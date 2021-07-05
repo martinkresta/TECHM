@@ -1,2 +1,2 @@
 # TECHM
-Frimaware for controller board TECHM
+Firmware for controller board TECHM
