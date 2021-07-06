@@ -51,6 +51,7 @@ uint8_t mROM[8];
 uint8_t mSensorsAddress[NUM_OF_SENSORS][8] =   // MSB on the left, transmit LSB first!!
 {
 {0x28,  0x4C,  0xA3,  0x7E,  0x0C,  0x0, 0x0,  0x6D},                      //T_IOBOARD_D
+{0x28,  0x60,  0x99,  0x7E,  0x0C,  0x0, 0x0,  0x9F},                      //T_TECHM
 
 //{0x28, 0xFF, 0xB5, 0x82, 0xB2, 0x15, 0x03, 0x09}, // 9
 };
@@ -63,8 +64,19 @@ uint8_t mSensorsAddress[NUM_OF_SENSORS][8] =   // MSB on the left, transmit LSB 
 void OW_Init(void)
 {
 
-	//DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM6_STOP;
+//	DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM6_STOP;
+	DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM6_STOP;
+// configure the OW pin as a open drain output
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(ONE_WIRE_GPIO_Port, ONE_WIRE_Pin, GPIO_PIN_RESET);
+
+	GPIO_InitTypeDef GPIO_InitStruct;
+	 GPIO_InitStruct.Pin = ONE_WIRE_Pin;
+	 GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+	 GPIO_InitStruct.Pull = GPIO_NOPULL;
+	 GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	 HAL_GPIO_Init(ONE_WIRE_GPIO_Port, &GPIO_InitStruct);
 
 	OW_TIM->DIER |= TIM_DIER_UIE;
 	OW_TIM->PSC = 4;
@@ -264,6 +276,7 @@ void OW_IRQHandler(void)
 
 	if (mTrStage == ets_Write)
 	{
+		OW_TIM->ARR = mTimWriteBit[mBitStage];
 		switch (mBitStage)
 		{
 			case ebs_Init:
@@ -289,12 +302,11 @@ void OW_IRQHandler(void)
 				break;
 		}
 
-		OW_TIM->ARR = mTimWriteBit[mBitStage];
+	//	OW_TIM->ARR = mTimWriteBit[mBitStage];
 		mBitStage++;
 		if (mBitStage > 2)
 		{
 			mBitStage = 0;
-		//	OW_TIM->ARR = mTimWriteBit[mBitStage];
 			mCurrBit++;
 			if (mCurrBit > 7)
 			{
@@ -306,7 +318,7 @@ void OW_IRQHandler(void)
 					if (mBytesToRead > 0)
 					{
 						mTrStage = ets_Read;   // switch to reading stage
-						OW_TIM->ARR = mTimReadBit[mBitStage];
+					//	OW_TIM->ARR = mTimReadBit[mBitStage];
 					}
 					else
 					{
@@ -321,6 +333,8 @@ void OW_IRQHandler(void)
 	}
 	else if (mTrStage == ets_Read)
 	{
+		OW_TIM->ARR = mTimReadBit[mBitStage];
+
 		switch (mBitStage)
 			{
 				case ebs_Init:
@@ -343,7 +357,7 @@ void OW_IRQHandler(void)
 					}
 					break;
 			}
-				OW_TIM->ARR = mTimReadBit[mBitStage];
+			//OW_TIM->ARR = mTimReadBit[mBitStage];
 				mBitStage++;
 				if (mBitStage > 2)
 				{

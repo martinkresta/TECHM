@@ -2,6 +2,7 @@
 PB13.GPIOParameters=GPIO_Label
 PC7.GPIOParameters=GPIO_Label
 RCC.USART1Freq_Value=25000000
+NVIC.TIM6_DAC_IRQn=true\:0\:0\:false\:false\:true\:true\:true
 PC12.Locked=true
 TIM1.IPParameters=Channel-Output Compare1 CH1,Channel-Output Compare2 CH2
 PC12.Signal=GPIO_Output
@@ -309,7 +310,7 @@ PC9.GPIO_Label=AV_ENC1
 ProjectManager.NoMain=false
 PC11.Signal=GPIO_Output
 PC8.Signal=GPIO_Input
-TIM6.Prescaler=50
+TIM6.Prescaler=4
 PC4.Signal=ADCx_IN13
 VP_TIM6_VS_ClockSourceINT.Mode=Enable_Timer
 ProjectManager.DefaultFWLocation=true

@@ -112,7 +112,7 @@ int main(void)
 
   Scheduler_Init();
   LED_Init();
-
+  OW_Init();
 
   /* USER CODE END 2 */
 
@@ -363,7 +363,7 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 50;
+  htim6.Init.Prescaler = 4;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 1000;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
