@@ -25,6 +25,7 @@
 #include "scheduler.h"
 #include "leds.h"
 #include "OW.h"
+#include "TEMP.h"
 
 /* USER CODE END Includes */
 
@@ -113,6 +114,7 @@ int main(void)
   Scheduler_Init();
   LED_Init();
   OW_Init();
+  TEMP_Init();
 
   /* USER CODE END 2 */
 

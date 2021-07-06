@@ -3,6 +3,14 @@
  *  One wire library with timing realized by timer interrupts
  *  Created on: Feb 21, 2021
  *      Author: Martin
+ *  Brief: Modul is based on basic timer interrupts with variable period. i.e TIM6 is used.
+ *  			 The timer clock after prescaler should be 10MHz (see TIM_CLK_PER_US)
+ *  			 This module rewrites the ARR register of that timer within each interrupt handler, to define duration of next period.
+ *
+ *  How to Use:
+ *  			 Configure GPIO pin as Open Drain Output. And assign the pin in OW.h
+ *  			 Configure the basic timer and enable its OVF interrupt, hook the OW_IRQ_Handler to this interrupt
+ *
  */
 
 #include "OW.h"
@@ -47,16 +55,16 @@ int16_t mTemperatures[NUM_OF_SENSORS];
 int16_t mTemp;
 
 uint8_t mROM[8];
-
+/*
 uint8_t mSensorsAddress[NUM_OF_SENSORS][8] =   // MSB on the left, transmit LSB first!!
 {
-{0x28,  0x4C,  0xA3,  0x7E,  0x0C,  0x0, 0x0,  0x6D},                      //T_IOBOARD_D
 {0x28,  0x60,  0x99,  0x7E,  0x0C,  0x0, 0x0,  0x9F},                      //T_TECHM
+{0x28,  0xFF,  0x5A,  0x9A,  0xB2,  0x15, 0x01,  0x24},                      //T8
 
 //{0x28, 0xFF, 0xB5, 0x82, 0xB2, 0x15, 0x03, 0x09}, // 9
 };
 
-
+*/
 
 
 
@@ -80,6 +88,7 @@ void OW_Init(void)
 
 	OW_TIM->DIER |= TIM_DIER_UIE;
 	OW_TIM->PSC = 4;
+	OW_TIM->CR1 |= TIM_CR1_ARPE;  // preload enable
 
 	mTimReset[0] = DEL_RES_PULSE * TIM_CLK_PER_US;
 	mTimReset[1] = DEL_RES_SAMPLE * TIM_CLK_PER_US;
@@ -138,9 +147,9 @@ eTransferResult OW_ReadSensor(uint8_t* address, int16_t* result)
 		mCurrentTranfer = ett_ReadTemp;
 
 		mBusy = 1;
-
-		OW_TIM->ARR = 1000;
+		OW_TIM->ARR = mTimReset[ers_ResetPulse];  // first timed period
 		OW_TIM->CR1 |= TIM_CR1_CEN;
+		OW_TIM->EGR = 1;
 	}
 	else
 	{
@@ -153,7 +162,7 @@ eTransferResult OW_ReadSensor(uint8_t* address, int16_t* result)
 void OW_Read(uint8_t sensorIndex)
 {
 	// TBD
-	OW_ReadSensor(mSensorsAddress[0], mTemperatures);
+//	OW_ReadSensor(mSensorsAddress[0], mTemperatures);
 }
 
 void OW_Read_SingleSensor(void)
@@ -184,9 +193,9 @@ void OW_ConvertAll(void)
 		mCurrentTranfer = ett_Convert;
 
 		mBusy = 1;
-
-		OW_TIM->ARR = 1000;
+		OW_TIM->ARR = mTimReset[ers_ResetPulse];  // first timed period
 		OW_TIM->CR1 |= TIM_CR1_CEN;
+		OW_TIM->EGR = 1;
 	}
 }
 
@@ -212,12 +221,10 @@ void OW_ReadRom(void)
 		mCurrByte = 0;
 		mCurrentTranfer = ett_ReadRom;
 
-
-
 		mBusy = 1;
-
-		OW_TIM->ARR = 1000;
+		OW_TIM->ARR = mTimReset[ers_ResetPulse];  // first timed period
 		OW_TIM->CR1 |= TIM_CR1_CEN;
+		OW_TIM->EGR = 1;
 	}
 }
 
@@ -276,7 +283,6 @@ void OW_IRQHandler(void)
 
 	if (mTrStage == ets_Write)
 	{
-		OW_TIM->ARR = mTimWriteBit[mBitStage];
 		switch (mBitStage)
 		{
 			case ebs_Init:
@@ -302,11 +308,15 @@ void OW_IRQHandler(void)
 				break;
 		}
 
-	//	OW_TIM->ARR = mTimWriteBit[mBitStage];
 		mBitStage++;
-		if (mBitStage > 2)
+		if (mBitStage <=2)
+		{
+			OW_TIM->ARR = mTimWriteBit[mBitStage];   // prepare ARR for next bit stage
+		}
+		else  // go to next bit
 		{
 			mBitStage = 0;
+			OW_TIM->ARR = mTimWriteBit[mBitStage];   // prepare ARR for first stage of next write bit
 			mCurrBit++;
 			if (mCurrBit > 7)
 			{
@@ -318,7 +328,7 @@ void OW_IRQHandler(void)
 					if (mBytesToRead > 0)
 					{
 						mTrStage = ets_Read;   // switch to reading stage
-					//	OW_TIM->ARR = mTimReadBit[mBitStage];
+						OW_TIM->ARR = mTimReadBit[mBitStage];   // prepare ARR for first stage of first read bit
 					}
 					else
 					{
@@ -333,8 +343,6 @@ void OW_IRQHandler(void)
 	}
 	else if (mTrStage == ets_Read)
 	{
-		OW_TIM->ARR = mTimReadBit[mBitStage];
-
 		switch (mBitStage)
 			{
 				case ebs_Init:
@@ -357,12 +365,11 @@ void OW_IRQHandler(void)
 					}
 					break;
 			}
-			//OW_TIM->ARR = mTimReadBit[mBitStage];
+
 				mBitStage++;
 				if (mBitStage > 2)
 				{
 					mBitStage = 0;
-				//	OW_TIM->ARR = mTimReadBit[mBitStage];
 					mCurrBit++;
 					if (mCurrBit > 7)
 					{
@@ -380,6 +387,8 @@ void OW_IRQHandler(void)
 						}
 					}
 				}
+
+				OW_TIM->ARR = mTimReadBit[mBitStage]; // prepare ARR for next period
 
 	}
 	else if (mTrStage == ets_Reset)
@@ -406,26 +415,26 @@ void OW_IRQHandler(void)
 				}
 				break;
 		}
-		OW_TIM->ARR = mTimReset[mResetStage];
 		mResetStage++;
-		if (mResetStage > 2)
+		if (mResetStage <= 2)   // still in Reset phase
+		{
+			OW_TIM->ARR = mTimReset[mResetStage];  // prepare period for next reset stage
+		}
+		else   // switching from reset to write phase
 		{
 			mResetStage = 0;
-			mBitStage = 0;
-		//	OW_TIM->ARR = mTimWriteBit[mBitStage];
-			if (mPresencePulse)
+			mBitStage = 0;   // reset the bit stage for next phase
+			if (mPresencePulse)  // device detected switch to write phase
 			{
 				mTrStage = ets_Write;
+				OW_TIM->ARR = mTimWriteBit[mBitStage];  // prepare period for first write bit stage
 			}
-			else
-			{  // no device on bus - finish transaction
+			else  // no device on bus - finish transaction
+			{
 				OW_TIM->CR1 &= ~TIM_CR1_CEN;
 				mBusy = 0;
 			}
-
 		}
-
-
 	}
 
 }

@@ -5,12 +5,13 @@
 
 
 #include "scheduler.h"
-
 #include "leds.h"
+#include "OW.h"
+#include "TEMP.h"
 
 //#include "pwrout.h"
 
-#include "OW.h"
+
 
 /*************************
 	V A R I A B L E 
@@ -216,7 +217,7 @@ static void Timer_Task_50ms(void)
 static void Timer_Task_100ms(void)
 {
 
-
+	TEMP_Update100ms();
 }
 
 /**
@@ -254,7 +255,7 @@ static void Timer_Task_1s(void)
 	//LED_Error_SetMode(eLED_BLINK_ONCE);
 	//	OW_Read(0);
 	//		OW_ConvertAll();
-	OW_ReadRom();
+	//OW_ReadRom();
 	//OW_Read(0);
 	//OW_ConvertAll();
 
