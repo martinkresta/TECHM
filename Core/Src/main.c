@@ -26,6 +26,7 @@
 #include "leds.h"
 #include "OW.h"
 #include "TEMP.h"
+#include "SCOM.h"
 
 /* USER CODE END Includes */
 
@@ -115,11 +116,15 @@ int main(void)
   LED_Init();
   OW_Init();
   TEMP_Init();
+  SCOM_Init(&huart1);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  HAL_GPIO_WritePin(ELV_GPIO_Port, ELV_Pin, GPIO_PIN_SET);  // open the electronic valve
+
   while (1)
   {
     /* USER CODE END WHILE */

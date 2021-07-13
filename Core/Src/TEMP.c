@@ -9,6 +9,7 @@
 #include "TEMP.h"
 #include "OW.h"
 #include "main.h"
+#include "VARS.h"
 
 
 typedef enum
@@ -32,14 +33,10 @@ typedef struct
 
 
 /* Private variables */
+uint8_t mNumOfAssignedSensors;
+sTemp mSensors[NUM_OF_ALL_SENSORS];
 
-sTemp mSensors[NUM_OF_ASSIGNED_SENSORS] =
-{
-		{T8, 0, ets_NotReady},
-		{T_TECHM, 0, ets_NotReady},
-};
-
-
+void AssignSensor(uint8_t sensorId, uint8_t varId);
 
 // temp sensors ROM codes (see TempSensIDs.xlsx)
 uint8_t mSensorsAddress[NUM_OF_ALL_SENSORS][8] =   // LSB on the left, transmit LSB first!!
@@ -92,6 +89,23 @@ void TEMP_Init(void)
 {
 	mTimer = 0;
 	mReadId = 0;
+	mNumOfAssignedSensors = 0;
+
+	// default sensor assignment:
+	AssignSensor(T303, VAR_TEMP_BOILER);
+	AssignSensor(T110, VAR_TEMP_BOILER_IN);
+	AssignSensor(T107, VAR_TEMP_BOILER_OUT);
+	AssignSensor(T108, VAR_TEMP_TANK_IN);
+	AssignSensor(T106, VAR_TEMP_TANK_OUT);
+	AssignSensor(T301, VAR_TEMP_TANK_1);
+	AssignSensor(T302, VAR_TEMP_TANK_2);
+	AssignSensor(T103, VAR_TEMP_TANK_3);
+	AssignSensor(T104, VAR_TEMP_TANK_4);
+	AssignSensor(T105, VAR_TEMP_TANK_5);
+	AssignSensor(T306, VAR_TEMP_TANK_6);
+	AssignSensor(T109, VAR_TEMP_WALL_IN);
+	AssignSensor(T101, VAR_TEMP_WALL_OUT);
+
 }
 
 void TEMP_Update100ms(void)
@@ -112,7 +126,7 @@ void TEMP_Update100ms(void)
 	}
 	mTimer++;
 
-	if (mReadId > NUM_OF_ASSIGNED_SENSORS)
+	if (mReadId > mNumOfAssignedSensors)
 	{
 		mReadId = 0;
 		mTimer = 0;
@@ -121,6 +135,17 @@ void TEMP_Update100ms(void)
 }
 
 
+void AssignSensor(uint8_t sensorId, uint8_t varId)
+{
+	if (mNumOfAssignedSensors < NUM_OF_ALL_SENSORS)
+	{
+		mSensors[mNumOfAssignedSensors].sensorId = sensorId;
+		mSensors[mNumOfAssignedSensors].temp_10ths_of_deg = 0x8000;
+		mSensors[mNumOfAssignedSensors].status = ets_NotReady;
+		VAR_SetVariablePointer(varId,&(mSensors[mNumOfAssignedSensors].temp_10ths_of_deg));
+		mNumOfAssignedSensors++;
+	}
+}
 
 
 

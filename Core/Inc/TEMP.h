@@ -13,7 +13,7 @@
 
 
 #define NUM_OF_ALL_SENSORS    32
-#define NUM_OF_ASSIGNED_SENSORS	 2
+#define NUM_OF_ASSIGNED_SENSORS	 13
 
 
 

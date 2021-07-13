@@ -98,8 +98,6 @@ void Error_Handler(void);
 #define OUT4_GPIO_Port GPIOB
 #define OW1_Pin GPIO_PIN_7
 #define OW1_GPIO_Port GPIOC
-	//#define OW1_Pin GPIO_PIN_15
-	//#define OW1_GPIO_Port GPIOB
 #define AV_ENC2_Pin GPIO_PIN_8
 #define AV_ENC2_GPIO_Port GPIOC
 #define AV_ENC1_Pin GPIO_PIN_9
