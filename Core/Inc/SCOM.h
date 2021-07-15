@@ -8,6 +8,7 @@
  */
 
 #ifndef INC_SCOM_H_
+#define INC_SCOM_H_
 
 #include "main.h"
 
@@ -44,8 +45,9 @@
 
 
 void SCOM_Init(UART_HandleTypeDef* uart);
+void SCOM_Update_10ms(void);
 
-#define INC_SCOM_H_
+
 
 
 
