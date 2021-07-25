@@ -10,6 +10,7 @@
 #include "OW.h"
 #include "main.h"
 #include "VARS.h"
+#include "ADC.h"
 
 
 typedef enum
@@ -36,7 +37,10 @@ typedef struct
 uint8_t mNumOfAssignedSensors;
 sTemp mSensors[NUM_OF_ALL_SENSORS];
 
+int16_t mPtcTemp;
+
 void AssignSensor(uint8_t sensorId, uint8_t varId);
+void ConvertPtc(void);
 
 // temp sensors ROM codes (see TempSensIDs.xlsx)
 uint8_t mSensorsAddress[NUM_OF_ALL_SENSORS][8] =   // LSB on the left, transmit LSB first!!
@@ -92,7 +96,7 @@ void TEMP_Init(void)
 	mNumOfAssignedSensors = 0;
 
 	// default sensor assignment:
-	AssignSensor(T303, VAR_TEMP_BOILER);
+/*	AssignSensor(T303, VAR_TEMP_BOILER);
 	AssignSensor(T110, VAR_TEMP_BOILER_IN);
 	AssignSensor(T107, VAR_TEMP_BOILER_OUT);
 	AssignSensor(T108, VAR_TEMP_TANK_IN);
@@ -103,8 +107,10 @@ void TEMP_Init(void)
 	AssignSensor(T104, VAR_TEMP_TANK_4);
 	AssignSensor(T105, VAR_TEMP_TANK_5);
 	AssignSensor(T306, VAR_TEMP_TANK_6);
-	AssignSensor(T109, VAR_TEMP_WALL_IN);
+	AssignSensor(T109, VAR_TEMP_WALL_IN);*/
 	AssignSensor(T101, VAR_TEMP_WALL_OUT);
+
+	VAR_SetVariablePointer(VAR_TEMP_BOILER_EXHAUST, &mPtcTemp);
 
 }
 
@@ -130,6 +136,7 @@ void TEMP_Update100ms(void)
 	{
 		mReadId = 0;
 		mTimer = 0;
+		ConvertPtc();
 	}
 
 }
@@ -145,6 +152,19 @@ void AssignSensor(uint8_t sensorId, uint8_t varId)
 		VAR_SetVariablePointer(varId,&(mSensors[mNumOfAssignedSensors].temp_10ths_of_deg));
 		mNumOfAssignedSensors++;
 	}
+}
+
+
+void ConvertPtc(void)
+{
+	uint16_t PtcRaw = ADC_GetValue(0);  // raw ADC result
+	double Ptc_mV = V0/4096.0 * PtcRaw;  // convert to milivolts
+	double V2 = (double)V0*R2/(R1+R2);   // Opamp inputs in miliVolts,
+	double Vptc = (V2*(R3+R4) - Ptc_mV*R3)/R4;
+	double Rpt = (Vptc*R5)/(V0 - Vptc);   // rezistance of PT1000 in ohms
+	double temp = (Rpt - 1000) * 0.261;
+	mPtcTemp = (int16_t)temp;
+
 }
 
 

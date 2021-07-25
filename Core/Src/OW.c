@@ -247,6 +247,7 @@ void TransferComplete()
 		case ett_ReadTemp:
 			if (mResultPtr != NULL)
 			{
+			//	mRxBuff[1] &= 0x7F; // workaround
 				*mResultPtr = (int16_t)((double)(((uint16_t)mRxBuff[0] | ((uint16_t)mRxBuff[1]) << 8)) / 1.6);
 			}
 			break;
@@ -355,7 +356,7 @@ void OW_IRQHandler(void)
 					break;
 				case ebs_Rest:
 					// Read the pin value
-				if (OW_PORT->IDR & ONE_WIRE_Pin)
+					if (OW_PORT->IDR & ONE_WIRE_Pin)
 					{  // store 1
 						mRxBuff[mCurrByte] |= (1 << mCurrBit);
 					}

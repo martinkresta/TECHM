@@ -9,6 +9,7 @@
 #include "OW.h"
 #include "TEMP.h"
 #include "SCOM.h"
+#include "ADC.h"
 
 //#include "pwrout.h"
 
@@ -220,6 +221,7 @@ static void Timer_Task_100ms(void)
 {
 
 	TEMP_Update100ms();
+	ADC_StartConversion();
 }
 
 /**

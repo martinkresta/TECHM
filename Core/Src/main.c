@@ -27,6 +27,8 @@
 #include "OW.h"
 #include "TEMP.h"
 #include "SCOM.h"
+#include "DO.h"
+#include "ADC.h"
 
 /* USER CODE END Includes */
 
@@ -122,6 +124,7 @@ int main(void)
   OW_Init();
   TEMP_Init();
   SCOM_Init(&huart1);
+  ADC_Init(&hadc1, &hdma_adc1);
 
   /* USER CODE END 2 */
 
@@ -129,6 +132,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   HAL_GPIO_WritePin(ELV_GPIO_Port, ELV_Pin, GPIO_PIN_SET);  // open the electronic valve
+
+ DO_SetPumps(0x01);
 
   while (1)
   {
