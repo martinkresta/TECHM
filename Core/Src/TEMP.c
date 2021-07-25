@@ -28,6 +28,7 @@ typedef struct
 	uint8_t sensorId;
 	int16_t temp_10ths_of_deg;
 	eTempStatus status;
+	uint16_t VarId;
 }sTemp;
 
 
@@ -96,7 +97,7 @@ void TEMP_Init(void)
 	mNumOfAssignedSensors = 0;
 
 	// default sensor assignment:
-/*	AssignSensor(T303, VAR_TEMP_BOILER);
+	AssignSensor(T303, VAR_TEMP_BOILER);
 	AssignSensor(T110, VAR_TEMP_BOILER_IN);
 	AssignSensor(T107, VAR_TEMP_BOILER_OUT);
 	AssignSensor(T108, VAR_TEMP_TANK_IN);
@@ -107,10 +108,9 @@ void TEMP_Init(void)
 	AssignSensor(T104, VAR_TEMP_TANK_4);
 	AssignSensor(T105, VAR_TEMP_TANK_5);
 	AssignSensor(T306, VAR_TEMP_TANK_6);
-	AssignSensor(T109, VAR_TEMP_WALL_IN);*/
+	AssignSensor(T109, VAR_TEMP_WALL_IN);
 	AssignSensor(T101, VAR_TEMP_WALL_OUT);
 
-	VAR_SetVariablePointer(VAR_TEMP_BOILER_EXHAUST, &mPtcTemp);
 
 }
 
@@ -120,6 +120,22 @@ void TEMP_Update100ms(void)
 
 	if (mTimer == 0)
 	{
+		// copy results to VARS
+		int i;
+		for(i = 0; i < mNumOfAssignedSensors; i++)
+		{
+			if ((mSensors[i].temp_10ths_of_deg >= -300) && (mSensors[i].temp_10ths_of_deg <= 1250) )  // valid range
+			{
+				mSensors[i].status = ets_Valid;
+				VAR_SetVariable(mSensors[i].VarId, mSensors[i].temp_10ths_of_deg, 1);
+			}
+			else
+			{
+				mSensors[i].status = ets_NotValid;
+				VAR_SetVariable(mSensors[i].VarId, mSensors[i].temp_10ths_of_deg, 0);
+			}
+
+		}
 		// trig conversion
 		OW_ConvertAll();
 	}
@@ -129,6 +145,7 @@ void TEMP_Update100ms(void)
 
 		OW_ReadSensor(&(mSensorsAddress[mSensors[mReadId].sensorId]),&(mSensors[mReadId].temp_10ths_of_deg));
 		mReadId++;
+
 	}
 	mTimer++;
 
@@ -149,10 +166,12 @@ void AssignSensor(uint8_t sensorId, uint8_t varId)
 		mSensors[mNumOfAssignedSensors].sensorId = sensorId;
 		mSensors[mNumOfAssignedSensors].temp_10ths_of_deg = 0x8000;
 		mSensors[mNumOfAssignedSensors].status = ets_NotReady;
-		VAR_SetVariablePointer(varId,&(mSensors[mNumOfAssignedSensors].temp_10ths_of_deg));
+		mSensors[mNumOfAssignedSensors].VarId = varId;
+	//	VAR_SetVariablePointer(varId,&(mSensors[mNumOfAssignedSensors].temp_10ths_of_deg));
 		mNumOfAssignedSensors++;
 	}
 }
+
 
 
 void ConvertPtc(void)
@@ -162,8 +181,18 @@ void ConvertPtc(void)
 	double V2 = (double)V0*R2/(R1+R2);   // Opamp inputs in miliVolts,
 	double Vptc = (V2*(R3+R4) - Ptc_mV*R3)/R4;
 	double Rpt = (Vptc*R5)/(V0 - Vptc);   // rezistance of PT1000 in ohms
-	double temp = (Rpt - 1000) * 0.261;
+	//double temp = (Rpt - 1000) * 0.261;
+	double temp = (Rpt - 1000) * 2.61;		// 10ths of degree C
 	mPtcTemp = (int16_t)temp;
+
+	if(PtcRaw != 0 && PtcRaw != 4096)
+	{
+		VAR_SetVariable(VAR_TEMP_BOILER_EXHAUST, mPtcTemp, 1);
+	}
+	else
+	{
+		VAR_SetVariable(VAR_TEMP_BOILER_EXHAUST, mPtcTemp, 0);
+	}
 
 }
 

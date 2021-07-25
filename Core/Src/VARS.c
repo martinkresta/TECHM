@@ -9,36 +9,65 @@
 #include "vars.h"
 #include "main.h"
 
-int16_t* VarPointers[0xFF];
+sVar Vars[NUM_OF_VARIABLES];
 
 int16_t mDummyVar = 0x8000;
 
-int16_t VAR_GetVariable(uint8_t varId)
+
+void VAR_Init(void)
 {
-	if (VarPointers[varId] != NULL)
+	int i;
+	for(i = 0; i < NUM_OF_VARIABLES; i++)
 	{
-		return *(VarPointers[varId]);
-	}
-	else
-	{
-		return 0xFFFF;
+		Vars[i].valid = 0;
+		Vars[i].local = 0;
+		Vars[i].value = 0;
 	}
 }
 
-int16_t* VAR_GetVariablePointer(uint8_t varId)
+int16_t VAR_GetVariable(uint16_t varId, uint16_t* invalid)
 {
-	if (VarPointers[varId] != NULL)
+	if (invalid == NULL) return;
+	if (varId < NUM_OF_VARIABLES)
 	{
-		return VarPointers[varId];
+		if(Vars[varId].valid == 0)
+		{
+			*invalid |= INVALID_FLAG;
+		}
+		return Vars[varId].value;
 	}
 	else
 	{
-		return &mDummyVar;
+		*invalid |= INVALID_FLAG;
+		return 0;
 	}
 }
 
-void VAR_SetVariablePointer(uint8_t varId, int16_t* ptr)
+
+int16_t* VAR_GetVariablePointer(uint8_t varId, uint16_t* invalid)
 {
-	VarPointers[varId] = ptr;
+	if (invalid == NULL) return;
+	if (varId < NUM_OF_VARIABLES)
+	{
+		if(Vars[varId].valid == 0)
+		{
+			*invalid |= INVALID_FLAG;
+		}
+		return &(Vars[varId].value);
+	}
+	else
+	{
+		*invalid |= INVALID_FLAG;
+		return &(Vars[varId].value);
+	}
+}
+
+void VAR_SetVariable(uint8_t varId, int16_t value, uint8_t valid)
+{
+	if (varId < NUM_OF_VARIABLES)
+	{
+		Vars[varId].valid = valid;
+		Vars[varId].value = value;
+	}
 }
 

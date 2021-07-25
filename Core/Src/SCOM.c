@@ -16,7 +16,7 @@
 typedef struct
 {
 	uint8_t enable;
-	uint8_t varId;
+	uint16_t varId;
 	uint16_t sendPeriod;  // 10ms
 	uint16_t timer;
 	void* next;
@@ -33,8 +33,8 @@ sScanVariable mScanList[20];
 
 
 
-void UpdateScanList(uint8_t varId, uint16_t period);
-void SendVariable(uint8_t id);
+void UpdateScanList(uint16_t varId, uint16_t period);
+void SendVariable(uint16_t id);
 
 void SCOM_Init(UART_HandleTypeDef* uart)
 {
@@ -141,7 +141,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	}
 }
 
-void UpdateScanList(uint8_t varId, uint16_t period)
+void UpdateScanList(uint16_t varId, uint16_t period)
 {
 	// go thru the list to find if entry already exists
 	int i;
@@ -179,13 +179,15 @@ void UpdateScanList(uint8_t varId, uint16_t period)
 	}
 }
 
-void SendVariable(uint8_t id)
+void SendVariable(uint16_t id)
 {
-	int16_t tmp = VAR_GetVariable(id);
+	uint16_t invalid = 0;
+	int16_t tmp = VAR_GetVariable(id, &invalid);
+	id |= invalid;
 	mTxBuffer[0] = CMD_TM_VAR_VALUE >> 8;
 	mTxBuffer[1] = CMD_TM_VAR_VALUE & 0xFF;
-	mTxBuffer[2] = 0;
-	mTxBuffer[3] = id;
+	mTxBuffer[2] = id >> 8;
+	mTxBuffer[3] = id  & 0xFF;
 	mTxBuffer[4] = tmp >> 8;
 	mTxBuffer[5] = tmp & 0xFF;
 	//memcpy(&(mTxBuffer[4]),VAR_GetVariablePointer(id), sizeof(int16_t));

@@ -27,8 +27,23 @@
 #define  VAR_TEMP_BOILER_EXHAUST  113
 
 
-int16_t VAR_GetVariable(uint8_t varId);
-int16_t* VAR_GetVariablePointer(uint8_t varId);
-void VAR_SetVariablePointer(uint8_t varId, int16_t* ptr);
+#define NUM_OF_VARIABLES		255
+
+
+#define INVALID_FLAG				0x8000
+
+typedef struct
+{
+	uint8_t valid;
+	uint8_t local;
+	int16_t value;
+} sVar;
+
+
+void VAR_Init(void);
+
+int16_t VAR_GetVariable(uint16_t varId, uint16_t* invalid);
+int16_t* VAR_GetVariablePointer(uint8_t varId, uint16_t* invalid);
+void VAR_SetVariable(uint8_t varId, int16_t value, uint8_t valid);
 
 #endif /* INC_VARS_H_ */
