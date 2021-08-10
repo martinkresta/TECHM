@@ -1,23 +1,8 @@
 /**
   ******************************************************************************
   * @file    leds.c
-  * @author  Ing. Vaclav Silar, Martin Kresta
-  * @version V0.0.1
-  * @date    06-June-2016
-  * @brief   Led Controler on board UPCB
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT 2016 RIETER CZ a.s</center></h2>
-  *
-  * Unless required by applicable law or agreed to in writing, software 
-  * distributed under the License is distributed on an "AS IS" BASIS, 
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  *
-  ******************************************************************************
-  */ 
+  * @author  Martin Kresta
+  ******************************************************************************/
 
 /*************************
 	I N C L U D E

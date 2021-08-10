@@ -55,24 +55,12 @@ int16_t mTemperatures[NUM_OF_SENSORS];
 int16_t mTemp;
 
 uint8_t mROM[8];
-/*
-uint8_t mSensorsAddress[NUM_OF_SENSORS][8] =   // MSB on the left, transmit LSB first!!
-{
-{0x28,  0x60,  0x99,  0x7E,  0x0C,  0x0, 0x0,  0x9F},                      //T_TECHM
-{0x28,  0xFF,  0x5A,  0x9A,  0xB2,  0x15, 0x01,  0x24},                      //T8
-
-//{0x28, 0xFF, 0xB5, 0x82, 0xB2, 0x15, 0x03, 0x09}, // 9
-};
-
-*/
-
 
 
 //initialization of GPIO, Timer, and timing of OW bus;
 void OW_Init(void)
 {
-
-//	DBGMCU->APB1FZ |= DBGMCU_APB1_FZ_DBG_TIM6_STOP;
+ // debug support (stop Timer when halted)
 	DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM6_STOP;
 // configure the OW pin as a open drain output
 
@@ -80,11 +68,11 @@ void OW_Init(void)
   HAL_GPIO_WritePin(ONE_WIRE_GPIO_Port, ONE_WIRE_Pin, GPIO_PIN_RESET);
 
 	GPIO_InitTypeDef GPIO_InitStruct;
-	 GPIO_InitStruct.Pin = ONE_WIRE_Pin;
-	 GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-	 GPIO_InitStruct.Pull = GPIO_NOPULL;
-	 GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	 HAL_GPIO_Init(ONE_WIRE_GPIO_Port, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = ONE_WIRE_Pin;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(ONE_WIRE_GPIO_Port, &GPIO_InitStruct);
 
 	OW_TIM->DIER |= TIM_DIER_UIE;
 	OW_TIM->PSC = 4;
@@ -159,15 +147,9 @@ eTransferResult OW_ReadSensor(uint8_t* address, int16_t* result)
 	return res;
 }
 
-void OW_Read(uint8_t sensorIndex)
-{
-	// TBD
-//	OW_ReadSensor(mSensorsAddress[0], mTemperatures);
-}
 
 void OW_Read_SingleSensor(void)
 {
-	// TBD
 	OW_ReadSensor(mROM, mTemperatures);
 }
 
@@ -247,7 +229,6 @@ void TransferComplete()
 		case ett_ReadTemp:
 			if (mResultPtr != NULL)
 			{
-			//	mRxBuff[1] &= 0x7F; // workaround
 				*mResultPtr = (int16_t)((double)(((uint16_t)mRxBuff[0] | ((uint16_t)mRxBuff[1]) << 8)) / 1.6);
 			}
 			break;

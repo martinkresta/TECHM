@@ -190,7 +190,6 @@ void SendVariable(uint16_t id)
 	mTxBuffer[3] = id  & 0xFF;
 	mTxBuffer[4] = tmp >> 8;
 	mTxBuffer[5] = tmp & 0xFF;
-	//memcpy(&(mTxBuffer[4]),VAR_GetVariablePointer(id), sizeof(int16_t));
 	Send();
 }
 
