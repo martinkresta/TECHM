@@ -29,10 +29,11 @@ uint8_t mTxBuffer[COM_BUFLEN];
 uint8_t mRxLength, mNewDataReady, mTxBusy;
 
 UART_HandleTypeDef* ComUart;
-sScanVariable mScanList[20];
+sScanVariable mScanList[30];
 
 uint8_t mPcConnected;
 uint16_t mPcHbTimer;
+uint16_t mNsSendTimer;  // timer for sending network status
 
 
 static void UpdateScanList(uint16_t varId, uint16_t period);
@@ -67,17 +68,26 @@ void SCOM_Update_10ms(void)
 		mPcConnected = 0;    // heartbeat timeout elapsed
 	}
 
+	// send network status every NS_SEND_PERIOD
+/*	mNsSendTimer += 10;
+	if (mNsSendTimer > NS_SEND_PERIOD)
+	{
+		mNsSendTimer = 0;
+		VAR_SetVariable(VAR_NETWORK_STATUS,COM_GetNetworkStatus(), 1);
+		SendVariable(VAR_NETWORK_STATUS);
+	} */
+
 
 	if (mPcConnected)  // send variables only if PC is connected
 	{
 		int i;
-		for(i = 0; i < 20; i++)
+		for(i = 0; i < 30; i++)
 		{
 			mScanList[i].timer+=10;
 		}
 
 
-		for(i = 0; i < 20; i++)
+		for(i = 0; i < 30; i++)
 		{
 			if (mScanList[i].enable == 1 && mScanList[i].sendPeriod != 0)
 			{
@@ -99,25 +109,28 @@ void SCOM_Update_10ms(void)
 static void InitPcScanList(void)
 {
 
-	UpdateScanList(VAR_TEMP_TECHM_BOARD,5000);
-	UpdateScanList(VAR_TEMP_TANK_1,5000);
-	UpdateScanList(VAR_TEMP_TANK_2,5000);
-	UpdateScanList(VAR_TEMP_TANK_3,5000);
-	UpdateScanList(VAR_TEMP_TANK_4,5000);
-	UpdateScanList(VAR_TEMP_TANK_5,5000);
-	UpdateScanList(VAR_TEMP_TANK_6,5000);
+	UpdateScanList(VAR_TEMP_TECHM_BOARD,1000);
+	UpdateScanList(VAR_TEMP_TANK_1,1000);
+	UpdateScanList(VAR_TEMP_TANK_2,1000);
+	UpdateScanList(VAR_TEMP_TANK_3,1000);
+	UpdateScanList(VAR_TEMP_TANK_4,1000);
+	UpdateScanList(VAR_TEMP_TANK_5,1000);
+	UpdateScanList(VAR_TEMP_TANK_6,1000);
 
-	UpdateScanList(VAR_TEMP_BOILER,5000);
+	UpdateScanList(VAR_TEMP_TANK_IN,1000);
+	UpdateScanList(VAR_TEMP_TANK_OUT,1000);
+
+/*	UpdateScanList(VAR_TEMP_BOILER,5000);
 	UpdateScanList(VAR_TEMP_BOILER_IN,5000);
 	UpdateScanList(VAR_TEMP_BOILER_OUT,5000);
-	UpdateScanList(VAR_TEMP_TANK_IN,5000);
-	UpdateScanList(VAR_TEMP_TANK_OUT,5000);
+
 	UpdateScanList(VAR_TEMP_WALL_IN,5000);
-	UpdateScanList(VAR_TEMP_WALL_OUT,5000);
+	UpdateScanList(VAR_TEMP_WALL_OUT,5000);  */
+	UpdateScanList(VAR_TEMP_BOILER_EXHAUST,5000);
 
-	UpdateScanList(VAR_EL_HEATER_STATUS,1500);
+	UpdateScanList(VAR_EL_HEATER_STATUS,1000);
 
-	UpdateScanList(VAR_EL_HEATER_POWER,1500);
+	UpdateScanList(VAR_EL_HEATER_POWER,1000);
 
 	UpdateScanList(VAR_BAT_SOC,1000);
 	UpdateScanList(VAR_LOAD_A10,1000);

@@ -44,7 +44,7 @@ uint8_t mRxBuff[12];
 
 int16_t* mResultPtr;
 
-
+int16_t  mLastTemp;
 uint8_t mBusy;
 
 
@@ -227,6 +227,11 @@ void TransferComplete()
 			// nothing
 			break;
 		case ett_ReadTemp:
+			mLastTemp = (int16_t)((double)(((uint16_t)mRxBuff[0] | ((uint16_t)mRxBuff[1]) << 8)) / 1.6);
+			if (mLastTemp < -20)
+			{
+				mLastTemp = 20;
+			}
 			if (mResultPtr != NULL)
 			{
 				*mResultPtr = (int16_t)((double)(((uint16_t)mRxBuff[0] | ((uint16_t)mRxBuff[1]) << 8)) / 1.6);

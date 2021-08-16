@@ -97,19 +97,28 @@ void TEMP_Init(void)
 	mNumOfAssignedSensors = 0;
 
 	// default sensor assignment:
-	AssignSensor(T303, VAR_TEMP_BOILER);
-	AssignSensor(T110, VAR_TEMP_BOILER_IN);
-	AssignSensor(T107, VAR_TEMP_BOILER_OUT);
+//	AssignSensor(T303, VAR_TEMP_BOILER);
+//	AssignSensor(T110, VAR_TEMP_BOILER_IN);
+//	AssignSensor(T107, VAR_TEMP_BOILER_OUT);
+
+	//	AssignSensor(T101, VAR_TEMP_WALL_OUT);
+	//	AssignSensor(T109, VAR_TEMP_WALL_IN);
+
+	AssignSensor(T_TECHM, VAR_TEMP_TECHM_BOARD);
+
 	AssignSensor(T108, VAR_TEMP_TANK_IN);
-	AssignSensor(T106, VAR_TEMP_TANK_OUT);
+	AssignSensor(T109, VAR_TEMP_TANK_OUT);
+
+
+
+
 	AssignSensor(T301, VAR_TEMP_TANK_1);
 	AssignSensor(T302, VAR_TEMP_TANK_2);
 	AssignSensor(T103, VAR_TEMP_TANK_3);
 	AssignSensor(T104, VAR_TEMP_TANK_4);
 	AssignSensor(T105, VAR_TEMP_TANK_5);
 	AssignSensor(T306, VAR_TEMP_TANK_6);
-	AssignSensor(T109, VAR_TEMP_WALL_IN);
-	AssignSensor(T101, VAR_TEMP_WALL_OUT);
+
 }
 
 void TEMP_Update100ms(void)
@@ -147,7 +156,7 @@ void TEMP_Update100ms(void)
 	}
 	mTimer++;
 
-	if (mReadId > mNumOfAssignedSensors)
+	if (mReadId >= mNumOfAssignedSensors)
 	{
 		mReadId = 0;
 		mTimer = 0;

@@ -22,10 +22,10 @@ typedef enum
 	eElh_SwitchError
 }eElhState;
 
-#define  MAX_BOARD_TEMP_C					40
+#define  MAX_BOARD_TEMP_C					55
 #define  MAX_TANK_TEMP_C					70
 #define  MIN_SOC									90
-#define  MAX_LOAD_A								20  //
+#define  MAX_LOAD_A								25  //
 
 #define  ONE_COIL_LOAD_A					10
 

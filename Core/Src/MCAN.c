@@ -26,6 +26,7 @@ static s_CanNode mNodes[MAX_NUM_OF_NODES];
 void MCAN_Init(CAN_HandleTypeDef	* can, uint8_t id)
 {
 	uint8_t bank_offset = 0;
+	uint8_t i;
 
 	mMcan.Rx0Buf = CB_Create(sizeof(s_CanRxMsg),RX_NMT_BUFF_SIZE);
 	mMcan.Rx1Buf = CB_Create(sizeof(s_CanRxMsg),RX_BUFF_SIZE);
@@ -55,6 +56,16 @@ void MCAN_Init(CAN_HandleTypeDef	* can, uint8_t id)
 	mMcan.HbMsg.header.RTR = CAN_RTR_DATA;
 	mMcan.HbMsg.header.IDE = CAN_ID_STD;
 
+	// init network
+	for (i = 0; i < MAX_NUM_OF_NODES; i++)
+	{
+		mNodes[i].timeout = CO_DEFAULT_HB_TO;
+		mNodes[i].canStatus = eNS_NMT_UNKNOWN;
+		mNodes[i].nodeId = i;
+	}
+	mNodes[mMcan.Node.nodeId].canStatus = mMcan.Node.canStatus;
+
+
 
 	// set the filter of FIFO0 for hearbeats (0x700 - 0x70F)
 	Set_Filter_Id_Mask(mMcan.CanHw, CAN_FILTER_FIFO0, 1 + bank_offset , HB, HB+ID_RANGE, 0,0); // HeartBeats from all devices => FMI = 0/4
@@ -75,6 +86,12 @@ void MCAN_Start(void)
 {
 	HAL_CAN_Start(mMcan.CanHw);  // start can
 	mMcan.Node.canStatus = eNS_NMT_RUN;
+	mNodes[mMcan.Node.nodeId].canStatus = mMcan.Node.canStatus;
+}
+
+s_CanNode* MCAN_GetNodesPt(void)
+{
+	return mNodes;
 }
 
 // Periodic update function for synchronous CAN handling
@@ -210,8 +227,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	if (mMcan.CanHw == hcan)
 	{
 		CB_Put(mMcan.Rx0Buf,(uint8_t*) &tmp);
-		LED_R_SetMode(eLED_BLINK_ONCE);  // yellow blink
-		LED_G_SetMode(eLED_BLINK_ONCE);
+	//	LED_R_SetMode(eLED_BLINK_ONCE);  // yellow blink
+	//	LED_G_SetMode(eLED_BLINK_ONCE);
 	}
 
 }
@@ -224,7 +241,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	if (mMcan.CanHw == hcan)
 	{
 		CB_Put(mMcan.Rx1Buf,(uint8_t*) &tmp);
-		LED_B_SetMode(eLED_BLINK_ONCE);  // blue blink
+	//	LED_B_SetMode(eLED_BLINK_ONCE);  // blue blink
 	}
 
 }

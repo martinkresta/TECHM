@@ -24,7 +24,7 @@ typedef struct
 
 
 
-sStreamVariable mStreamList[20];
+sStreamVariable mStreamList[STREAM_LIST_SIZE];
 uint8_t mNodeId;
 
 
@@ -38,13 +38,36 @@ void COM_Init(uint8_t nodeId)
 {
 	mNodeId = nodeId;
 	InitStreamList();
-
 }
 
+uint8_t COM_GetNodeStatus(uint8_t nodeId)
+{
+	if (MCAN_GetNodesPt()[nodeId].canStatus == eNS_NMT_RUN)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+int16_t COM_GetNetworkStatus(void)
+{
+	int16_t ns = 0;
+	int16_t i;
+	for (i = 0; i < MAX_NUM_OF_NODES; i++)
+	{
+		if (COM_GetNodeStatus(i) == 1)
+		{
+			ns |= (1 << i);
+		}
+	}
+	return ns;
+}
 
 void COM_Update_10ms(void)
 {
-
 	// Process messages
 	s_CanRxMsg msg;
 	while(1 == MCAN_GetRxMessage(&msg))  // process all messages in buffer
@@ -54,11 +77,11 @@ void COM_Update_10ms(void)
 
 	// stream the variables to CAN
 	int i;
-	for(i = 0; i < 20; i++)
+	for(i = 0; i < STREAM_LIST_SIZE; i++)
 	{
 		mStreamList[i].timer+=10;
 	}
-	for(i = 0; i < 20; i++)
+	for(i = 0; i < STREAM_LIST_SIZE; i++)
 	{
 		if (mStreamList[i].enable == 1 && mStreamList[i].sendPeriod != 0)
 		{

@@ -17,9 +17,10 @@
 
 uint16_t mHeaterMask = 0;
 eElhState mState;
-int16_t mHeaterLoad_A;
+static int16_t mHeaterLoad_A;
 int16_t mReqTankTemp;
 uint16_t mIncreaseRequest_cnt;
+uint16_t mDecreaseRequest_cnt;
 
 
 
@@ -40,6 +41,7 @@ void ELH_Init(void)
 	mState = eElh_NoFreePower;
 	mHeaterLoad_A = 0;
 	mIncreaseRequest_cnt= 0;
+	mDecreaseRequest_cnt= 0;
 
 }
 
@@ -52,6 +54,13 @@ void ELH_Update_1s(void)
 	int16_t soc;
 	int16_t charging_A;
 	int16_t load_A;
+
+
+	// insert actual variables to VARS module
+	VAR_SetVariable(VAR_EL_HEATER_STATUS, mState, 1);
+	VAR_SetVariable(VAR_EL_HEATER_POWER, mHeaterLoad_A, 1);
+
+
 // collect the all informations to make decision about the power
 
 // Over temperature input (emergency thermostate)
@@ -63,7 +72,7 @@ void ELH_Update_1s(void)
 	}
 
 // 48V Supply availability
-	if (GPIO_PIN_SET == HAL_GPIO_ReadPin(PG_48V_GPIO_Port,PG_48V_Pin))
+	if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PG_48V_GPIO_Port,PG_48V_Pin))
 	{ // 48V not available
 		mState = eElh_48VFail;
 		SwitchOffImmediatelly();
@@ -71,6 +80,7 @@ void ELH_Update_1s(void)
 	}
 
 	// collect the variables
+	invalid = 0;
 	boartTemp_C= VAR_GetVariable(VAR_TEMP_TECHM_BOARD,&invalid)/10;  // techm board temperature
 	tankTemp_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;  // top tank sensor
 	soc				 = VAR_GetVariable(VAR_BAT_SOC,&invalid);  		// battery soc
@@ -113,13 +123,17 @@ void ELH_Update_1s(void)
 		return;
 	}
 // Battery actual load
-	if ((load_A - charging_A) < MAX_LOAD_A )
+	if (((load_A - charging_A) + ONE_COIL_LOAD_A) < MAX_LOAD_A )
 	{
 		mIncreaseRequest_cnt ++;
 	}
+	else if ((load_A - charging_A) < MAX_LOAD_A )
+	{
+		// do nothig, this is the sweet spot we want to reach
+	}
 	else
 	{
-		DecreasePower();
+		mDecreaseRequest_cnt ++;
 
 		if (mHeaterLoad_A == 0)
 		{
@@ -130,16 +144,26 @@ void ELH_Update_1s(void)
 	// increase power only every X seconds, to prevent switching all switches simultaneously
 	if (mIncreaseRequest_cnt > INCREASE_PERIOD_S)
 	{
+		mIncreaseRequest_cnt = 0;
 		IncreasePower();
 		mState = eElh_Heating;
 	}
 
-// Battery Voltage
-	//TBD
+	if (mDecreaseRequest_cnt > INCREASE_PERIOD_S)
+	{
+		mDecreaseRequest_cnt = 0;
+		DecreasePower();
+		mState = eElh_Heating;
+		if (mHeaterLoad_A == 0)
+		{
+			mState = eElh_NoFreePower;
+		}
+	}
+
 
 	// insert actual variables to VARS module
-	VAR_SetVariable(VAR_EL_HEATER_STATUS, mState, 1);
-	VAR_SetVariable(VAR_EL_HEATER_POWER, mHeaterLoad_A, 1);
+//	VAR_SetVariable(VAR_EL_HEATER_STATUS, mState, 1);
+//	VAR_SetVariable(VAR_EL_HEATER_POWER, mHeaterLoad_A, 1);
 }
 
 uint16_t ELH_GetStatus(void);
@@ -156,14 +180,14 @@ void ELH_SetTemp(int16_t tempTop, int16_t tempMiddle)
 void IncreasePower(void)
 {
 	mHeaterMask |= 0x40;
-	mHeaterMask >> 1;
+	mHeaterMask = mHeaterMask >> 1;
 	DO_SetElHeaters(mHeaterMask);
 	CalculateHeaterLoad();
 }
 
 void DecreasePower(void)
 {
-	mHeaterMask << 1;
+	mHeaterMask = mHeaterMask << 1;
 	DO_SetElHeaters(mHeaterMask);
 	CalculateHeaterLoad();
 }
@@ -183,7 +207,10 @@ void CalculateHeaterLoad(void)
 	uint8_t i;
 	for (i = 0; i < 6; i++)
 	{
-		if (mHeaterMask & (0x01 < i)) numOfHeatingElements++;
+		if (mHeaterMask & (0x01 << i))
+		{
+			numOfHeatingElements++;
+		}
 	}
 	mHeaterLoad_A = numOfHeatingElements * ONE_COIL_LOAD_A;
 }

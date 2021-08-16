@@ -115,6 +115,8 @@ uint8_t MCAN_GetRxMessage(s_CanRxMsg* msg);
 
 uint8_t MCAN_SendFrame(uint16_t cobid, uint8_t* data, uint8_t dlc);
 
+s_CanNode* MCAN_GetNodesPt(void);
+
 
 // Required interface ! - This fcns have to be defined in application
 //void MCAN_NotifySlaveStateReceived(uint8_t nodeid, e_NodeStatus status);

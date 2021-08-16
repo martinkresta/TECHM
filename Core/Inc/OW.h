@@ -16,12 +16,12 @@
 #define DEL_RES_SAMPLE		100
 #define DEL_RES_REST			380
 
-#define DEL_RB_PULSE			3//2
-#define DEL_RB_SAMPLE			15//11
-#define DEL_RB_REST			  55//63
+#define DEL_RB_PULSE			1 //3//2
+#define DEL_RB_SAMPLE			11 //15//11
+#define DEL_RB_REST			  60 //55//63
 
 #define DEL_WB_PULSE			6
-#define DEL_WB_WRITE			60 //54
+#define DEL_WB_WRITE			65 //60 //54
 #define DEL_WB_REST			  15
 
 

@@ -193,7 +193,8 @@ static void Timer_Task_5ms(void)
 */
 static void Timer_Task_10ms(void)
 {
-//	COM_Update_10ms();
+	MCAN_Update_10ms();
+	COM_Update_10ms();
 	LED_Update_10ms();
 	SCOM_Update_10ms();
 }

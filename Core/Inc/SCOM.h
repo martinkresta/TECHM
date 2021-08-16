@@ -30,6 +30,7 @@
 #define  CMD_TM_SET_PUMPS 				0x725
 
 #define  CMD_MASTER_HB  					0x777
+#define  CMD_NETWORK_STATUS				0x765
 
 
 #define  CMD_TM_DEV_ID  					0x210
@@ -48,6 +49,7 @@
 
 
 #define PC_HB_TIMEOUT			3000
+#define NS_SEND_PERIOD		1000
 
 void SCOM_Init(UART_HandleTypeDef* uart);
 void SCOM_Update_10ms(void);

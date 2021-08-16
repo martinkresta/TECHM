@@ -11,6 +11,9 @@
 #include "main.h"
 
 
+#define  VAR_NETWORK_STATUS  1
+
+
 #define  VAR_BAT_SOC  10
 #define  VAR_BAT_VOLTAGE_V10  11
 #define  VAR_LOAD_A10  12
