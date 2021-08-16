@@ -110,8 +110,6 @@ void TEMP_Init(void)
 	AssignSensor(T306, VAR_TEMP_TANK_6);
 	AssignSensor(T109, VAR_TEMP_WALL_IN);
 	AssignSensor(T101, VAR_TEMP_WALL_OUT);
-
-
 }
 
 void TEMP_Update100ms(void)

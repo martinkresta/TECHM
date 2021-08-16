@@ -10,7 +10,7 @@
 
 
 
-void	DO_SetOutput(uint8_t output, uint8_t value);
+void	DO_SetElHeaters(uint8_t heaterMask);
 
 void  DO_SetPumps(uint8_t pumps);
 

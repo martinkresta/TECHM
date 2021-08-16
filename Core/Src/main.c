@@ -22,14 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "scheduler.h"
-#include "leds.h"
-#include "OW.h"
-#include "TEMP.h"
-#include "SCOM.h"
-#include "DO.h"
-#include "ADC.h"
-
+#include "APP.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -119,32 +112,19 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-  Scheduler_Init();
-  LED_Init();
-  OW_Init();
-  TEMP_Init();
-  SCOM_Init(&huart1);
-  ADC_Init(&hadc1, &hdma_adc1);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-  HAL_GPIO_WritePin(ELV_GPIO_Port, ELV_Pin, GPIO_PIN_SET);  // open the electronic valve
-
- DO_SetPumps(0x01);
+  APP_Init();
+  APP_Start();
 
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  	Scheduler_Check_Flag();
-  //	HAL_Delay(500);
-  //	HAL_GPIO_WritePin(LED_R_GPIO_Port,LED_R_Pin, GPIO_PIN_SET);
-  //	HAL_GPIO_WritePin(LED_G_GPIO_Port,LED_G_Pin, GPIO_PIN_SET);
-  //	HAL_GPIO_TogglePin(LED_B_GPIO_Port,LED_B_Pin);
   }
   /* USER CODE END 3 */
 }
@@ -323,11 +303,11 @@ static void MX_CAN1_Init(void)
 
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 10;
+  hcan1.Init.Prescaler = 5;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_8TQ;
-  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_15TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_4TQ;
   hcan1.Init.TimeTriggeredMode = DISABLE;
   hcan1.Init.AutoBusOff = DISABLE;
   hcan1.Init.AutoWakeUp = DISABLE;
@@ -586,8 +566,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, PUMP_RAD_Pin|PUMP_WALL_Pin|PUMP_BOIL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, OUT3_Pin|OUT2_Pin|OUT1_Pin|OUT6_Pin
-                          |OUT5_Pin|OUT4_Pin|ELV_Pin|LED_G_Pin
+  HAL_GPIO_WritePin(GPIOB, OUT4_Pin|OUT5_Pin|OUT6_Pin|OUT1_Pin
+                          |OUT2_Pin|OUT3_Pin|ELV_Pin|LED_G_Pin
                           |LED_R_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -636,11 +616,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(PG_48V_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : OUT3_Pin OUT2_Pin OUT1_Pin OUT6_Pin
-                           OUT5_Pin OUT4_Pin ELV_Pin LED_G_Pin
+  /*Configure GPIO pins : OUT4_Pin OUT5_Pin OUT6_Pin OUT1_Pin
+                           OUT2_Pin OUT3_Pin ELV_Pin LED_G_Pin
                            LED_R_Pin */
-  GPIO_InitStruct.Pin = OUT3_Pin|OUT2_Pin|OUT1_Pin|OUT6_Pin
-                          |OUT5_Pin|OUT4_Pin|ELV_Pin|LED_G_Pin
+  GPIO_InitStruct.Pin = OUT4_Pin|OUT5_Pin|OUT6_Pin|OUT1_Pin
+                          |OUT2_Pin|OUT3_Pin|ELV_Pin|LED_G_Pin
                           |LED_R_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

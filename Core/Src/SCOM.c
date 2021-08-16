@@ -4,7 +4,7 @@
  *  Created on: Jul 13, 2021
  *      Author: Martin
  *      Brief:  Universal serial communication protocol between device and computer.
- *      Resources: DMA channels 5+4, USART1,
+ *     	The handler of used UART is inserted as parameter to SCOM_Init
  */
 
 #include "main.h"
@@ -31,10 +31,15 @@ uint8_t mRxLength, mNewDataReady, mTxBusy;
 UART_HandleTypeDef* ComUart;
 sScanVariable mScanList[20];
 
+uint8_t mPcConnected;
+uint16_t mPcHbTimer;
 
 
-void UpdateScanList(uint16_t varId, uint16_t period);
-void SendVariable(uint16_t id);
+static void UpdateScanList(uint16_t varId, uint16_t period);
+static void SendVariable(uint16_t id);
+static void InitPcScanList(void);
+static uint8_t Send(void);
+static void ProcessMessage(void);
 
 void SCOM_Init(UART_HandleTypeDef* uart)
 {
@@ -43,6 +48,8 @@ void SCOM_Init(UART_HandleTypeDef* uart)
 	mRxLength = 0;
 	mNewDataReady = 0;
 	mTxBusy = 0;
+	mPcConnected = 0;
+	InitPcScanList();
 
 	// enable receiver
 	HAL_UART_Receive_DMA(ComUart, mRxBuffer, 10);
@@ -50,8 +57,75 @@ void SCOM_Init(UART_HandleTypeDef* uart)
 }
 
 
+void SCOM_Update_10ms(void)
+{
+
+	// check PC heartbeat
+	mPcHbTimer += 10;
+	if (mPcHbTimer > PC_HB_TIMEOUT)
+	{
+		mPcConnected = 0;    // heartbeat timeout elapsed
+	}
+
+
+	if (mPcConnected)  // send variables only if PC is connected
+	{
+		int i;
+		for(i = 0; i < 20; i++)
+		{
+			mScanList[i].timer+=10;
+		}
+
+
+		for(i = 0; i < 20; i++)
+		{
+			if (mScanList[i].enable == 1 && mScanList[i].sendPeriod != 0)
+			{
+				if (mScanList[i].timer >= mScanList[i].sendPeriod)
+				{
+					SendVariable(mScanList[i].varId);
+					mScanList[i].timer = 0;
+					break;  // send just 1 value every 10ms
+				}
+			}
+		}
+	}
+}
+
+/* private methods */
+
+
+// Compile-time initialization of list of variables periodically sent toi the PC app
+static void InitPcScanList(void)
+{
+
+	UpdateScanList(VAR_TEMP_TECHM_BOARD,5000);
+	UpdateScanList(VAR_TEMP_TANK_1,5000);
+	UpdateScanList(VAR_TEMP_TANK_2,5000);
+	UpdateScanList(VAR_TEMP_TANK_3,5000);
+	UpdateScanList(VAR_TEMP_TANK_4,5000);
+	UpdateScanList(VAR_TEMP_TANK_5,5000);
+	UpdateScanList(VAR_TEMP_TANK_6,5000);
+
+	UpdateScanList(VAR_TEMP_BOILER,5000);
+	UpdateScanList(VAR_TEMP_BOILER_IN,5000);
+	UpdateScanList(VAR_TEMP_BOILER_OUT,5000);
+	UpdateScanList(VAR_TEMP_TANK_IN,5000);
+	UpdateScanList(VAR_TEMP_TANK_OUT,5000);
+	UpdateScanList(VAR_TEMP_WALL_IN,5000);
+	UpdateScanList(VAR_TEMP_WALL_OUT,5000);
+
+	UpdateScanList(VAR_EL_HEATER_STATUS,1500);
+
+	UpdateScanList(VAR_EL_HEATER_POWER,1500);
+
+	UpdateScanList(VAR_BAT_SOC,1000);
+	UpdateScanList(VAR_LOAD_A10,1000);
+	UpdateScanList(VAR_CHARGING_A10,1000);
+}
+
 //returns 0 when OK, 1 if transceiver is busy
-uint8_t Send(void)
+static uint8_t Send(void)
 {
 
 	if (mTxBusy == 1)  // check if transciever is ready
@@ -66,82 +140,7 @@ uint8_t Send(void)
 	return 0;
 }
 
-void ProcessMessage()
-{
-		uint16_t varId, sendPeriod;
-		uint16_t id = (mRxBuffer[0]<<8) | mRxBuffer[1];
-
-		uint16_t data1, data2, data3, data4;
-
-		switch (id )  // message ID
-		{
-		case CMD_READ_VAR_REQUEST:
-			varId = (mRxBuffer[2]<<8) | mRxBuffer[3];
-			sendPeriod = (mRxBuffer[4]<<8) | mRxBuffer[5];
-			UpdateScanList(varId, sendPeriod);
-			SendVariable(varId);
-			break;
-		case CMD_TM_SET_ELV:
-			data1 = (mRxBuffer[2]<<8) | mRxBuffer[3];
-			DO_SetElv(data1);
-			break;
-		case CMD_TM_SET_PUMPS:
-			data1 = (mRxBuffer[2]<<8) | mRxBuffer[3];
-			DO_SetPumps(data1);
-			break;
-		}
-
-	HAL_UART_Receive_DMA(ComUart, mRxBuffer, 10);
-	return;
-}
-
-
-
-void SCOM_Update_10ms(void)
-{
-	int i;
-	for(i = 0; i < 20; i++)
-	{
-		mScanList[i].timer++;
-	}
-
-
-	for(i = 0; i < 20; i++)
-	{
-		if (mScanList[i].enable == 1 && mScanList[i].sendPeriod != 0)
-		{
-			if (mScanList[i].timer >= mScanList[i].sendPeriod)
-			{
-				SendVariable(mScanList[i].varId);
-				mScanList[i].timer = 0;
-				break;  // send just 1 value every 10ms
-			}
-		}
-	}
-}
-
-
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
-{
-	if (huart == ComUart)
-	{
-		mTxBusy = 0;
-	}
-}
-
-
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-	if (huart == ComUart)
-	{
-		mNewDataReady = 1;
-		mRxLength = 1;
-		ProcessMessage();
-	}
-}
-
-void UpdateScanList(uint16_t varId, uint16_t period)
+static void UpdateScanList(uint16_t varId, uint16_t period)
 {
 	// go thru the list to find if entry already exists
 	int i;
@@ -179,7 +178,7 @@ void UpdateScanList(uint16_t varId, uint16_t period)
 	}
 }
 
-void SendVariable(uint16_t id)
+static void SendVariable(uint16_t id)
 {
 	uint16_t invalid = 0;
 	int16_t tmp = VAR_GetVariable(id, &invalid);
@@ -193,4 +192,63 @@ void SendVariable(uint16_t id)
 	Send();
 }
 
+static void ProcessMessage(void)
+{
+		uint16_t varId, sendPeriod;
+		uint16_t id = (mRxBuffer[0]<<8) | mRxBuffer[1];
 
+		uint16_t data1, data2, data3, data4;
+		data1 = (mRxBuffer[2]<<8) | mRxBuffer[3];
+		data2 = (mRxBuffer[4]<<8) | mRxBuffer[5];
+		data3 = (mRxBuffer[6]<<8) | mRxBuffer[7];
+		data4 = (mRxBuffer[8]<<8) | mRxBuffer[9];
+
+		switch (id )  // message ID
+		{
+			case CMD_MASTER_HB:
+				mPcConnected = 1;
+				mPcHbTimer = 0;
+				break;
+			case CMD_READ_VAR_REQUEST:
+				varId = (mRxBuffer[2]<<8) | mRxBuffer[3];
+				sendPeriod = (mRxBuffer[4]<<8) | mRxBuffer[5];
+				UpdateScanList(varId, sendPeriod);
+				SendVariable(varId);
+				break;
+			case CMD_TM_SET_ELV:
+				DO_SetElv(data1);
+				break;
+			case CMD_TM_SET_PUMPS:
+				DO_SetPumps(data1);
+				break;
+			case CMD_SET_VAR_VALUE:
+				VAR_SetVariable(data1 & 0x7FFF, data2, ((data1 & 0x8000)? 0 : 1));
+				break;
+		}
+
+	HAL_UART_Receive_DMA(ComUart, mRxBuffer, 10);
+	return;
+}
+
+
+
+
+/* Interrupt callbacks*/
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if (huart == ComUart)
+	{
+		mTxBusy = 0;
+	}
+}
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if (huart == ComUart)
+	{
+		mNewDataReady = 1;
+		mRxLength = 1;
+		ProcessMessage();
+	}
+}

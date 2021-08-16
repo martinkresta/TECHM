@@ -4,7 +4,6 @@
  *  Created on: Jul 13, 2021
  *      Author: Martin
  *      Brief:  Universal serial communication protocol between device and computer.
- *      Resources: DMA channels 5+4, USART1,
  */
 
 #ifndef INC_SCOM_H_
@@ -15,7 +14,6 @@
 
 #define SCOM_BAUDRATE 57600
 
-#define COM_UART USART1  // do not change used UART!
 #define COM_BUFLEN	10
 
 
@@ -31,9 +29,15 @@
 #define  CMD_TM_SET_SERVOVALVES  	0x724
 #define  CMD_TM_SET_PUMPS 				0x725
 
-#define  CMD_TM_DEV_ID  0x210
-#define  CMD_TM_STATUS  0x212
-#define  CMD_TM_VAR_VALUE  0x221
+#define  CMD_MASTER_HB  					0x777
+
+
+#define  CMD_TM_DEV_ID  					0x210
+#define  CMD_TM_STATUS  					0x212
+#define  CMD_TM_VAR_VALUE  				0x221
+
+#define  CMD_SET_VAR_VALUE 			 	0x120
+
 
 
 
@@ -43,6 +47,7 @@
 #define TEMP_READ_TEMP	 0x54
 
 
+#define PC_HB_TIMEOUT			3000
 
 void SCOM_Init(UART_HandleTypeDef* uart);
 void SCOM_Update_10ms(void);

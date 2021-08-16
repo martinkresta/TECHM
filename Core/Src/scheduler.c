@@ -10,8 +10,7 @@
 #include "TEMP.h"
 #include "SCOM.h"
 #include "ADC.h"
-
-//#include "pwrout.h"
+#include "ELHEATER.h"
 
 
 
@@ -256,6 +255,8 @@ static void Timer_Task_500ms(void)
 */
 static void Timer_Task_1s(void)
 {	
+	ELH_Update_1s();
+
 	//LED_Error_SetMode(eLED_BLINK_ONCE);
 	//	OW_Read(0);
 	//		OW_ConvertAll();

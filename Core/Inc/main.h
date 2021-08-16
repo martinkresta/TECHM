@@ -38,6 +38,15 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+extern ADC_HandleTypeDef hadc1;
+extern DMA_HandleTypeDef hdma_adc1;
+
+extern CAN_HandleTypeDef hcan1;
+
+extern UART_HandleTypeDef huart1;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern DMA_HandleTypeDef hdma_usart1_tx;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -84,18 +93,18 @@ void Error_Handler(void);
 #define PUMP_BOIL_GPIO_Port GPIOA
 #define PG_48V_Pin GPIO_PIN_0
 #define PG_48V_GPIO_Port GPIOB
-#define OUT3_Pin GPIO_PIN_2
-#define OUT3_GPIO_Port GPIOB
-#define OUT2_Pin GPIO_PIN_10
-#define OUT2_GPIO_Port GPIOB
-#define OUT1_Pin GPIO_PIN_11
-#define OUT1_GPIO_Port GPIOB
-#define OUT6_Pin GPIO_PIN_12
-#define OUT6_GPIO_Port GPIOB
-#define OUT5_Pin GPIO_PIN_13
-#define OUT5_GPIO_Port GPIOB
-#define OUT4_Pin GPIO_PIN_14
+#define OUT4_Pin GPIO_PIN_2
 #define OUT4_GPIO_Port GPIOB
+#define OUT5_Pin GPIO_PIN_10
+#define OUT5_GPIO_Port GPIOB
+#define OUT6_Pin GPIO_PIN_11
+#define OUT6_GPIO_Port GPIOB
+#define OUT1_Pin GPIO_PIN_12
+#define OUT1_GPIO_Port GPIOB
+#define OUT2_Pin GPIO_PIN_13
+#define OUT2_GPIO_Port GPIOB
+#define OUT3_Pin GPIO_PIN_14
+#define OUT3_GPIO_Port GPIOB
 #define OW1_Pin GPIO_PIN_7
 #define OW1_GPIO_Port GPIOC
 #define AV_ENC2_Pin GPIO_PIN_8

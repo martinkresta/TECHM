@@ -12,8 +12,7 @@
 /* Macros */
 
 
-#define NUM_OF_ALL_SENSORS    32
-#define NUM_OF_ASSIGNED_SENSORS	 13
+#define NUM_OF_ALL_SENSORS    33
 
 
 
@@ -48,8 +47,10 @@
 #define      T308          27
 #define      T309          28
 #define      T310          29
-#define      T_IOBOARD     30
+#define      T_IOBOARD_U   30
 #define      T_TECHM       31
+#define      T_IOBOARD_D   32
+
 
 
 // PTC Gain network

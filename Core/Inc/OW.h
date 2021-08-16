@@ -36,8 +36,8 @@
 #define CMD_READ_SCRATCHPAD		0xBE
 
 
-#define ONE_WIRE_Pin 										OW1_Pin
-#define ONE_WIRE_GPIO_Port 							OW1_GPIO_Port
+#define ONE_WIRE_Pin 								OW1_Pin
+#define ONE_WIRE_GPIO_Port 					OW1_GPIO_Port
 
 #define OW_TIM	TIM6
 #define OW_PORT ONE_WIRE_GPIO_Port

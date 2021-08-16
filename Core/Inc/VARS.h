@@ -11,6 +11,11 @@
 #include "main.h"
 
 
+#define  VAR_BAT_SOC  10
+#define  VAR_BAT_VOLTAGE_V10  11
+#define  VAR_LOAD_A10  12
+#define  VAR_CHARGING_A10  13
+
 #define  VAR_TEMP_BOILER  100
 #define  VAR_TEMP_BOILER_IN  101
 #define  VAR_TEMP_BOILER_OUT  102
@@ -25,6 +30,18 @@
 #define  VAR_TEMP_WALL_IN  111
 #define  VAR_TEMP_WALL_OUT  112
 #define  VAR_TEMP_BOILER_EXHAUST  113
+
+#define  VAR_TEMP_TECHM_BOARD			120
+#define  VAR_TEMP_IOBOARD_D				121
+#define  VAR_TEMP_IOBOARD_U				122
+#define  VAR_TEMP_ELECON_BOARD		123
+
+#define  VAR_TEMP_DOWNSTAIRS			124
+
+#define  VAR_EL_HEATER_STATUS  	80
+#define  VAR_EL_HEATER_POWER  	81
+
+
 
 
 #define NUM_OF_VARIABLES		255
