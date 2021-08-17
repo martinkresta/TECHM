@@ -12,26 +12,7 @@
 #include "VARS.h"
 #include "ADC.h"
 
-
-typedef enum
-{
-	ets_Valid,
-	ets_NotReady,
-	ets_NotValid,
-	ets_NotConnected,
-	ets_NotAssigned,
-}eTempStatus;
-
-
-typedef struct
-{
-	uint8_t sensorId;
-	int16_t temp_10ths_of_deg;
-	eTempStatus status;
-	uint16_t VarId;
-	uint8_t owBusId;
-}sTemp;
-
+#include <math.h>
 
 
 
@@ -138,15 +119,22 @@ void TEMP_Update100ms(void)
 		int i;
 		for(i = 0; i < mNumOfAssignedSensors; i++)
 		{
-			if ((mSensors[i].temp_10ths_of_deg >= -300) && (mSensors[i].temp_10ths_of_deg <= 1250) )  // valid range
+			mSensors[i].errorCnt++;  // just assume error to simplify the code :-)
+			// check the validity of last readout
+			if ((mSensors[i].rawTempC_10ths >= -300) && (mSensors[i].rawTempC_10ths <= 1250) )  // valid range from -30 to 125 deg C
 			{
 				mSensors[i].status = ets_Valid;
-				VAR_SetVariable(mSensors[i].VarId, mSensors[i].temp_10ths_of_deg, 1);
+				mSensors[i].errorCnt = 0;
+				mSensors[i].tempC_10ths = mSensors[i].rawTempC_10ths;  // copy the raw value to valid value
+				VAR_SetVariable(mSensors[i].VarId, mSensors[i].tempC_10ths, 1);
 			}
-			else
+
+			if (mSensors[i].errorCnt > MAX_ERR_TO_INVALIDATE)
 			{
 				mSensors[i].status = ets_NotValid;
-				VAR_SetVariable(mSensors[i].VarId, mSensors[i].temp_10ths_of_deg, 0);
+				mSensors[i].errorCnt = 0;
+				VAR_SetVariable(mSensors[i].VarId, mSensors[i].tempC_10ths, 0);  // set invalid flag also to variables..
+				// TBD LOG ERR
 			}
 
 		}
@@ -165,7 +153,7 @@ void TEMP_Update100ms(void)
 
 		OW_ReadSensor(mSensors[mReadId].owBusId,
 									&(mSensorsAddress[mSensors[mReadId].sensorId]),
-									&(mSensors[mReadId].temp_10ths_of_deg));
+									&(mSensors[mReadId].rawTempC_10ths));
 		mReadId++;
 
 	}
@@ -186,11 +174,11 @@ void AssignSensor(uint8_t sensorId, uint8_t varId, uint8_t busId)
 	if (mNumOfAssignedSensors < NUM_OF_ALL_SENSORS)
 	{
 		mSensors[mNumOfAssignedSensors].sensorId = sensorId;
-		mSensors[mNumOfAssignedSensors].temp_10ths_of_deg = 0x8000;
+		mSensors[mNumOfAssignedSensors].tempC_10ths = 0x8000;
 		mSensors[mNumOfAssignedSensors].status = ets_NotReady;
 		mSensors[mNumOfAssignedSensors].VarId = varId;
 		mSensors[mNumOfAssignedSensors].owBusId = busId;
-	//	VAR_SetVariablePointer(varId,&(mSensors[mNumOfAssignedSensors].temp_10ths_of_deg));
+		mSensors[mNumOfAssignedSensors].errorCnt = 0;
 		mNumOfAssignedSensors++;
 	}
 }
@@ -202,12 +190,11 @@ void ConvertPtc(void)
 	uint16_t PtcRaw = ADC_GetValue(0);  // raw ADC result
 	double Ptc_mV = V0/4096.0 * PtcRaw;  // convert to milivolts
 
-	Ptc_mV += 60;  // compensation of offset error ?   To be checked in full scale!
+	Ptc_mV += 60;  // compensation of offset error ?   TODO checked in full scale!
 
 	double V2 = (double)V0*R2/(R1+R2);   // Opamp inputs in miliVolts,
 	double Vptc = (V2*(R3+R4) - Ptc_mV*R3)/R4;
-	double Rpt = (Vptc*R5)/(V0 - Vptc);   // rezistance of PT1000 in ohms
-	//double temp = (Rpt - 1000) * 0.261;
+	double Rpt = (Vptc*R5)/(V0 - Vptc);   // resistance of PT1000 in ohms
 	double temp = (Rpt - 1000) * 2.61;		// 10ths of degree C
 	mPtcTemp = (int16_t)temp;
 
@@ -218,6 +205,7 @@ void ConvertPtc(void)
 	else
 	{
 		VAR_SetVariable(VAR_TEMP_BOILER_EXHAUST, mPtcTemp, 0);
+		// TBD LOG ERR
 	}
 
 }

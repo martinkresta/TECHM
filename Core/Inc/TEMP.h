@@ -12,10 +12,12 @@
 /* Macros */
 
 
+
+
+#define MAX_ERR_TO_INVALIDATE		3  // max number of consecutive err readouts to set value as invalid
+
+
 #define NUM_OF_ALL_SENSORS    33
-
-
-
 // temp sensors aliases (see TempSensIDs.xlsx)
 #define      T1            0
 #define      T2            1
@@ -62,13 +64,28 @@
 #define				R4			47000
 #define				V0			3313   // mV
 
-/* Private variables */
 
-/* Public variables */
 
-/* Private methods */
+typedef enum
+{
+	ets_Valid,
+	ets_NotReady,
+	ets_NotValid,
+	ets_NotConnected,
+	ets_NotAssigned,
+}eTempStatus;
 
-/* Public methods */
+
+typedef struct
+{
+	uint8_t sensorId;
+	int16_t tempC_10ths;
+	int16_t rawTempC_10ths;
+	eTempStatus status;
+	uint16_t VarId;
+	uint8_t owBusId;
+	uint8_t errorCnt;
+}sTemp;
 
 void TEMP_Init(void);
 void TEMP_Update100ms(void);
