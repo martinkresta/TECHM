@@ -19,8 +19,6 @@
 
 
 
-
-
 uint8_t mBytesToWrite;
 uint8_t mBytesToRead;
 uint8_t mCurrBit;
@@ -31,7 +29,7 @@ eBitStage mBitStage;
 eTransferStage mTrStage;
 eTransferType mCurrentTranfer;
 uint8_t mPresencePulse;
-eTransferResult mLastTransferResult;
+eOwResult mLastTransferResult;
 
 uint16_t mTimReset[3];
 uint16_t mTimWriteBit[3];
@@ -46,33 +44,40 @@ int16_t* mResultPtr;
 
 int16_t  mLastTemp;
 uint8_t mBusy;
+sOwBus mBus[MAX_NUM_OF_BUSES];  // max number of hardware busses is 3
+
+GPIO_TypeDef* mOwPort;   //  variables holding values of just active (selected) bus (quicker access then to array)
+uint32_t mOwClearMask;
+uint32_t mOwSetMask;
 
 
-/// sensors
-
-
-int16_t mTemperatures[NUM_OF_SENSORS];
 int16_t mTemp;
 
 uint8_t mROM[8];
 
 
+
+static void ActivateBus(uint8_t mBusId)
+{
+	mOwPort = mBus[mBusId].Port;
+	mOwClearMask = mBus[mBusId].ClearBitMask;
+	mOwSetMask = mBus[mBusId].SetBitMask;
+}
+
 //initialization of GPIO, Timer, and timing of OW bus;
 void OW_Init(void)
 {
+//reset list of busses
+	uint8_t i;
+	for (i = 0; i < MAX_NUM_OF_BUSES; i++)
+	{
+		mBus[i].Port = NULL;
+	}
+
  // debug support (stop Timer when halted)
 	DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM6_STOP;
 // configure the OW pin as a open drain output
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(ONE_WIRE_GPIO_Port, ONE_WIRE_Pin, GPIO_PIN_RESET);
-
-	GPIO_InitTypeDef GPIO_InitStruct;
-	GPIO_InitStruct.Pin = ONE_WIRE_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(ONE_WIRE_GPIO_Port, &GPIO_InitStruct);
 
 	OW_TIM->DIER |= TIM_DIER_UIE;
 	OW_TIM->PSC = 4;
@@ -92,6 +97,31 @@ void OW_Init(void)
 
 }
 
+
+// define bus connected to some GPIO pin
+void OW_AddBus(uint8_t busId, GPIO_TypeDef* port, uint32_t pin)
+{
+	if (busId < MAX_NUM_OF_BUSES)
+	{
+		// store the Bus - Pin assignment
+		mBus[busId].Port = port;
+		mBus[busId].SetBitMask = pin;
+		mBus[busId].ClearBitMask = pin << 16;
+
+		// configure the pin
+		 /*Configure GPIO pin Output Level */
+		HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
+
+		GPIO_InitTypeDef GPIO_InitStruct;
+		GPIO_InitStruct.Pin = pin;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+		HAL_GPIO_Init(port, &GPIO_InitStruct);
+	}
+}
+
+
 void ClearRxBuffer()
 {
 	mRxBuff[0] = 0;
@@ -104,11 +134,21 @@ void ClearRxBuffer()
 	mRxBuff[7] = 0;
 }
 
-eTransferResult OW_ReadSensor(uint8_t* address, int16_t* result)
+eOwResult OW_ReadSensor(uint8_t busId, uint8_t* address, int16_t* result)
 {
-	eTransferResult res = etr_OK;
-	if (!mBusy)
+	eOwResult res = etr_OK;
+
+	if (mBus[busId].Port == NULL)
 	{
+		res = etr_UnknownBus;
+	}
+	else if (mBusy)
+	{
+		res = etr_Busy;
+	}
+	else // all OK
+	{
+		ActivateBus(busId);  // asign active bus
 		ClearRxBuffer();
 		// initialize transfer parameters
 		mResultPtr = result;
@@ -139,26 +179,32 @@ eTransferResult OW_ReadSensor(uint8_t* address, int16_t* result)
 		OW_TIM->CR1 |= TIM_CR1_CEN;
 		OW_TIM->EGR = 1;
 	}
-	else
-	{
-		res = etr_Busy;
-	}
 	mLastTransferResult = res;
 	return res;
 }
 
 
-void OW_Read_SingleSensor(void)
+void OW_Read_SingleSensor(uint8_t busId)
 {
-	OW_ReadSensor(mROM, mTemperatures);
+	OW_ReadSensor(busId, mROM, &mTemp);
 }
 
 
-
-void OW_ConvertAll(void)
+eOwResult OW_ConvertAll(uint8_t busId)
 {
-	if (!mBusy)
+	eOwResult res = etr_OK;
+
+	if (mBus[busId].Port == NULL)
 	{
+		res = etr_UnknownBus;
+	}
+	else if (mBusy)
+	{
+		res = etr_Busy;
+	}
+	else // all OK
+	{
+		ActivateBus(busId);  // asign active bus
 		ClearRxBuffer();
 		// initialize transfer parameters
 		mTxBuff[0] = CMD_SKIP_ROM;
@@ -179,15 +225,26 @@ void OW_ConvertAll(void)
 		OW_TIM->CR1 |= TIM_CR1_CEN;
 		OW_TIM->EGR = 1;
 	}
+	mLastTransferResult = res;
+	return res;
 }
 
-void OW_ReadRom(void)
+eOwResult OW_ReadRom(uint8_t busId)
 {
 	int16_t dummy;
+	eOwResult res = etr_OK;
 
-
-	if (!mBusy)
+	if (mBus[busId].Port == NULL)
 	{
+		res = etr_UnknownBus;
+	}
+	else if (mBusy)
+	{
+		res = etr_Busy;
+	}
+	else // all OK
+	{
+		ActivateBus(busId);  // asign active bus
 		ClearRxBuffer();
 		mResultPtr = mROM;
 		// initialize transfer parameters
@@ -208,6 +265,9 @@ void OW_ReadRom(void)
 		OW_TIM->CR1 |= TIM_CR1_CEN;
 		OW_TIM->EGR = 1;
 	}
+
+	mLastTransferResult = res;
+	return res;
 }
 
 
@@ -227,21 +287,17 @@ void TransferComplete()
 			// nothing
 			break;
 		case ett_ReadTemp:
-			mLastTemp = (int16_t)((double)(((uint16_t)mRxBuff[0] | ((uint16_t)mRxBuff[1]) << 8)) / 1.6);
-			if (mLastTemp < -20)
-			{
-				mLastTemp = 20;
-			}
 			if (mResultPtr != NULL)
 			{
 				*mResultPtr = (int16_t)((double)(((uint16_t)mRxBuff[0] | ((uint16_t)mRxBuff[1]) << 8)) / 1.6);
+				mResultPtr = NULL; // clear the pointer to prevent overwrite in next cycle.
 			}
 			break;
 	}
 	mBusy = 0;
 }
 
-eTransferResult OW_GetLastTransferResult(void)
+eOwResult OW_GetLastTransferResult(void)
 {
 	return mLastTransferResult;
 }
@@ -249,18 +305,6 @@ eTransferResult OW_GetLastTransferResult(void)
 uint8_t* OW_GetRom(void)
 {
 	return mROM;
-}
-
-int16_t* OW_GetTemp(uint8_t id)
-{
-	if (id < NUM_OF_SENSORS)
-	{
-		return &(mTemperatures[id]);
-	}
-	else
-	{
-		return NULL;
-	}
 }
 
 
@@ -274,23 +318,23 @@ void OW_IRQHandler(void)
 		{
 			case ebs_Init:
 				// write 0 to GPIO
-				OW_PORT->BSRR = CLEAR_BIT_MASK;
+				mOwPort->BSRR = mOwClearMask;
 				break;
 			case ebs_WriteSample:
 				// write the bit  value to the GPIO
 				if (mTxBuff[mCurrByte] & (1 << mCurrBit))
 				{  // write 1
-					OW_PORT->BSRR = SET_BIT_MASK;
+					mOwPort->BSRR = mOwSetMask;
 				}
 				else
 				{
 					//write 0;
-					OW_PORT->BSRR = CLEAR_BIT_MASK;
+					mOwPort->BSRR = mOwClearMask;
 				}
 				break;
 			case ebs_Rest:
 				// write 1 to GPIO
-				OW_PORT->BSRR = SET_BIT_MASK;
+				mOwPort->BSRR = mOwSetMask;
 				// increment CurrBit
 				break;
 		}
@@ -334,15 +378,15 @@ void OW_IRQHandler(void)
 			{
 				case ebs_Init:
 					// write 0 to GPIO
-					OW_PORT->BSRR = CLEAR_BIT_MASK;
+					mOwPort->BSRR = mOwClearMask;
 					break;
 				case ebs_WriteSample:
 					// write 1 to GPIO
-					OW_PORT->BSRR = SET_BIT_MASK;
+					mOwPort->BSRR = mOwSetMask;
 					break;
 				case ebs_Rest:
 					// Read the pin value
-					if (OW_PORT->IDR & ONE_WIRE_Pin)
+					if (mOwPort->IDR & mOwSetMask)
 					{  // store 1
 						mRxBuff[mCurrByte] |= (1 << mCurrBit);
 					}
@@ -385,14 +429,14 @@ void OW_IRQHandler(void)
 		{
 			case ers_ResetPulse:
 				// write 0 to GPIO
-				OW_PORT->BSRR = CLEAR_BIT_MASK;
+				mOwPort->BSRR = mOwClearMask;
 				break;
 			case ers_PresencePulse:
 				// write 1 to GPIO
-				OW_PORT->BSRR = SET_BIT_MASK;
+				mOwPort->BSRR = mOwSetMask;
 				break;
 			case ers_Rest:
-				if (OW_PORT->IDR & ONE_WIRE_Pin)
+				if (mOwPort->IDR & mOwSetMask)
 				{  // store 1
 					mPresencePulse = 0;
 				}

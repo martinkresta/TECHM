@@ -123,11 +123,9 @@ static void InitStreamList(void)
 	UpdateStreamList(VAR_TEMP_TANK_5,5000);
 	UpdateStreamList(VAR_TEMP_TANK_6,5000);
 
-	UpdateStreamList(VAR_TEMP_BOILER,5000);
+/*	UpdateStreamList(VAR_TEMP_BOILER,5000);
 	UpdateStreamList(VAR_TEMP_BOILER_IN,5000);
 	UpdateStreamList(VAR_TEMP_BOILER_OUT,5000);
-	UpdateStreamList(VAR_TEMP_TANK_IN,5000);
-	UpdateStreamList(VAR_TEMP_TANK_OUT,5000);
 	UpdateStreamList(VAR_TEMP_WALL_IN,5000);
 	UpdateStreamList(VAR_TEMP_WALL_OUT,5000);
 
@@ -135,7 +133,7 @@ static void InitStreamList(void)
 
 	UpdateStreamList(VAR_EL_HEATER_POWER,1500);
 
-/*	UpdateStreamList(VAR_BAT_SOC,1000);
+	UpdateStreamList(VAR_BAT_SOC,1000);
 	UpdateStreamList(VAR_LOAD_A10,1000);
 	UpdateStreamList(VAR_CHARGING_A10,1000);*/
 
@@ -163,7 +161,7 @@ static void UpdateStreamList(uint16_t varId, uint16_t period)
 {
 	// go thru the list to find if entry already exists
 	int i;
-	for(i = 0; i < 20; i++)
+	for(i = 0; i < STREAM_LIST_SIZE; i++)
 	{
 		if(mStreamList[i].varId == varId)
 		{
@@ -182,7 +180,7 @@ static void UpdateStreamList(uint16_t varId, uint16_t period)
 	}
 
 	// if not add variable to the list
-	for(i = 0; i < 20; i++)
+	for(i = 0; i < STREAM_LIST_SIZE; i++)
 	{
 		if(mStreamList[i].enable == 0)
 		{

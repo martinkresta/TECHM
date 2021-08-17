@@ -22,8 +22,8 @@
 #define  VAR_TEMP_BOILER  100
 #define  VAR_TEMP_BOILER_IN  101
 #define  VAR_TEMP_BOILER_OUT  102
-#define  VAR_TEMP_TANK_IN  103
-#define  VAR_TEMP_TANK_OUT  104
+#define  VAR_TEMP_TANK_IN_H  103
+#define  VAR_TEMP_TANK_OUT_H  104
 #define  VAR_TEMP_TANK_1  105
 #define  VAR_TEMP_TANK_2  106
 #define  VAR_TEMP_TANK_3  107
@@ -33,6 +33,11 @@
 #define  VAR_TEMP_WALL_IN  111
 #define  VAR_TEMP_WALL_OUT  112
 #define  VAR_TEMP_BOILER_EXHAUST  113
+#define  VAR_TEMP_RAD_H  114
+#define  VAR_TEMP_RAD_C  115
+#define  VAR_TEMP_TANK_IN_C  116
+#define  VAR_TEMP_TANK_OUT_C  117
+
 
 #define  VAR_TEMP_TECHM_BOARD			120
 #define  VAR_TEMP_IOBOARD_D				121

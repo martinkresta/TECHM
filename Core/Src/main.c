@@ -559,16 +559,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, LED_Life_Pin|BUZZ_Pin|OW1_Pin|AV4_Pin
-                          |AV3_Pin|AV2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, LED_Life_Pin|BUZZ_Pin|OW2_Pin|OW1_Pin
+                          |AV4_Pin|AV3_Pin|AV2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, PUMP_RAD_Pin|PUMP_WALL_Pin|PUMP_BOIL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, OUT4_Pin|OUT5_Pin|OUT6_Pin|OUT1_Pin
-                          |OUT2_Pin|OUT3_Pin|ELV_Pin|LED_G_Pin
-                          |LED_R_Pin, GPIO_PIN_RESET);
+                          |OUT2_Pin|OUT3_Pin|OW3_Pin|ELV_Pin
+                          |LED_G_Pin|LED_R_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(AV1_GPIO_Port, AV1_Pin, GPIO_PIN_RESET);
@@ -576,10 +576,10 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : LED_Life_Pin BUZZ_Pin OW1_Pin AV4_Pin
-                           AV3_Pin AV2_Pin */
-  GPIO_InitStruct.Pin = LED_Life_Pin|BUZZ_Pin|OW1_Pin|AV4_Pin
-                          |AV3_Pin|AV2_Pin;
+  /*Configure GPIO pins : LED_Life_Pin BUZZ_Pin OW2_Pin OW1_Pin
+                           AV4_Pin AV3_Pin AV2_Pin */
+  GPIO_InitStruct.Pin = LED_Life_Pin|BUZZ_Pin|OW2_Pin|OW1_Pin
+                          |AV4_Pin|AV3_Pin|AV2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -617,11 +617,11 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(PG_48V_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : OUT4_Pin OUT5_Pin OUT6_Pin OUT1_Pin
-                           OUT2_Pin OUT3_Pin ELV_Pin LED_G_Pin
-                           LED_R_Pin */
+                           OUT2_Pin OUT3_Pin OW3_Pin ELV_Pin
+                           LED_G_Pin LED_R_Pin */
   GPIO_InitStruct.Pin = OUT4_Pin|OUT5_Pin|OUT6_Pin|OUT1_Pin
-                          |OUT2_Pin|OUT3_Pin|ELV_Pin|LED_G_Pin
-                          |LED_R_Pin;
+                          |OUT2_Pin|OUT3_Pin|OW3_Pin|ELV_Pin
+                          |LED_G_Pin|LED_R_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

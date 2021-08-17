@@ -105,6 +105,10 @@ void Error_Handler(void);
 #define OUT2_GPIO_Port GPIOB
 #define OUT3_Pin GPIO_PIN_14
 #define OUT3_GPIO_Port GPIOB
+#define OW3_Pin GPIO_PIN_15
+#define OW3_GPIO_Port GPIOB
+#define OW2_Pin GPIO_PIN_6
+#define OW2_GPIO_Port GPIOC
 #define OW1_Pin GPIO_PIN_7
 #define OW1_GPIO_Port GPIOC
 #define AV_ENC2_Pin GPIO_PIN_8

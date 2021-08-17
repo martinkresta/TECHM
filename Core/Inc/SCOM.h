@@ -16,6 +16,8 @@
 
 #define COM_BUFLEN	10
 
+#define NUM_OF_SCAN_VARS	50
+
 
 
 // all commands has to fit to 11-bit value .  0x0000 - 0x07FF

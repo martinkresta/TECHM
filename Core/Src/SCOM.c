@@ -29,7 +29,7 @@ uint8_t mTxBuffer[COM_BUFLEN];
 uint8_t mRxLength, mNewDataReady, mTxBusy;
 
 UART_HandleTypeDef* ComUart;
-sScanVariable mScanList[30];
+sScanVariable mScanList[NUM_OF_SCAN_VARS];
 
 uint8_t mPcConnected;
 uint16_t mPcHbTimer;
@@ -68,26 +68,29 @@ void SCOM_Update_10ms(void)
 		mPcConnected = 0;    // heartbeat timeout elapsed
 	}
 
-	// send network status every NS_SEND_PERIOD
-/*	mNsSendTimer += 10;
-	if (mNsSendTimer > NS_SEND_PERIOD)
-	{
-		mNsSendTimer = 0;
-		VAR_SetVariable(VAR_NETWORK_STATUS,COM_GetNetworkStatus(), 1);
-		SendVariable(VAR_NETWORK_STATUS);
-	} */
-
 
 	if (mPcConnected)  // send variables only if PC is connected
 	{
 		int i;
-		for(i = 0; i < 30; i++)
+
+		// send network status every NS_SEND_PERIOD
+		mNsSendTimer += 10;
+		if (mNsSendTimer > NS_SEND_PERIOD)
+		{
+			mNsSendTimer = 0;
+			VAR_SetVariable(VAR_NETWORK_STATUS,COM_GetNetworkStatus(), 1);
+			SendVariable(VAR_NETWORK_STATUS);
+		}
+
+
+		// do the timing of the scanned variables
+		for(i = 0; i < NUM_OF_SCAN_VARS; i++)
 		{
 			mScanList[i].timer+=10;
 		}
 
-
-		for(i = 0; i < 30; i++)
+    // and send them if its time
+		for(i = 0; i < NUM_OF_SCAN_VARS; i++)
 		{
 			if (mScanList[i].enable == 1 && mScanList[i].sendPeriod != 0)
 			{
@@ -117,19 +120,23 @@ static void InitPcScanList(void)
 	UpdateScanList(VAR_TEMP_TANK_5,1000);
 	UpdateScanList(VAR_TEMP_TANK_6,1000);
 
-	UpdateScanList(VAR_TEMP_TANK_IN,1000);
-	UpdateScanList(VAR_TEMP_TANK_OUT,1000);
+	UpdateScanList(VAR_TEMP_TANK_IN_H,1000);
+	UpdateScanList(VAR_TEMP_TANK_OUT_H,1000);
 
-/*	UpdateScanList(VAR_TEMP_BOILER,5000);
-	UpdateScanList(VAR_TEMP_BOILER_IN,5000);
-	UpdateScanList(VAR_TEMP_BOILER_OUT,5000);
+	UpdateScanList(VAR_TEMP_TANK_IN_C,1000);
+	UpdateScanList(VAR_TEMP_TANK_OUT_C,1000);
 
-	UpdateScanList(VAR_TEMP_WALL_IN,5000);
-	UpdateScanList(VAR_TEMP_WALL_OUT,5000);  */
-	UpdateScanList(VAR_TEMP_BOILER_EXHAUST,5000);
+	UpdateScanList(VAR_TEMP_BOILER,1000);
+	UpdateScanList(VAR_TEMP_BOILER_IN,1000);
+	UpdateScanList(VAR_TEMP_BOILER_OUT,1000);
+
+	UpdateScanList(VAR_TEMP_RAD_H,1000);
+	UpdateScanList(VAR_TEMP_RAD_C,1000);
+	UpdateScanList(VAR_TEMP_BOILER_EXHAUST,1000);
+
+
 
 	UpdateScanList(VAR_EL_HEATER_STATUS,1000);
-
 	UpdateScanList(VAR_EL_HEATER_POWER,1000);
 
 	UpdateScanList(VAR_BAT_SOC,1000);
@@ -157,7 +164,7 @@ static void UpdateScanList(uint16_t varId, uint16_t period)
 {
 	// go thru the list to find if entry already exists
 	int i;
-	for(i = 0; i < 20; i++)
+	for(i = 0; i < NUM_OF_SCAN_VARS; i++)
 	{
 		if(mScanList[i].varId == varId)
 		{
@@ -176,7 +183,7 @@ static void UpdateScanList(uint16_t varId, uint16_t period)
 	}
 
 	// if not add variable to the list
-	for(i = 0; i < 20; i++)
+	for(i = 0; i < NUM_OF_SCAN_VARS; i++)
 	{
 		if(mScanList[i].enable == 0)
 		{

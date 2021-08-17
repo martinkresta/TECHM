@@ -29,6 +29,7 @@ typedef struct
 	int16_t temp_10ths_of_deg;
 	eTempStatus status;
 	uint16_t VarId;
+	uint8_t owBusId;
 }sTemp;
 
 
@@ -37,10 +38,14 @@ typedef struct
 /* Private variables */
 uint8_t mNumOfAssignedSensors;
 sTemp mSensors[NUM_OF_ALL_SENSORS];
+uint16_t mTimer;
+uint8_t mReadId;
+uint8_t mConvertId;
+uint8_t mNumOfBuses;
 
 int16_t mPtcTemp;
 
-void AssignSensor(uint8_t sensorId, uint8_t varId);
+void AssignSensor(uint8_t sensorId, uint8_t varId, uint8_t busId);
 void ConvertPtc(void);
 
 // temp sensors ROM codes (see TempSensIDs.xlsx)
@@ -81,8 +86,6 @@ uint8_t mSensorsAddress[NUM_OF_ALL_SENSORS][8] =   // LSB on the left, transmit 
 
 };
 
-uint16_t mTimer;
-uint8_t mReadId;
 
 /* Public variables */
 
@@ -94,31 +97,35 @@ void TEMP_Init(void)
 {
 	mTimer = 0;
 	mReadId = 0;
+	mConvertId = 0;
 	mNumOfAssignedSensors = 0;
 
-	// default sensor assignment:
-//	AssignSensor(T303, VAR_TEMP_BOILER);
-//	AssignSensor(T110, VAR_TEMP_BOILER_IN);
-//	AssignSensor(T107, VAR_TEMP_BOILER_OUT);
+	// define hardware OW busses
+	OW_AddBus(0,OW1_GPIO_Port, OW1_Pin);
+	OW_AddBus(1,OW2_GPIO_Port, OW2_Pin);
+	// OW_AddBus(2,OW3_GPIO_Port, OW3_Pin);  // not used so far
 
-	//	AssignSensor(T101, VAR_TEMP_WALL_OUT);
-	//	AssignSensor(T109, VAR_TEMP_WALL_IN);
+	mNumOfBuses = 2;
 
-	AssignSensor(T_TECHM, VAR_TEMP_TECHM_BOARD);
+	// assign sensors on OW1 :
+	AssignSensor(T_TECHM, VAR_TEMP_TECHM_BOARD, 0);
+	AssignSensor(T108, VAR_TEMP_TANK_IN_H, 0);
+	AssignSensor(T109, VAR_TEMP_TANK_OUT_H, 0);
+	AssignSensor(T301, VAR_TEMP_TANK_1, 0);
+	AssignSensor(T302, VAR_TEMP_TANK_2, 0);
+	AssignSensor(T103, VAR_TEMP_TANK_3, 0);
+	AssignSensor(T104, VAR_TEMP_TANK_4, 0);
+	AssignSensor(T105, VAR_TEMP_TANK_5, 0);
+	AssignSensor(T306, VAR_TEMP_TANK_6, 0);
 
-	AssignSensor(T108, VAR_TEMP_TANK_IN);
-	AssignSensor(T109, VAR_TEMP_TANK_OUT);
-
-
-
-
-	AssignSensor(T301, VAR_TEMP_TANK_1);
-	AssignSensor(T302, VAR_TEMP_TANK_2);
-	AssignSensor(T103, VAR_TEMP_TANK_3);
-	AssignSensor(T104, VAR_TEMP_TANK_4);
-	AssignSensor(T105, VAR_TEMP_TANK_5);
-	AssignSensor(T306, VAR_TEMP_TANK_6);
-
+	// assign sensors on OW2 :
+	AssignSensor(T303, VAR_TEMP_BOILER, 1);
+	AssignSensor(T110, VAR_TEMP_BOILER_IN, 1);
+	AssignSensor(T107, VAR_TEMP_BOILER_OUT, 1);
+	AssignSensor(T101, VAR_TEMP_RAD_H, 1);
+	AssignSensor(T106, VAR_TEMP_RAD_C, 1);
+	AssignSensor(T102, VAR_TEMP_TANK_IN_C, 1);
+	AssignSensor(T8, VAR_TEMP_TANK_OUT_C, 1);
 }
 
 void TEMP_Update100ms(void)
@@ -144,13 +151,21 @@ void TEMP_Update100ms(void)
 
 		}
 		// trig conversion
-		OW_ConvertAll();
+
 	}
+
+	if (mTimer < mNumOfBuses)
+	{
+		OW_ConvertAll(mTimer);  //  convert one Bus
+	}
+
 
 	if (mTimer > 20)  // 2 sec delay
 	{
 
-		OW_ReadSensor(&(mSensorsAddress[mSensors[mReadId].sensorId]),&(mSensors[mReadId].temp_10ths_of_deg));
+		OW_ReadSensor(mSensors[mReadId].owBusId,
+									&(mSensorsAddress[mSensors[mReadId].sensorId]),
+									&(mSensors[mReadId].temp_10ths_of_deg));
 		mReadId++;
 
 	}
@@ -166,7 +181,7 @@ void TEMP_Update100ms(void)
 }
 
 
-void AssignSensor(uint8_t sensorId, uint8_t varId)
+void AssignSensor(uint8_t sensorId, uint8_t varId, uint8_t busId)
 {
 	if (mNumOfAssignedSensors < NUM_OF_ALL_SENSORS)
 	{
@@ -174,6 +189,7 @@ void AssignSensor(uint8_t sensorId, uint8_t varId)
 		mSensors[mNumOfAssignedSensors].temp_10ths_of_deg = 0x8000;
 		mSensors[mNumOfAssignedSensors].status = ets_NotReady;
 		mSensors[mNumOfAssignedSensors].VarId = varId;
+		mSensors[mNumOfAssignedSensors].owBusId = busId;
 	//	VAR_SetVariablePointer(varId,&(mSensors[mNumOfAssignedSensors].temp_10ths_of_deg));
 		mNumOfAssignedSensors++;
 	}
