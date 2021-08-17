@@ -185,6 +185,9 @@ void ConvertPtc(void)
 {
 	uint16_t PtcRaw = ADC_GetValue(0);  // raw ADC result
 	double Ptc_mV = V0/4096.0 * PtcRaw;  // convert to milivolts
+
+	Ptc_mV += 60;  // compensation of offset error ?   To be checked in full scale!
+
 	double V2 = (double)V0*R2/(R1+R2);   // Opamp inputs in miliVolts,
 	double Vptc = (V2*(R3+R4) - Ptc_mV*R3)/R4;
 	double Rpt = (Vptc*R5)/(V0 - Vptc);   // rezistance of PT1000 in ohms

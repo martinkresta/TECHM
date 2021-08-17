@@ -33,10 +33,10 @@ void APP_Init(void)
 	TEMP_Init();
 	VAR_Init();
 	SCOM_Init(&huart1);
-	ADC_Init(&hadc1, &hdma_adc1);
 	MCAN_Init(&hcan1, THIS_NODE);
   COM_Init(THIS_NODE);
   ELH_Init();
+	ADC_Init(&hadc1, &hdma_adc1);
 
 }
 
