@@ -47,6 +47,9 @@ extern UART_HandleTypeDef huart1;
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 
+extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -79,8 +82,10 @@ void Error_Handler(void);
 #define PTC_GPIO_Port GPIOC
 #define WM1_Pin GPIO_PIN_1
 #define WM1_GPIO_Port GPIOC
+#define WM1_EXTI_IRQn EXTI1_IRQn
 #define WM2_Pin GPIO_PIN_2
 #define WM2_GPIO_Port GPIOC
+#define WM2_EXTI_IRQn EXTI2_IRQn
 #define WM3_Pin GPIO_PIN_3
 #define WM3_GPIO_Port GPIOC
 #define WM4_Pin GPIO_PIN_0

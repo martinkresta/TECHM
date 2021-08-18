@@ -21,6 +21,7 @@
 #include "DO.h"
 #include "ADC.h"
 #include "ELHEATER.h"
+#include "WM.h"
 
 
 
@@ -37,6 +38,8 @@ void APP_Init(void)
   COM_Init(THIS_NODE);
   ELH_Init();
 	ADC_Init(&hadc1, &hdma_adc1);
+	DO_Init();
+	WM_Init();
 
 }
 
@@ -45,6 +48,9 @@ void APP_Start(void)
 
 	DO_SetElv(1);
 	MCAN_Start();
+
+	//DO_SetServoRad(30);    // testing only
+	//DO_SetServoWall(70);
 
 	while (1)   // endless loop
 	{

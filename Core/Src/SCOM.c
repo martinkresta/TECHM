@@ -241,6 +241,10 @@ static void ProcessMessage(void)
 			case CMD_TM_SET_PUMPS:
 				DO_SetPumps(data1);
 				break;
+			case CMD_TM_SET_SERVOVALVES:
+				DO_SetServoRad(data1);
+				DO_SetServoWall(data2);
+				break;
 			case CMD_SET_VAR_VALUE:
 				VAR_SetVariable(data1 & 0x7FFF, data2, ((data1 & 0x8000)? 0 : 1));
 				break;
