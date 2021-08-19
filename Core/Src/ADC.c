@@ -26,12 +26,19 @@ void ADC_Init(ADC_HandleTypeDef*  ADC, DMA_HandleTypeDef* DMA)
 
 void ADC_StartConversion(void)
 {
-	HAL_ADC_Start_DMA(adc, mResults, NUM_OF_CHANNELS);
+	HAL_ADC_Start_DMA(adc, (uint32_t*)mResults, NUM_OF_CHANNELS);
 }
 
 uint16_t ADC_GetValue(uint8_t channel)
 {
-	return mResults[channel];
+	if (channel < NUM_OF_CHANNELS)
+	{
+		return mResults[channel];
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 

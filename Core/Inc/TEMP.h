@@ -62,7 +62,7 @@
 #define 			R2			27000
 #define				R3			10000
 #define				R4			47000
-#define				V0			3313   // mV
+
 
 
 

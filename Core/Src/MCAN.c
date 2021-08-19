@@ -227,8 +227,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	if (mMcan.CanHw == hcan)
 	{
 		CB_Put(mMcan.Rx0Buf,(uint8_t*) &tmp);
-	//	LED_R_SetMode(eLED_BLINK_ONCE);  // yellow blink
-	//	LED_G_SetMode(eLED_BLINK_ONCE);
+		LED_B_SetMode(eLED_BLINK_ONCE);  // blue blink;
 	}
 
 }
@@ -241,7 +240,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	if (mMcan.CanHw == hcan)
 	{
 		CB_Put(mMcan.Rx1Buf,(uint8_t*) &tmp);
-	//	LED_B_SetMode(eLED_BLINK_ONCE);  // blue blink
+		LED_B_SetMode(eLED_BLINK_ONCE);  // blue blink
 	}
 
 }

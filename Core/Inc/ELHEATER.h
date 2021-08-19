@@ -28,6 +28,7 @@ typedef enum
 #define  MAX_LOAD_A								25  //
 
 #define  ONE_COIL_LOAD_A					10
+#define  NUM_OF_COILS							6
 
 #define  INCREASE_PERIOD_S				10
 

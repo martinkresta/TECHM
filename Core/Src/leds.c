@@ -194,7 +194,7 @@ static void LED_Control (sLED *led,uint8_t led_switch)
 			}			
 			break;
 		case eLED_BLINK_ONCE:
-			if(led->Led_Cnt <= 10)  // blink for 100ms
+			if(led->Led_Cnt <= 2)  // blink for 20ms
 			{
 				if(led->Logic == eLEDL_NEGATIVE)
 				{
@@ -221,7 +221,7 @@ static void LED_Control (sLED *led,uint8_t led_switch)
 			}		
 			break;
 		case eLED_FLASH:
-			if(led->Led_Cnt < 10)
+			if(led->Led_Cnt < 2)
 			{
 				if(led->Logic == eLEDL_NEGATIVE)
 				{

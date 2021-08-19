@@ -108,12 +108,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	if (GPIO_Pin == WM1_Pin)
 	{
 		mConsCold += 3;
-		VAR_SetVariable(VAR_CONS_COLD, (int16_t)(mConsCold/10), 1);
+		VAR_SetVariable(VAR_CONS_COLD, (int16_t)(mConsCold), 1);
 	}
 	if (GPIO_Pin == WM2_Pin)
 	{
 		mConsHot += 3;
-		VAR_SetVariable(VAR_CONS_HOT, (int16_t)(mConsHot/10), 1);
+		VAR_SetVariable(VAR_CONS_HOT, (int16_t)(mConsHot), 1);
 	}
 
 }

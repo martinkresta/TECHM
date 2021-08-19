@@ -136,8 +136,8 @@ void  DO_SetServoRad(int16_t pct)
 	if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PG_48V_GPIO_Port,PG_48V_Pin))
 	{
 		// not available power suuply for servo valves
-		HAL_TIM_PWM_Stop(TIM_SERVOS, CHANNEL_RAD);
-		return;
+//		HAL_TIM_PWM_Stop(TIM_SERVOS, CHANNEL_RAD);
+	//	return;
 	}
 	if (pct < 0) pct = 0;
 	if (pct > 100) pct = 100;
@@ -163,8 +163,8 @@ void  DO_SetServoWall(int16_t pct)
 	if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PG_48V_GPIO_Port,PG_48V_Pin))
 	{
 		// not available power suuply for servo valves
-		HAL_TIM_PWM_Stop(TIM_SERVOS, CHANNEL_WALL);
-		return;
+//		HAL_TIM_PWM_Stop(TIM_SERVOS, CHANNEL_WALL);
+//		return;
 	}
 	if (pct < 0) pct = 0;
 	if (pct > 100) pct = 100;

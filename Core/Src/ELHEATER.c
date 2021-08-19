@@ -11,6 +11,7 @@
 #include "COM.h"
 #include "VARS.h"
 #include "DO.h"
+#include "ADC.h"
 
 
 // module variables
@@ -22,6 +23,9 @@ int16_t mReqTankTemp;
 uint16_t mIncreaseRequest_cnt;
 uint16_t mDecreaseRequest_cnt;
 
+uint16_t mHeaterCurrents_mA[NUM_OF_COILS];
+uint16_t mOveralCurrent_10mA;
+
 
 
 /* Private methods declarations */
@@ -30,6 +34,7 @@ void IncreasePower(void);
 void DecreasePower(void);
 void SwitchOffImmediatelly(void);
 void CalculateHeaterLoad(void);
+int16_t ConvertAdcToCurrent_mA(uint16_t adcval);
 
 
 /*Global methods*/
@@ -56,9 +61,19 @@ void ELH_Update_1s(void)
 	int16_t load_A;
 
 
+	// measure the heater currents
+	mHeaterCurrents_mA[0] = ConvertAdcToCurrent_mA( ADC_GetValue(ADC_CHANNEL_HEATER_1));
+	mHeaterCurrents_mA[1] = ConvertAdcToCurrent_mA( ADC_GetValue(ADC_CHANNEL_HEATER_2));
+	mHeaterCurrents_mA[2] = ConvertAdcToCurrent_mA( ADC_GetValue(ADC_CHANNEL_HEATER_3));
+	mHeaterCurrents_mA[3] = ConvertAdcToCurrent_mA( ADC_GetValue(ADC_CHANNEL_HEATER_4));
+	mHeaterCurrents_mA[4] = ConvertAdcToCurrent_mA( ADC_GetValue(ADC_CHANNEL_HEATER_5));
+	mHeaterCurrents_mA[5] = ConvertAdcToCurrent_mA( ADC_GetValue(ADC_CHANNEL_HEATER_6));
+
 	// insert actual variables to VARS module
+	CalculateHeaterLoad();
 	VAR_SetVariable(VAR_EL_HEATER_STATUS, mState, 1);
 	VAR_SetVariable(VAR_EL_HEATER_POWER, mHeaterLoad_A, 1);
+	VAR_SetVariable(VAR_EL_HEATER_CURRENT, mOveralCurrent_10mA, 1);
 
 
 // collect the all informations to make decision about the power
@@ -126,6 +141,7 @@ void ELH_Update_1s(void)
 	if (((load_A - charging_A) + ONE_COIL_LOAD_A) < MAX_LOAD_A )
 	{
 		mIncreaseRequest_cnt ++;
+		mState = eElh_Heating;
 	}
 	else if ((load_A - charging_A) < MAX_LOAD_A )
 	{
@@ -160,10 +176,6 @@ void ELH_Update_1s(void)
 		}
 	}
 
-
-	// insert actual variables to VARS module
-//	VAR_SetVariable(VAR_EL_HEATER_STATUS, mState, 1);
-//	VAR_SetVariable(VAR_EL_HEATER_POWER, mHeaterLoad_A, 1);
 }
 
 uint16_t ELH_GetStatus(void);
@@ -204,6 +216,7 @@ void SwitchOffImmediatelly(void)
 void CalculateHeaterLoad(void)
 {
 	int16_t numOfHeatingElements = 0;
+	uint32_t overallCurrent_mA = 0;
 	uint8_t i;
 	for (i = 0; i < 6; i++)
 	{
@@ -211,7 +224,17 @@ void CalculateHeaterLoad(void)
 		{
 			numOfHeatingElements++;
 		}
+		overallCurrent_mA += mHeaterCurrents_mA[i];
 	}
 	mHeaterLoad_A = numOfHeatingElements * ONE_COIL_LOAD_A;
+	mOveralCurrent_10mA = (int16_t)(overallCurrent_mA/10);
 }
 
+
+inline int16_t ConvertAdcToCurrent_mA(uint16_t adcval)
+{
+	int16_t current = 0;
+	uint32_t sense_mv = ADC_VREF_MV/4096.0 * adcval;
+	current = (int16_t)((sense_mv * 1000) / 84);
+	return current;
+}

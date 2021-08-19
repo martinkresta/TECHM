@@ -46,15 +46,21 @@ void APP_Init(void)
 void APP_Start(void)
 {
 
-	DO_SetElv(1);
+	DO_SetElv(1);        // open watter supply valve
+	DO_SetServoRad(0);   // close servo valves
+	DO_SetServoWall(0);
+
 	MCAN_Start();
 
-	//DO_SetServoRad(30);    // testing only
-	//DO_SetServoWall(70);
 
 	while (1)   // endless loop
 	{
 		Scheduler_Check_Flag();
+
+
+
+
+
 	}
 }
 

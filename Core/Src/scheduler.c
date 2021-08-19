@@ -247,6 +247,7 @@ static void Timer_Task_250ms(void)
 static void Timer_Task_500ms(void)
 {
 	//HAL_GPIO_TogglePin(LED_B_GPIO_Port,LED_B_Pin);
+
 }
 
 /**

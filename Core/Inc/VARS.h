@@ -46,8 +46,10 @@
 
 #define  VAR_TEMP_DOWNSTAIRS			124
 
-#define  VAR_EL_HEATER_STATUS  	80
-#define  VAR_EL_HEATER_POWER  	81
+#define  VAR_EL_HEATER_STATUS  80
+#define  VAR_EL_HEATER_POWER  81
+#define  VAR_EL_HEATER_CURRENT  82
+
 
 #define  VAR_FLOW_COLD  90
 #define  VAR_FLOW_HOT  91

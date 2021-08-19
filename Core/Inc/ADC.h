@@ -14,6 +14,17 @@
 
 #define NUM_OF_CHANNELS		7
 
+#define ADC_CHANNEL_PTC				0
+#define ADC_CHANNEL_HEATER_1	1
+#define ADC_CHANNEL_HEATER_2	2
+#define ADC_CHANNEL_HEATER_3	3
+#define ADC_CHANNEL_HEATER_4	4
+#define ADC_CHANNEL_HEATER_5	5
+#define ADC_CHANNEL_HEATER_6	6
+
+
+#define ADC_VREF_MV					3313   // mV
+
 void ADC_Init(ADC_HandleTypeDef*  adc, DMA_HandleTypeDef* dma);
 
 void ADC_StartConversion(void);

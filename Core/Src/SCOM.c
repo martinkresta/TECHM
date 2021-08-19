@@ -138,10 +138,17 @@ static void InitPcScanList(void)
 
 	UpdateScanList(VAR_EL_HEATER_STATUS,1000);
 	UpdateScanList(VAR_EL_HEATER_POWER,1000);
+	UpdateScanList(VAR_EL_HEATER_CURRENT,1000);
 
 	UpdateScanList(VAR_BAT_SOC,1000);
 	UpdateScanList(VAR_LOAD_A10,1000);
 	UpdateScanList(VAR_CHARGING_A10,1000);
+
+	UpdateScanList(VAR_FLOW_COLD,240);
+	UpdateScanList(VAR_FLOW_HOT,240);
+	UpdateScanList(VAR_CONS_COLD,240);
+	UpdateScanList(VAR_CONS_HOT,240);
+
 }
 
 //returns 0 when OK, 1 if transceiver is busy

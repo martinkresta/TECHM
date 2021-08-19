@@ -187,14 +187,14 @@ void AssignSensor(uint8_t sensorId, uint8_t varId, uint8_t busId)
 
 void ConvertPtc(void)
 {
-	uint16_t PtcRaw = ADC_GetValue(0);  // raw ADC result
-	double Ptc_mV = V0/4096.0 * PtcRaw;  // convert to milivolts
+	uint16_t PtcRaw = ADC_GetValue(ADC_CHANNEL_PTC);  // raw ADC result
+	double Ptc_mV = ADC_VREF_MV/4096.0 * PtcRaw;  // convert to milivolts
 
 	Ptc_mV += 60;  // compensation of offset error ?   TODO checked in full scale!
 
-	double V2 = (double)V0*R2/(R1+R2);   // Opamp inputs in miliVolts,
+	double V2 = (double)ADC_VREF_MV * R2/(R1+R2);   // Opamp inputs in miliVolts,
 	double Vptc = (V2*(R3+R4) - Ptc_mV*R3)/R4;
-	double Rpt = (Vptc*R5)/(V0 - Vptc);   // resistance of PT1000 in ohms
+	double Rpt = (Vptc*R5)/(ADC_VREF_MV - Vptc);   // resistance of PT1000 in ohms
 	double temp = (Rpt - 1000) * 2.61;		// 10ths of degree C
 	mPtcTemp = (int16_t)temp;
 
