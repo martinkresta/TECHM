@@ -49,6 +49,9 @@ extern DMA_HandleTypeDef hdma_usart1_tx;
 
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
+extern RTC_HandleTypeDef hrtc;
+
+extern IWDG_HandleTypeDef hiwdg;
 
 /* USER CODE END ET */
 

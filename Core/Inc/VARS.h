@@ -49,6 +49,8 @@
 #define  VAR_EL_HEATER_STATUS  80
 #define  VAR_EL_HEATER_POWER  81
 #define  VAR_EL_HEATER_CURRENT  82
+#define  VAR_EL_HEATER_CONS  83
+
 
 
 #define  VAR_FLOW_COLD  90

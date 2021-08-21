@@ -12,6 +12,7 @@
 #include "VARS.h"
 #include "DO.h"
 #include "ADC.h"
+#include "RTC.h"
 
 
 // module variables
@@ -29,6 +30,10 @@ uint16_t mHeaterCurrents_mA[NUM_OF_COILS];
 uint16_t mOveralCurrent_10mA;
 
 int16_t mMaxHeaterLoad;
+
+int16_t mTodayEnergy_Wh;
+uint32_t mEnergyCounter_mWh;
+uint8_t mTodayDayNumber;
 
 
 
@@ -56,6 +61,9 @@ void ELH_Init(void)
 	mIncreaseRequest_cnt= 0;
 	mDecreaseRequest_cnt= 0;
 
+	mTodayEnergy_Wh = 0;
+	mEnergyCounter_mWh = 0;
+	mTodayDayNumber = 0;
 
 }
 
@@ -83,6 +91,29 @@ void ELH_Update_1s(void)
 	VAR_SetVariable(VAR_EL_HEATER_STATUS, mState, 1);
 	VAR_SetVariable(VAR_EL_HEATER_POWER, mHeaterLoad_A, 1);
 	VAR_SetVariable(VAR_EL_HEATER_CURRENT, mOveralCurrent_10mA, 1);
+
+	// calculate consumed energy today
+	uint32_t mPowerW = mHeaterLoad_A * VAR_GetVariable(VAR_BAT_VOLTAGE_V10, &invalid)/10;
+	mEnergyCounter_mWh += (mPowerW * 1000 )/ 3600;
+	if (mEnergyCounter_mWh > 1000)
+	{
+		mTodayEnergy_Wh++;
+		mEnergyCounter_mWh -= 1000;
+	}
+	if (mEnergyCounter_mWh > 1000)
+	{
+		mTodayEnergy_Wh++;
+		mEnergyCounter_mWh -= 1000;
+	}
+
+	VAR_SetVariable(VAR_EL_HEATER_CONS, mTodayEnergy_Wh, 1);
+
+	// reset the energy counter at midnight
+	if (mTodayDayNumber != RTC_GetTime().Day)
+	{
+		mTodayEnergy_Wh = 0;
+		mTodayDayNumber = RTC_GetTime().Day;
+	}
 
 
 // collect the all informations to make decision about the power
@@ -152,7 +183,7 @@ void ELH_Update_1s(void)
 		}
 		else  // if charger is enabled (Charging > 1A) adjust the load to be less than charging current
 		{
-			mMaxHeaterLoad = 0;
+			mMaxHeaterLoad = -2;  // at least 2 Amps should stay for charging
 		}
 
 		// Battery actual load
@@ -165,6 +196,8 @@ void ELH_Update_1s(void)
 		else if ((load_A - charging_A) < mMaxHeaterLoad )
 		{
 			// do nothig, this is the sweet spot we want to reach
+			mIncreaseRequest_cnt = 0;
+			mDecreaseRequest_cnt = 0;
 		}
 		else
 		{

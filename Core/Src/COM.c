@@ -130,8 +130,9 @@ static void InitStreamList(void)
 	UpdateStreamList(VAR_TEMP_WALL_OUT,5000);
 
 	UpdateStreamList(VAR_EL_HEATER_STATUS,1000);
-
 	UpdateStreamList(VAR_EL_HEATER_POWER,1000);
+	UpdateStreamList(VAR_EL_HEATER_CONS,2000);
+
 
 /*	UpdateStreamList(VAR_BAT_SOC,1000);
 	UpdateStreamList(VAR_LOAD_A10,1000);

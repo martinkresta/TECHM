@@ -22,6 +22,8 @@
 #include "ADC.h"
 #include "ELHEATER.h"
 #include "WM.h"
+#include "watchdog.h"
+#include "RTC.h"
 
 
 
@@ -40,11 +42,25 @@ void APP_Init(void)
 	ADC_Init(&hadc1, &hdma_adc1);
 	DO_Init();
 	WM_Init();
+	WDG_Init(3000);
+	//RTC_Init();
+
+
 
 }
 
 void APP_Start(void)
 {
+
+	sDateTime now;
+	now.Day = 21;
+	now.Hour = 16;
+	now.Minute = 10;
+	now.Month = 8;
+	now.Second = 0;
+	now.Year = 2021;
+
+	RTC_SetTime(now);
 
 	DO_SetElv(1);        // open watter supply valve
 	DO_SetServoRad(0);   // close servo valves
@@ -56,10 +72,6 @@ void APP_Start(void)
 	while (1)   // endless loop
 	{
 		Scheduler_Check_Flag();
-
-
-
-
 
 	}
 }

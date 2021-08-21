@@ -12,6 +12,7 @@
 #include "ADC.h"
 #include "ELHEATER.h"
 #include "WM.h"
+#include "watchdog.h"
 
 
 
@@ -260,7 +261,7 @@ static void Timer_Task_500ms(void)
 static void Timer_Task_1s(void)
 {	
 	ELH_Update_1s();
-
+	WDG_Refresh();
 	//LED_Error_SetMode(eLED_BLINK_ONCE);
 	//	OW_Read(0);
 	//		OW_ConvertAll();
