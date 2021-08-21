@@ -115,7 +115,7 @@ void COM_Update_10ms(void)
 // Compile-time initialization of list of variables periodically sent toi the PC app
 static void InitStreamList(void)
 {
-	UpdateStreamList(VAR_TEMP_TECHM_BOARD,5000);
+	UpdateStreamList(VAR_TEMP_TECHM_BOARD,1000);
 	UpdateStreamList(VAR_TEMP_TANK_1,5000);
 	UpdateStreamList(VAR_TEMP_TANK_2,5000);
 	UpdateStreamList(VAR_TEMP_TANK_3,5000);
@@ -123,17 +123,17 @@ static void InitStreamList(void)
 	UpdateStreamList(VAR_TEMP_TANK_5,5000);
 	UpdateStreamList(VAR_TEMP_TANK_6,5000);
 
-/*	UpdateStreamList(VAR_TEMP_BOILER,5000);
+	UpdateStreamList(VAR_TEMP_BOILER,5000);
 	UpdateStreamList(VAR_TEMP_BOILER_IN,5000);
 	UpdateStreamList(VAR_TEMP_BOILER_OUT,5000);
 	UpdateStreamList(VAR_TEMP_WALL_IN,5000);
 	UpdateStreamList(VAR_TEMP_WALL_OUT,5000);
 
-	UpdateStreamList(VAR_EL_HEATER_STATUS,1500);
+	UpdateStreamList(VAR_EL_HEATER_STATUS,1000);
 
-	UpdateStreamList(VAR_EL_HEATER_POWER,1500);
+	UpdateStreamList(VAR_EL_HEATER_POWER,1000);
 
-	UpdateStreamList(VAR_BAT_SOC,1000);
+/*	UpdateStreamList(VAR_BAT_SOC,1000);
 	UpdateStreamList(VAR_LOAD_A10,1000);
 	UpdateStreamList(VAR_CHARGING_A10,1000);*/
 
@@ -152,6 +152,12 @@ static void ProcessMessage(s_CanRxMsg* msg)
 	switch (cmd)
 	{
 		case CMD_BUTTON_STATE:
+			break;
+		case  CMD_VAR_VALUE:
+			if(producer == NODEID_IOBOARD_U) // accept values only from Ioboard_U
+			{
+				VAR_SetVariable(par1, par2, 1);  // tbd check valid flag
+			}
 			break;
 	}
 	return;

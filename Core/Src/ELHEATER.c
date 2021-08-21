@@ -17,6 +17,8 @@
 // module variables
 
 uint16_t mHeaterMask = 0;
+uint16_t mHeaterEnaMask = 0;
+uint8_t mSocEnableHys = 0;
 eElhState mState;
 static int16_t mHeaterLoad_A;
 int16_t mReqTankTemp;
@@ -25,6 +27,9 @@ uint16_t mDecreaseRequest_cnt;
 
 uint16_t mHeaterCurrents_mA[NUM_OF_COILS];
 uint16_t mOveralCurrent_10mA;
+
+int16_t mMaxHeaterLoad;
+
 
 
 
@@ -43,10 +48,14 @@ void ELH_Init(void)
 {
 	mReqTankTemp = 50;
 	mHeaterMask = 0;
+	mHeaterEnaMask = DEF_ENABLE_MASK;
 	mState = eElh_NoFreePower;
 	mHeaterLoad_A = 0;
+	mMaxHeaterLoad = 0;
+
 	mIncreaseRequest_cnt= 0;
 	mDecreaseRequest_cnt= 0;
+
 
 }
 
@@ -107,6 +116,17 @@ void ELH_Update_1s(void)
 		SwitchOffImmediatelly();
 		return;
 	}
+	// enable/disable hysteresis
+	if (soc >=  SOC_ENABLE)
+	{
+		mSocEnableHys = 1;
+	}
+	if (soc < SOC_DISABLE)
+	{
+		mSocEnableHys = 0;
+		mState = eElh_LowSOC;
+		SwitchOffImmediatelly();
+	}
 	// TECHM Board temperature
 	if (boartTemp_C > MAX_BOARD_TEMP_C)
 		{
@@ -122,58 +142,65 @@ void ELH_Update_1s(void)
 		return;
 	}
 
-// Battery SOC
-	if (soc <  MIN_SOC)
+	// regulating load current to match to actual charging vs discharging
+	if ( mSocEnableHys == 1)
+	{
+		// When SOC is being discharged from 100%, and charger is still disabled allow discharging 25A
+		if(soc > 95 && charging_A <=1)
+		{
+			mMaxHeaterLoad = MAX_LOAD_A;
+		}
+		else  // if charger is enabled (Charging > 1A) adjust the load to be less than charging current
+		{
+			mMaxHeaterLoad = 0;
+		}
+
+		// Battery actual load
+		if (((load_A - charging_A) + ONE_COIL_LOAD_A) < mMaxHeaterLoad )
+		{
+			mIncreaseRequest_cnt ++;
+			mDecreaseRequest_cnt = 0;
+			mState = eElh_Heating;
+		}
+		else if ((load_A - charging_A) < mMaxHeaterLoad )
+		{
+			// do nothig, this is the sweet spot we want to reach
+		}
+		else
+		{
+			mDecreaseRequest_cnt ++;
+			mIncreaseRequest_cnt = 0;
+
+			if (mHeaterLoad_A == 0)
+			{
+				mState = eElh_NoFreePower;
+			}
+		}
+
+		// increase power only every X seconds, to prevent switching all switches simultaneously
+		if (mIncreaseRequest_cnt > INCREASE_PERIOD_S)
+		{
+			mIncreaseRequest_cnt = 0;
+			IncreasePower();
+			mState = eElh_Heating;
+		}
+
+		if (mDecreaseRequest_cnt > INCREASE_PERIOD_S)
+		{
+			mDecreaseRequest_cnt = 0;
+			DecreasePower();
+			mState = eElh_Heating;
+			if (mHeaterLoad_A == 0)
+			{
+				mState = eElh_NoFreePower;
+			}
+		}
+
+	}
+	else  // heating not enabled
 	{
 		mState = eElh_LowSOC;
 		SwitchOffImmediatelly();
-		return;
-	}
-// Solar current
-	if (charging_A < ONE_COIL_LOAD_A && soc < 95)
-	{
-		// turn off if sun power is too low
-		mState = eElh_NoFreePower;
-		SwitchOffImmediatelly();
-		return;
-	}
-// Battery actual load
-	if (((load_A - charging_A) + ONE_COIL_LOAD_A) < MAX_LOAD_A )
-	{
-		mIncreaseRequest_cnt ++;
-		mState = eElh_Heating;
-	}
-	else if ((load_A - charging_A) < MAX_LOAD_A )
-	{
-		// do nothig, this is the sweet spot we want to reach
-	}
-	else
-	{
-		mDecreaseRequest_cnt ++;
-
-		if (mHeaterLoad_A == 0)
-		{
-			mState = eElh_NoFreePower;
-		}
-	}
-
-	// increase power only every X seconds, to prevent switching all switches simultaneously
-	if (mIncreaseRequest_cnt > INCREASE_PERIOD_S)
-	{
-		mIncreaseRequest_cnt = 0;
-		IncreasePower();
-		mState = eElh_Heating;
-	}
-
-	if (mDecreaseRequest_cnt > INCREASE_PERIOD_S)
-	{
-		mDecreaseRequest_cnt = 0;
-		DecreasePower();
-		mState = eElh_Heating;
-		if (mHeaterLoad_A == 0)
-		{
-			mState = eElh_NoFreePower;
-		}
 	}
 
 }
@@ -193,6 +220,7 @@ void IncreasePower(void)
 {
 	mHeaterMask |= 0x40;
 	mHeaterMask = mHeaterMask >> 1;
+	mHeaterMask &=mHeaterEnaMask;
 	DO_SetElHeaters(mHeaterMask);
 	CalculateHeaterLoad();
 }
@@ -200,6 +228,7 @@ void IncreasePower(void)
 void DecreasePower(void)
 {
 	mHeaterMask = mHeaterMask << 1;
+	mHeaterMask &= mHeaterEnaMask;
 	DO_SetElHeaters(mHeaterMask);
 	CalculateHeaterLoad();
 }
@@ -220,7 +249,7 @@ void CalculateHeaterLoad(void)
 	uint8_t i;
 	for (i = 0; i < 6; i++)
 	{
-		if (mHeaterMask & (0x01 << i))
+		if ((mHeaterMask) & (0x01 << i))
 		{
 			numOfHeatingElements++;
 		}
