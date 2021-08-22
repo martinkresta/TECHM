@@ -68,6 +68,8 @@ void APP_Start(void)
 
 	MCAN_Start();
 
+	VAR_SetVariable(VAR_BAT_VOLTAGE_V10, 520, 1);
+
 
 	while (1)   // endless loop
 	{

@@ -27,17 +27,18 @@ void VAR_Init(void)
 
 int16_t VAR_GetVariable(uint16_t varId, uint16_t* invalid)
 {
+	if (invalid == NULL) return;
 	if (varId < NUM_OF_VARIABLES)
 	{
 		if(Vars[varId].valid == 0)
 		{
-			if (invalid != NULL) *invalid |= INVALID_FLAG;
+			*invalid |= INVALID_FLAG;
 		}
 		return Vars[varId].value;
 	}
 	else
 	{
-		if (invalid != NULL) *invalid |= INVALID_FLAG;
+		*invalid |= INVALID_FLAG;
 		return 0;
 	}
 }
@@ -45,17 +46,18 @@ int16_t VAR_GetVariable(uint16_t varId, uint16_t* invalid)
 
 int16_t* VAR_GetVariablePointer(uint8_t varId, uint16_t* invalid)
 {
+	if (invalid == NULL) return;
 	if (varId < NUM_OF_VARIABLES)
 	{
 		if(Vars[varId].valid == 0)
 		{
-			if (invalid != NULL) *invalid |= INVALID_FLAG;
+			*invalid |= INVALID_FLAG;
 		}
 		return &(Vars[varId].value);
 	}
 	else
 	{
-		if (invalid != NULL) *invalid |= INVALID_FLAG;
+		*invalid |= INVALID_FLAG;
 		return &(Vars[varId].value);
 	}
 }

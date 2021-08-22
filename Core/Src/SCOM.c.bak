@@ -208,17 +208,14 @@ static void UpdateScanList(uint16_t varId, uint16_t period)
 static void SendVariable(uint16_t id)
 {
 	uint16_t invalid = 0;
-	uint16_t validflag = 0;
 	int16_t tmp = VAR_GetVariable(id, &invalid);
-	validflag = (invalid == INVALID_FLAG ? 0 : 1);
+	id |= invalid;
 	mTxBuffer[0] = CMD_TM_VAR_VALUE >> 8;
 	mTxBuffer[1] = CMD_TM_VAR_VALUE & 0xFF;
 	mTxBuffer[2] = id >> 8;
 	mTxBuffer[3] = id  & 0xFF;
 	mTxBuffer[4] = tmp >> 8;
 	mTxBuffer[5] = tmp & 0xFF;
-	mTxBuffer[6] = validflag >> 8;
-	mTxBuffer[7] = validflag & 0xFF;
 	Send();
 }
 

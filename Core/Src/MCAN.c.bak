@@ -227,7 +227,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	if (mMcan.CanHw == hcan)
 	{
 		CB_Put(mMcan.Rx0Buf,(uint8_t*) &tmp);
-		LED_B_SetMode(eLED_BLINK_ONCE);  // blue blink
+		LED_B_SetMode(eLED_BLINK_ONCE);  // blue blink;
 	}
 
 }

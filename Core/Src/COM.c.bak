@@ -110,17 +110,6 @@ void COM_Update_10ms(void)
 	MCAN_SendFrame(CMD_BUTTON_STATE + mNodeId, data, 8);
 }*/
 
-
-void COM_SendVariable(uint16_t varId)
-{
-	SendVariable(varId);
-}
-
-void COM_SendMessage(uint8_t cmd, uint8_t* data, uint8_t dlc)
-{
-	MCAN_SendFrame(cmd, data, dlc);
-}
-
 /*Private methods*/
 
 // Compile-time initialization of list of variables periodically sent toi the PC app
@@ -175,7 +164,10 @@ static void ProcessMessage(s_CanRxMsg* msg)
 		case CMD_BUTTON_STATE:
 			break;
 		case  CMD_VAR_VALUE:
-			VAR_SetVariable(par1, par2, par3);  // tbd check valid flag
+			if(producer == NODEID_IOBOARD_U) // accept values only from Ioboard_U
+			{
+				VAR_SetVariable(par1, par2, 1);  // tbd check valid flag
+			}
 			break;
 	}
 	return;
@@ -222,17 +214,15 @@ static void UpdateStreamList(uint16_t varId, uint16_t period)
 static void SendVariable(uint16_t id)
 {
 	uint16_t invalid = 0;
-	uint16_t validflag = 0;
 	int16_t tmp = VAR_GetVariable(id, &invalid);
-	validflag = (invalid == INVALID_FLAG ? 0 : 1);
 	uint8_t data[8];
 	data[0] = id >> 8;
 	data[1] = id  & 0xFF;
 	data[2] = tmp >> 8;
 	data[3] = tmp & 0xFF;
-	data[4] = validflag >> 8;
-	data[5] = validflag & 0xFF;
-	data[6] = 0;
+	data[4] = invalid >> 8;
+	data[5] = invalid & 0xFF;
+	data[5] = 0;
 	data[7] = 0;
 	MCAN_SendFrame(CMD_VAR_VALUE + mNodeId, data, 8);
 }

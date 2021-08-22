@@ -183,7 +183,7 @@ static void Timer_Task_1ms(void)
 */
 static void Timer_Task_5ms(void)
 {	
-//	COM_Transmit();
+	MCAN_Transmit();
 }
 
 /**

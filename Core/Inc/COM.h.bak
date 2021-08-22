@@ -29,7 +29,5 @@ void COM_Update_10ms(void);
 
 uint8_t COM_GetNodeStatus(uint8_t nodeId);
 int16_t COM_GetNetworkStatus(void);
-void COM_SendVariable(uint16_t varId);
-void COM_SendMessage(uint8_t cmd, uint8_t* data, uint8_t dlc);
 
 #endif /* INC_COM_H_ */
