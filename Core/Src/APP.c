@@ -24,6 +24,7 @@
 #include "WM.h"
 #include "watchdog.h"
 #include "RTC.h"
+#include "HEATING.h"
 
 
 
@@ -43,6 +44,7 @@ void APP_Init(void)
 	DO_Init();
 	WM_Init();
 	WDG_Init(3000);
+	HC_Init();
 	//RTC_Init();
 
 
@@ -54,7 +56,7 @@ void APP_Start(void)
 
 	sDateTime now;
 	now.Day = 21;
-	now.Hour = 16;
+	now.Hour = 17;
 	now.Minute = 10;
 	now.Month = 8;
 	now.Second = 0;
@@ -65,6 +67,8 @@ void APP_Start(void)
 	DO_SetElv(1);        // open watter supply valve
 	DO_SetServoRad(0);   // close servo valves
 	DO_SetServoWall(0);
+
+	DO_SetPumps(0x06);
 
 	MCAN_Start();
 

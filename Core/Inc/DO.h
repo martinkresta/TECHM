@@ -15,6 +15,11 @@
 #define CHANNEL_RAD		TIM_CHANNEL_2
 #define CHANNEL_WALL	TIM_CHANNEL_1
 
+#define PUMP_BOILER			0x01
+#define PUMP_WALL				0x02
+#define PUMP_RAD				0x04
+
+
 void DO_Init();
 
 void	DO_SetElHeaters(uint8_t heaterMask);

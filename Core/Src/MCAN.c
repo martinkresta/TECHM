@@ -118,22 +118,22 @@ void MCAN_Update_10ms(void)
 				mNodes[nodeId].timeout_cnt = 0;
 			}
 		}
-
-		// Check timeout of all nodes
-		for(i = 0; i < MAX_NUM_OF_NODES; i++)
-		{
-			mNodes[i].timeout_cnt += 10;  // 10ms period of execution of this fcn
-			if (mNodes[i].timeout_cnt > mNodes[i].timeout &&  // HB period elapsed
-					mNodes[i].canStatus != eNS_NMT_UNKNOWN)
-			{
-				mNodes[i].timeout_cnt = 0;
-				mNodes[i].canStatus = eNS_NMT_UNKNOWN;
-				// TBD notify app about elapsed timeout
-				//Send(NmtMsg);
-			}
-		}
-
 	}
+
+	// Check timeout of all nodes
+	for(i = 0; i < MAX_NUM_OF_NODES; i++)
+	{
+		mNodes[i].timeout_cnt += 10;  // 10ms period of execution of this fcn
+		if (mNodes[i].timeout_cnt > mNodes[i].timeout &&  // HB period elapsed
+				mNodes[i].canStatus != eNS_NMT_UNKNOWN)
+		{
+			mNodes[i].timeout_cnt = 0;
+			mNodes[i].canStatus = eNS_NMT_UNKNOWN;
+			// TBD notify app about elapsed timeout
+			//Send(NmtMsg);
+		}
+	}
+
 	// Send heartbeat if it's time
 	mMcan.Node.timeout_cnt += 10;
 	if (mMcan.Node.timeout_cnt >= mMcan.Node.timeout)

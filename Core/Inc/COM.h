@@ -9,6 +9,7 @@
 #define INC_COM_H_
 
 #include "main.h"
+#include "MCAN.h"
 
 
 // CAN ids

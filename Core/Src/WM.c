@@ -7,6 +7,7 @@
 
 #include "OW.h"
 #include "VARS.h"
+#include "RTC.h"
 
 // private variables
 
@@ -17,12 +18,15 @@ static uint32_t mLastConsCold, mLastConsHot;
 
 static uint32_t mP2PCold, mP2PHot;   // pulse to pulse period
 
+uint8_t mTodayDayNumber;
+
 void WM_Init(void)
 {
 	mFlowCold_dlpm = 0;
 	mFlowHot_dlpm = 0;
 	mConsCold = 0;
 	mConsHot = 0;
+	mTodayDayNumber = 0;
 }
 
 void WM_Update_10ms(void)
@@ -57,19 +61,27 @@ void WM_Update_10ms(void)
 			mP2PHot = 0;
 			VAR_SetVariable(VAR_FLOW_HOT, mFlowHot_dlpm, 1);
 		}
-		else
+	else
+	{
+		mP2PHot ++;
+		// zero the flow, if current P2P is twice longer then previous
+		if (mFlowHot_dlpm > 0)
 		{
-			mP2PHot ++;
-			// zero the flow, if current P2P is twice longer then previous
-			if (mFlowHot_dlpm > 0)
+			if (mP2PHot > 2*(18000/mFlowHot_dlpm))
 			{
-				if (mP2PHot > 2*(18000/mFlowHot_dlpm))
-				{
-					mFlowHot_dlpm = 0;
-					VAR_SetVariable(VAR_FLOW_HOT, mFlowHot_dlpm, 1);
-				}
+				mFlowHot_dlpm = 0;
+				VAR_SetVariable(VAR_FLOW_HOT, mFlowHot_dlpm, 1);
 			}
 		}
+	}
+
+	// reset the energy counter at midnight
+	if (mTodayDayNumber != RTC_GetTime().Day)
+	{
+		mConsHot = 0;
+		mConsCold = 0;
+		mTodayDayNumber = RTC_GetTime().Day;
+	}
 
 }
 

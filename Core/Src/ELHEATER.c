@@ -34,6 +34,7 @@ int16_t mMaxHeaterLoad;
 int16_t mTodayEnergy_Wh;
 uint32_t mEnergyCounter_mWh;
 uint8_t mTodayDayNumber;
+uint8_t mBatteryBalancedToday;
 
 
 
@@ -64,6 +65,7 @@ void ELH_Init(void)
 	mTodayEnergy_Wh = 0;
 	mEnergyCounter_mWh = 0;
 	mTodayDayNumber = 0;
+	mBatteryBalancedToday = 0;
 
 }
 
@@ -113,26 +115,13 @@ void ELH_Update_1s(void)
 	{
 		mTodayEnergy_Wh = 0;
 		mTodayDayNumber = RTC_GetTime().Day;
+		mBatteryBalancedToday = 0;
 	}
 
 
 // collect the all informations to make decision about the power
 
-// Over temperature input (emergency thermostate)
-	if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ETS_GPIO_Port,ETS_Pin))
-	{ // overtemperature
-		mState = eElh_TankOvertemperature;
-		SwitchOffImmediatelly();
-		return;
-	}
 
-// 48V Supply availability
-	if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PG_48V_GPIO_Port,PG_48V_Pin))
-	{ // 48V not available
-		mState = eElh_48VFail;
-		SwitchOffImmediatelly();
-		return;
-	}
 
 	// collect the variables
 	invalid = 0;
@@ -148,29 +137,62 @@ void ELH_Update_1s(void)
 		return;
 	}
 	// enable/disable hysteresis
-	if (soc >=  SOC_ENABLE)
+	if ((soc >=  SOC_ENABLE) && (charging_A == 0))   // battery balanced
+	{
+		mSocEnableHys = 1;
+		mBatteryBalancedToday = 1;
+	}
+	if ((soc > SOC_DISABLE) && (mBatteryBalancedToday == 1))
 	{
 		mSocEnableHys = 1;
 	}
-	if (soc < SOC_DISABLE)
-	{
-		mSocEnableHys = 0;
-		mState = eElh_LowSOC;
+
+	// Safety checks
+	// Over temperature input (emergency thermostate)
+	if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ETS_GPIO_Port,ETS_Pin))
+	{ // overtemperature
+		mState = eElh_TankOvertemperature;
 		SwitchOffImmediatelly();
+		return;
 	}
+
+// 48V Supply availability
+	if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PG_48V_GPIO_Port,PG_48V_Pin))
+	{ // 48V not available
+		mState = eElh_48VFail;
+		SwitchOffImmediatelly();
+		return;
+	}
+	// ELECON communication
+	if (0 == COM_GetNodeStatus(NODEID_ELECON))
+	{
+		// ELECON does not communicate
+		mState = eElh_ELeconComError;
+		SwitchOffImmediatelly();
+		return;
+	}
+
 	// TECHM Board temperature
 	if (boartTemp_C > MAX_BOARD_TEMP_C)
-		{
-			mState = eElh_BoardOveremerature;
-			SwitchOffImmediatelly();
-			return;
-		}
+	{
+		mState = eElh_BoardOveremerature;
+		SwitchOffImmediatelly();
+		return;
+	}
 // Actual tank temperature
 	if (tankTemp_C > mReqTankTemp)
 	{
 		mState = eELh_TempReached;
 		SwitchOffImmediatelly();
 		return;
+	}
+
+  // low soc
+	if (soc < SOC_DISABLE)
+	{
+		mSocEnableHys = 0;
+		mState = eElh_LowSOC;
+		SwitchOffImmediatelly();
 	}
 
 	// regulating load current to match to actual charging vs discharging
@@ -181,9 +203,17 @@ void ELH_Update_1s(void)
 		{
 			mMaxHeaterLoad = MAX_LOAD_A;
 		}
-		else  // if charger is enabled (Charging > 1A) adjust the load to be less than charging current
+		else  // if charger is enabled (Charging > 1A) adjust the load to maintain SOC around 97% (prevent charging to 100%)
 		{
-			mMaxHeaterLoad = -2;  // at least 2 Amps should stay for charging
+			if (soc <= 97)
+			{
+				mMaxHeaterLoad = -2;  // at least 2 Amps should stay for charging
+			}
+			else
+			{
+				mMaxHeaterLoad = ONE_COIL_LOAD_A + 1; // when SOC os over 97% we shod discharge more than charge
+			}
+
 		}
 
 		// Battery actual load

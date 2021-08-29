@@ -19,6 +19,7 @@ typedef enum
 	eElh_TankOvertemperature,
 	eElh_BoardOveremerature,
 	eElh_InvalidInputs,
+	eElh_ELeconComError,
 	eElh_SwitchError
 }eElhState;
 
@@ -28,7 +29,7 @@ typedef enum
 #define  MAX_LOAD_A								35  //
 #define  SOC_ENABLE								100
 #define  SOC_DISABLE							90
-#define  DEF_ENABLE_MASK					0x3C    // 0011 11 00   // four uppest coils enabled
+#define  DEF_ENABLE_MASK					0x3E    // 0011 1110   // five uppest coils enabled
 
 #define  ONE_COIL_LOAD_A					10
 #define  NUM_OF_COILS							6

@@ -29,7 +29,7 @@
 #define RX_BUFF_WARN RX_BUFF_SIZE/2
 #define TX_BUFF_WARN TX_BUFF_SIZE/2
 #define MAX_NUM_OF_NODES	8
-#define CO_DEFAULT_HB_TO	2000  // 2sec
+#define CO_DEFAULT_HB_TO	10000  // 10sec
 
 
 #define ID_RANGE	0x0F    // maximal nodeID
