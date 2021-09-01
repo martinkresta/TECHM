@@ -87,6 +87,12 @@ void HC_Update_1s(void)
 			{
 				mBoilerState = eBS_Heating;
 			}
+			if (boilerTemp_C < (TEMP_PUMP_ON - 5))
+			{
+				mPumpMask &= ~PUMP_BOILER;  // turn off pump
+				DO_SetPumps(mPumpMask);
+				mBoilerState = eBs_Idle;
+			}
 			break;
 		case eBS_Heating:
 			if (boilerExhaust_C < 100)

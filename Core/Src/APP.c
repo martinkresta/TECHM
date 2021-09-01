@@ -45,10 +45,7 @@ void APP_Init(void)
 	WM_Init();
 	WDG_Init(3000);
 	HC_Init();
-	//RTC_Init();
-
-
-
+	//RTC_Init()
 }
 
 void APP_Start(void)

@@ -16,6 +16,7 @@ sLED 	LED_Life;
 sLED	LED_R;
 sLED	LED_G;
 sLED	LED_B;
+sLED  Buzzer;
 
 
 
@@ -55,6 +56,14 @@ void LED_Init (void)
 	init_struct.Port				= LED_B_GPIO_Port;
   LED_Struct_Initialisation (init_struct, &LED_B);
 
+  init_struct.Pin					= BUZZ_Pin;
+  init_struct.Port				= BUZZ_GPIO_Port;
+  LED_Struct_Initialisation (init_struct, &Buzzer);
+
+
+
+
+
 }
 
 /**
@@ -75,6 +84,7 @@ void LED_Update_10ms()
 	LED_Control(&LED_R, 	0x00);
 	LED_Control(&LED_G, 	0x00);
 	LED_Control(&LED_B, 	0x00);
+	LED_Control(&Buzzer, 	0x00);
 }
 
 
@@ -102,6 +112,24 @@ void LED_B_SetMode(eLED_Status status)
 	{
 		LED_B.Status = status;
 		LED_B.Led_Cnt = 0;
+	}
+}
+
+void LED_Life_SetMode(eLED_Status status)
+{
+	if (LED_Life.Status != status)
+	{
+		LED_Life.Status = status;
+		LED_Life.Led_Cnt = 0;
+	}
+}
+
+void Buzzer_SetMode(eLED_Status status)
+{
+	if (Buzzer.Status != status)
+	{
+		Buzzer.Status = status;
+		Buzzer.Led_Cnt = 0;
 	}
 }
 
@@ -220,6 +248,33 @@ static void LED_Control (sLED *led,uint8_t led_switch)
 				led->Led_Cnt = 0;
 			}		
 			break;
+		 case eLED_BEEP_ONCE:
+					if(led->Led_Cnt <= 25)  // blink for 250ms
+					{
+						if(led->Logic == eLEDL_NEGATIVE)
+						{
+							HAL_GPIO_WritePin(led->Port,led->Pin,GPIO_PIN_RESET);
+						}
+						else
+						{
+							HAL_GPIO_WritePin(led->Port,led->Pin,GPIO_PIN_SET);
+						}
+					}
+					else
+					{
+						if(led->Logic == eLEDL_NEGATIVE)
+						{
+							HAL_GPIO_WritePin(led->Port,led->Pin,GPIO_PIN_SET);
+						}
+						else
+						{
+							HAL_GPIO_WritePin(led->Port,led->Pin,GPIO_PIN_RESET);
+						}
+
+						led->Status = eLED_OFF;   // go to permanent off state
+						led->Led_Cnt = 0;
+					}
+					break;
 		case eLED_FLASH:
 			if(led->Led_Cnt < 2)
 			{

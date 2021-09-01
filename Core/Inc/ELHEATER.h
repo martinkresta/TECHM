@@ -25,11 +25,13 @@ typedef enum
 
 #define  MAX_BOARD_TEMP_C					55
 #define  MAX_TANK_TEMP_C					70
+#define  MIN_UTIL_TEMP_C					45
 //#define  MIN_SOC									90
 #define  MAX_LOAD_A								35  //
 #define  SOC_ENABLE								100
 #define  SOC_DISABLE							90
-#define  DEF_ENABLE_MASK					0x3E    // 0011 1110   // five uppest coils enabled
+//#define  DEF_ENABLE_MASK					0x3E    // 0011 1110   // five uppest coils enabled
+#define  DEF_ENABLE_MASK					0x3F    // 0011 1111   // all coils enabled
 
 #define  ONE_COIL_LOAD_A					10
 #define  NUM_OF_COILS							6

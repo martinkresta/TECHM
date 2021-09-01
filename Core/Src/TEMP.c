@@ -11,6 +11,7 @@
 #include "main.h"
 #include "VARS.h"
 #include "ADC.h"
+#include "leds.h"
 
 #include <math.h>
 
@@ -134,6 +135,7 @@ void TEMP_Update100ms(void)
 				mSensors[i].status = ets_NotValid;
 				mSensors[i].errorCnt = 0;
 				VAR_SetVariable(mSensors[i].VarId, mSensors[i].tempC_10ths, 0);  // set invalid flag also to variables..
+				Buzzer_SetMode(eLED_BEEP_ONCE);
 				// TBD LOG ERR
 			}
 

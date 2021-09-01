@@ -33,8 +33,10 @@ int16_t mMaxHeaterLoad;
 
 int16_t mTodayEnergy_Wh;
 uint32_t mEnergyCounter_mWh;
-uint8_t mTodayDayNumber;
-uint8_t mBatteryBalancedToday;
+static uint8_t mTodayDayNumber;
+static uint8_t mBatteryBalancedToday;
+
+static int16_t mTankTemp_C;
 
 
 
@@ -52,7 +54,8 @@ int16_t ConvertAdcToCurrent_mA(uint16_t adcval);
 
 void ELH_Init(void)
 {
-	mReqTankTemp = 50;
+	//mReqTankTemp = 50;
+	mReqTankTemp = 84;
 	mHeaterMask = 0;
 	mHeaterEnaMask = DEF_ENABLE_MASK;
 	mState = eElh_NoFreePower;
@@ -74,7 +77,6 @@ void ELH_Update_1s(void)
 
 	int16_t invalid;
 	int16_t boartTemp_C;
-	int16_t tankTemp_C;
 	int16_t soc;
 	int16_t charging_A;
 	int16_t load_A;
@@ -126,7 +128,7 @@ void ELH_Update_1s(void)
 	// collect the variables
 	invalid = 0;
 	boartTemp_C= VAR_GetVariable(VAR_TEMP_TECHM_BOARD,&invalid)/10;  // techm board temperature
-	tankTemp_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;  // top tank sensor
+	mTankTemp_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;  // top tank sensor
 	soc				 = VAR_GetVariable(VAR_BAT_SOC,&invalid);  		// battery soc
 	charging_A = VAR_GetVariable(VAR_CHARGING_A10,&invalid)/10;  // charging current
 	load_A		 = VAR_GetVariable(VAR_LOAD_A10,&invalid)/10;  // load current
@@ -180,7 +182,7 @@ void ELH_Update_1s(void)
 		return;
 	}
 // Actual tank temperature
-	if (tankTemp_C > mReqTankTemp)
+	if (mTankTemp_C > mReqTankTemp)
 	{
 		mState = eELh_TempReached;
 		SwitchOffImmediatelly();
@@ -281,8 +283,34 @@ void ELH_SetTemp(int16_t tempTop, int16_t tempMiddle)
 /*Private methods */
 void IncreasePower(void)
 {
-	mHeaterMask |= 0x40;
-	mHeaterMask = mHeaterMask >> 1;
+	if (mTankTemp_C < MIN_UTIL_TEMP_C)  // top hlaft of the tank has higher protity
+	{
+		// firstly ensure that top coils are on
+		if (mHeaterMask != 0)  // if some coil is already ON
+		{
+			while (mHeaterMask & 0x20 == 0) // mask of topmost coil
+			{
+				mHeaterMask = mHeaterMask << 1;   // shift until the topmost coil is ON
+			}
+		}
+		// increase the power by one coil
+		mHeaterMask |= 0x40;
+		mHeaterMask = mHeaterMask >> 1;
+	}
+	else          // botom coils have higher priority
+	{
+		// firstly ensure that bottom coils are on
+		if (mHeaterMask != 0)  // if some coil is already ON
+		{
+			while (mHeaterMask & 0x01 == 0) // mask of bottommost coil
+			{
+				mHeaterMask = mHeaterMask >> 1;   // shift until the bottom coil is ON
+			}
+		}
+		// increase the power by one coil
+		mHeaterMask = mHeaterMask << 1;
+		mHeaterMask |= 0x01;
+	}
 	mHeaterMask &=mHeaterEnaMask;
 	DO_SetElHeaters(mHeaterMask);
 	CalculateHeaterLoad();
@@ -290,7 +318,32 @@ void IncreasePower(void)
 
 void DecreasePower(void)
 {
-	mHeaterMask = mHeaterMask << 1;
+	if (mTankTemp_C < MIN_UTIL_TEMP_C)  // top hlaft of the tank has higher protity
+		{
+			// firstly ensure that top coils are on
+			if (mHeaterMask != 0)  // if some coil is already ON
+			{
+				while (mHeaterMask & 0x20 == 0) // mask of topmost coil
+				{
+					mHeaterMask = mHeaterMask << 1;   // shift until the topmost coil is ON
+				}
+			}
+			// decrease the power by one coil
+			mHeaterMask = mHeaterMask << 1;
+		}
+		else          // botom coils have higher priority
+		{
+			// firstly ensure that bottom coils are on
+			if (mHeaterMask != 0)  // if some coil is already ON
+			{
+				while (mHeaterMask & 0x01 == 0) // mask of bottommost coil
+				{
+					mHeaterMask = mHeaterMask >> 1;   // shift until the bottom coil is ON
+				}
+			}
+			// decrease the power by one coil
+			mHeaterMask = mHeaterMask >> 1;
+		}
 	mHeaterMask &= mHeaterEnaMask;
 	DO_SetElHeaters(mHeaterMask);
 	CalculateHeaterLoad();

@@ -25,6 +25,7 @@ typedef enum
 	eLED_BLINKING_SLOW,
 	eLED_BLINKING_FAST,
 	eLED_BLINK_ONCE,
+	eLED_BEEP_ONCE,
 	eLED_FLASH, 
 	eLED_COMBI_1,
 	eLED_TOGGLE
@@ -48,5 +49,7 @@ void LED_Update_10ms(void);
 void LED_R_SetMode(eLED_Status status);
 void LED_G_SetMode(eLED_Status status);
 void LED_B_SetMode(eLED_Status status);
+void LED_Life_SetMode(eLED_Status status);
+void Buzzer_SetMode(eLED_Status status);
 
 #endif // LEDS_H

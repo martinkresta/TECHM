@@ -18,7 +18,7 @@ static uint32_t mLastConsCold, mLastConsHot;
 
 static uint32_t mP2PCold, mP2PHot;   // pulse to pulse period
 
-uint8_t mTodayDayNumber;
+static uint8_t mTodayDayNumber;
 
 void WM_Init(void)
 {
