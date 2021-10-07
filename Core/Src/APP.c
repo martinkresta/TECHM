@@ -52,10 +52,10 @@ void APP_Start(void)
 {
 
 	sDateTime now;
-	now.Day = 21;
-	now.Hour = 17;
+	now.Day = 22;
+	now.Hour = 21;
 	now.Minute = 10;
-	now.Month = 8;
+	now.Month = 9;
 	now.Second = 0;
 	now.Year = 2021;
 

@@ -139,7 +139,7 @@ void ELH_Update_1s(void)
 		return;
 	}
 	// enable/disable hysteresis
-	if ((soc >=  SOC_ENABLE) && (charging_A == 0))   // battery balanced
+	if ((soc >=  99) && (charging_A == 0))   // battery balanced
 	{
 		mSocEnableHys = 1;
 		mBatteryBalancedToday = 1;
