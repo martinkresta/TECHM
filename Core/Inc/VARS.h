@@ -49,6 +49,8 @@
 #define  VAR_TEMP_IOBOARD_U  122
 #define  VAR_TEMP_ELECON_BOARD  123
 #define  VAR_TEMP_DOWNSTAIRS  124
+#define  VAR_TEMP_OFFICE  125
+
 
 
 

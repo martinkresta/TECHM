@@ -64,6 +64,7 @@ sDateTime RTC_GetTime(void);
 void RTC_SetTime(sDateTime dt);
 
 uint32_t RTC_GetUnixTime(void);
+void RTC_SetUnixTime(uint32_t unixtime);
 
 void RTC_PrintTimeStamp(char * ts);
  void RTC_PrintTimeStampMs(char* ts);

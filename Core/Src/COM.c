@@ -11,6 +11,7 @@
 #include "COM.h"
 #include "VARS.h"
 #include "MCAN.h"
+#include "rtc.h"
 
 
 typedef struct
@@ -165,6 +166,7 @@ static void ProcessMessage(s_CanRxMsg* msg)
 	uint16_t cmd = msg->header.StdId & 0xFF0;  // maskout nodeid
 	uint8_t producer = msg->header.StdId & 0x00F;  // maskout cmd
 	int16_t par1,par2,par3,par4;
+	uint32_t unixtime = 0;
 	par1 = msg->data[0]*0xFF + msg->data[1];
 	par2 = msg->data[2]*0xFF + msg->data[3];
 	par3 = msg->data[4]*0xFF + msg->data[5];
@@ -177,6 +179,19 @@ static void ProcessMessage(s_CanRxMsg* msg)
 		case  CMD_VAR_VALUE:
 			VAR_SetVariable(par1, par2, par3);  // tbd check valid flag
 			break;
+		case CMD_RPI_RTC_SYNC: // set RTC time
+			unixtime = (uint32_t)par1 * 0xFFFF + par2;
+			RTC_SetUnixTime(unixtime);
+			break;
+	}
+	// TBD change cobID ! and put it to switch case
+	if (msg->header.StdId == CMD_RPI_RTC_SYNC)
+	{
+		unixtime |= msg->data[0] << 24;
+		unixtime |= msg->data[1] << 16;
+		unixtime |= msg->data[2] << 8;
+		unixtime |= msg->data[3];
+		RTC_SetUnixTime(unixtime);
 	}
 	return;
 }

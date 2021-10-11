@@ -129,7 +129,8 @@ void RTC_SetTime(sDateTime dt)
  void RTC_SetUnixTime(uint32_t unixtime)
  {
 	 struct tm * tm_now;
-	 tm_now = localtime(&unixtime);
+	 time_t unixnow = unixtime;
+	 tm_now = localtime(&unixnow);
 	 sDateTime time;
 	 time.Second = tm_now->tm_sec;
 	 time.Minute = tm_now->tm_min;
