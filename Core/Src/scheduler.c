@@ -14,6 +14,7 @@
 #include "WM.h"
 #include "watchdog.h"
 #include "HEATING.h"
+#include "PTCTEMP.h"
 
 
 
@@ -225,6 +226,7 @@ static void Timer_Task_100ms(void)
 {
 
 	TEMP_Update100ms();
+	PTCTEMP_Convert();
 	ADC_StartConversion();
 }
 

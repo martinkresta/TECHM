@@ -46,6 +46,38 @@ void APP_Init(void)
 	WDG_Init(3000);
 	HC_Init();
 	//RTC_Init()
+
+
+	/*Config temperature measurement*/
+
+	// define hardware OW busses
+	TEMP_AddHwBus(0,OW1_GPIO_Port, OW1_Pin);
+	TEMP_AddHwBus(1,OW2_GPIO_Port, OW2_Pin);
+	// TEMP_AddHwBus(2,OW3_GPIO_Port, OW3_Pin);  // not used so far
+
+
+	// assign sensors on OW1 :
+	TEMP_AssignSensor(T_TECHM, VAR_TEMP_TECHM_BOARD, 0);
+	TEMP_AssignSensor(T108, VAR_TEMP_TANK_IN_H, 0);
+	TEMP_AssignSensor(T109, VAR_TEMP_TANK_OUT_H, 0);
+	TEMP_AssignSensor(T301, VAR_TEMP_TANK_1, 0);
+	TEMP_AssignSensor(T302, VAR_TEMP_TANK_2, 0);
+	TEMP_AssignSensor(T103, VAR_TEMP_TANK_3, 0);
+	TEMP_AssignSensor(T104, VAR_TEMP_TANK_4, 0);
+	TEMP_AssignSensor(T105, VAR_TEMP_TANK_5, 0);
+	TEMP_AssignSensor(T306, VAR_TEMP_TANK_6, 0);
+
+	// assign sensors on OW2 :
+	TEMP_AssignSensor(T303, VAR_TEMP_BOILER, 1);
+	TEMP_AssignSensor(T110, VAR_TEMP_BOILER_IN, 1);
+	TEMP_AssignSensor(T107, VAR_TEMP_BOILER_OUT, 1);
+	TEMP_AssignSensor(T101, VAR_TEMP_RAD_H, 1);
+	TEMP_AssignSensor(T106, VAR_TEMP_RAD_C, 1);
+	TEMP_AssignSensor(T102, VAR_TEMP_TANK_IN_C, 1);
+	TEMP_AssignSensor(T8, VAR_TEMP_TANK_OUT_C, 1);
+	TEMP_AssignSensor(T2, VAR_TEMP_WALL_IN, 1);
+	TEMP_AssignSensor(T3, VAR_TEMP_WALL_OUT, 1);
+
 }
 
 void APP_Start(void)
