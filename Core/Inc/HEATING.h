@@ -22,8 +22,8 @@ typedef enum
 	eBS_InvalidInputs
 }eBoilerState;
 
-#define  TEMP_PUMP_ON							40
-#define  TEMP_PUMP_OFF						40
+#define  TEMP_PUMP_ON							50
+#define  TEMP_PUMP_OFF						50
 
 #define  TEMP_BOILER_OVERHEAT			95
 #define  MIXVALVE_ERR_TEMP				80

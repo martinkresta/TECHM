@@ -39,6 +39,7 @@ void HC_Update_1s(void)
 	int16_t TankInHot_C;
 	int16_t TankOutCold_C;
 	int16_t Tank_C;
+	int16_t boilerDiff;
 
 
 // collect the all informations to make decision about the power
@@ -57,6 +58,8 @@ void HC_Update_1s(void)
 	TankOutCold_C = VAR_GetVariable(VAR_TEMP_TANK_OUT_C,&invalid)/10;
 	Tank_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;
 
+	boilerDiff = boilerOut_C - boilerIn_C;
+
 	if (invalid)
 	{
 		mBoilerState = eBS_InvalidInputs;
@@ -69,6 +72,8 @@ void HC_Update_1s(void)
 		if (mBoilerState == eBS_InvalidInputs)
 		{
 			mBoilerState = eBs_Idle;
+			mPumpMask &= ~PUMP_BOILER;  // turn off pump
+			DO_SetPumps(mPumpMask);
 		}
 	}
 
@@ -95,15 +100,11 @@ void HC_Update_1s(void)
 			}
 			break;
 		case eBS_Heating:
-			if (boilerExhaust_C < 100)
-			{
-				mBoilerState = eBS_CoolDown;
-			}
 			if (Tank_C > MAX_TANK_TEMP_C)
 			{
 				// TBD warning
 			}
-			if (boilerExhaust_C < 100 && boilerTemp_C < 60)
+			if (boilerExhaust_C < 110  && boilerDiff <= 0) // if chimney is cooling down and exchanger does not put heat to water
 			{
 				mPumpMask &= ~PUMP_BOILER;  // turn off pump
 				DO_SetPumps(mPumpMask);
@@ -117,7 +118,7 @@ void HC_Update_1s(void)
 				{
 					mBoilerState = eBs_Idle;
 				}
-				if (boilerTemp_C > 65) // if it gets warm again, turn on the pump
+				if (boilerTemp_C > 85 || boilerExhaust_C > 115) // if it gets warm again, turn on the pump
 				{
 					mPumpMask |= PUMP_BOILER;  // turn on pump
 					DO_SetPumps(mPumpMask);
