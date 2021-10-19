@@ -7,6 +7,7 @@
  *
  */
 
+#include <RTC.h>
 #include "UI.h"
 #include "main.h"
 #include "APP.h"
@@ -15,17 +16,20 @@
 #include "TEMP.h"
 #include "VARS.h"
 #include "SCOM.h"
-#include "MCAN.h"
+//#include "MCAN.h"
 #include "COM.h"
 #include "DO.h"
 #include "ADC.h"
 #include "ELHEATER.h"
 #include "WM.h"
 #include "watchdog.h"
-#include "RTC.h"
 #include "HEATING.h"
 
 
+
+s_CanRxMsg rmsg;
+
+static void ProcessMessage(s_CanRxMsg* msg);
 
 // public methods
 void APP_Init(void)
@@ -47,7 +51,7 @@ void APP_Init(void)
 	WM_Init();
 	WDG_Init(3000);
 	HC_Init();
-	//RTC_Init()
+
 
 	/*Assign pins for onboard UI  */
 	uihw.Led_Life.Pin = LED_Life_Pin;
@@ -81,7 +85,6 @@ void APP_Init(void)
 	TEMP_AddHwBus(1,OW2_GPIO_Port, OW2_Pin);
 	// TEMP_AddHwBus(2,OW3_GPIO_Port, OW3_Pin);  // not used so far
 
-
 	// assign sensors on OW1 :
 	TEMP_AssignSensor(T_TECHM, VAR_TEMP_TECHM_BOARD, 0);
 	TEMP_AssignSensor(T108, VAR_TEMP_TANK_IN_H, 0);
@@ -103,6 +106,39 @@ void APP_Init(void)
 	TEMP_AssignSensor(T8, VAR_TEMP_TANK_OUT_C, 1);
 	TEMP_AssignSensor(T2, VAR_TEMP_WALL_IN, 1);
 	TEMP_AssignSensor(T3, VAR_TEMP_WALL_OUT, 1);
+
+	/* Configure CAN streamed variables */
+
+	COM_AddStreamedVariable(VAR_TEMP_TECHM_BOARD,1000);
+	COM_AddStreamedVariable(VAR_EL_HEATER_STATUS, 3000);
+	COM_AddStreamedVariable(VAR_EL_HEATER_POWER, 3000);
+	COM_AddStreamedVariable(VAR_EL_HEATER_CURRENT, 3000);
+	COM_AddStreamedVariable(VAR_EL_HEATER_CONS, 3000);
+
+	COM_AddStreamedVariable(VAR_FLOW_COLD, 3000);
+	COM_AddStreamedVariable(VAR_FLOW_HOT, 3000);
+	COM_AddStreamedVariable(VAR_CONS_COLD, 3000);
+	COM_AddStreamedVariable(VAR_CONS_HOT, 3000);
+
+
+	COM_AddStreamedVariable(VAR_TEMP_BOILER, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_BOILER_IN, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_BOILER_OUT, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_IN_H, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_OUT_H, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_1, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_2, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_3, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_4, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_5, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_6, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_WALL_IN, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_WALL_OUT, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_BOILER_EXHAUST, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_RAD_H, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_RAD_C, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_IN_C, 3000);
+	COM_AddStreamedVariable(VAR_TEMP_TANK_OUT_C, 3000);
 
 }
 
@@ -134,7 +170,56 @@ void APP_Start(void)
 	{
 		Scheduler_Check_Flag();
 
+		// Process received COM messages
+
+		s_CanRxMsg rmsg;
+		while(1 == COM_GetRxMessage(&rmsg))  // process all messages in buffer
+		{
+				ProcessMessage(&rmsg);
+		}
+
 	}
+}
+
+
+/*Private methods*/
+
+static void ProcessMessage(s_CanRxMsg* msg)
+{
+	uint16_t cmd = msg->header.StdId & 0xFF0;  // maskout nodeid
+	uint8_t producer = msg->header.StdId & 0x00F;  // maskout cmd
+	int16_t par1,par2,par3,par4;
+	uint32_t unixtime = 0;
+	par1 = msg->data[0]*0xFF + msg->data[1];
+	par2 = msg->data[2]*0xFF + msg->data[3];
+	par3 = msg->data[4]*0xFF + msg->data[5];
+	par4 = msg->data[6]*0xFF + msg->data[7];
+
+	switch (cmd)
+	{
+		case CMD_BUTTON_STATE:
+			break;
+		case  CMD_VAR_VALUE:
+			VAR_SetVariable(par1, par2, par3);  // tbd check valid flag
+			break;
+		case CMD_RPI_RTC_SYNC: // set RTC time
+			unixtime |= msg->data[0] << 24;
+			unixtime |= msg->data[1] << 16;
+			unixtime |= msg->data[2] << 8;
+			unixtime |= msg->data[3];
+			RTC_SetUnixTime(unixtime);
+			break;
+	}
+	// TBD change cobID ! and put it to switch case
+	if (msg->header.StdId == CMD_RPI_RTC_SYNC)
+	{
+		unixtime |= msg->data[0] << 24;
+		unixtime |= msg->data[1] << 16;
+		unixtime |= msg->data[2] << 8;
+		unixtime |= msg->data[3];
+		RTC_SetUnixTime(unixtime);
+	}
+	return;
 }
 
 
