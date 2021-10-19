@@ -7,11 +7,10 @@
  *
  */
 
+#include "UI.h"
 #include "main.h"
 #include "APP.h"
 #include "scheduler.h"
-#include "leds.h"
-
 #include "OW.h"
 #include "TEMP.h"
 #include "VARS.h"
@@ -31,8 +30,11 @@
 // public methods
 void APP_Init(void)
 {
+
+	sUIHwInit uihw;
+
 	Scheduler_Init();
-	LED_Init();
+
 	OW_Init();
 	TEMP_Init();
 	VAR_Init();
@@ -46,6 +48,30 @@ void APP_Init(void)
 	WDG_Init(3000);
 	HC_Init();
 	//RTC_Init()
+
+	/*Assign pins for onboard UI  */
+	uihw.Led_Life.Pin = LED_Life_Pin;
+	uihw.Led_Life.Port = LED_Life_GPIO_Port;
+	uihw.Led_Life.Logic = eUIL_POSITIVE;
+
+	uihw.Led_R.Pin = LED_R_Pin;
+	uihw.Led_R.Port = LED_R_GPIO_Port;
+	uihw.Led_R.Logic = eUIL_POSITIVE;
+
+	uihw.Led_G.Pin = LED_G_Pin;
+	uihw.Led_G.Port = LED_G_GPIO_Port;
+	uihw.Led_G.Logic = eUIL_POSITIVE;
+
+	uihw.Led_B.Pin = LED_B_Pin;
+	uihw.Led_B.Port = LED_B_GPIO_Port;
+	uihw.Led_B.Logic = eUIL_POSITIVE;
+
+	uihw.Buzzer.Pin = BUZZ_Pin;
+	uihw.Buzzer.Port = BUZZ_GPIO_Port;
+	uihw.Buzzer.Logic = eUIL_POSITIVE;
+
+	UI_Init(&uihw);
+	UI_LED_Life_SetMode(eUI_BLINKING_SLOW);
 
 
 	/*Config temperature measurement*/

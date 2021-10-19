@@ -4,8 +4,8 @@
 // Project: Robodof
 
 
+#include "UI.h"
 #include "scheduler.h"
-#include "leds.h"
 #include "OW.h"
 #include "TEMP.h"
 #include "SCOM.h"
@@ -199,7 +199,7 @@ static void Timer_Task_10ms(void)
 {
 	MCAN_Update_10ms();
 	COM_Update_10ms();
-	LED_Update_10ms();
+	UI_Update_10ms();
 	SCOM_Update_10ms();
 	WM_Update_10ms();
 }

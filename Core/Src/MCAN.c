@@ -5,8 +5,8 @@
  *      Author: Martin
  */
 
+#include <UI.h>
 #include "MCAN.h"
-#include "leds.h"
 #include "circbuf.h"
 
 
@@ -227,7 +227,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	if (mMcan.CanHw == hcan)
 	{
 		CB_Put(mMcan.Rx0Buf,(uint8_t*) &tmp);
-		LED_B_SetMode(eLED_BLINK_ONCE);  // blue blink
+		UI_LED_B_SetMode(eUI_BLINK_ONCE);  // blue blink
 	}
 
 }
@@ -240,7 +240,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	if (mMcan.CanHw == hcan)
 	{
 		CB_Put(mMcan.Rx1Buf,(uint8_t*) &tmp);
-		LED_B_SetMode(eLED_BLINK_ONCE);  // blue blink
+		UI_LED_B_SetMode(eUI_BLINK_ONCE);  // blue blink
 	}
 
 }
