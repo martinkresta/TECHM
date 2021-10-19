@@ -29,16 +29,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>Common/Inc</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/UHA_COMMON/Inc</locationURI>
-		</link>
-		<link>
-			<name>Common/Src</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/UHA_COMMON/Src</locationURI>
-		</link>
-	</linkedResources>
 </projectDescription>
