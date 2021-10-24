@@ -3,7 +3,8 @@ Debug/
 *.d
 *.o
 *.su
-*.bin
+!*.bin
+!*.hex
 *.elf
 *.map
 *.bak
