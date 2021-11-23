@@ -33,7 +33,7 @@ int16_t mMaxHeaterLoad;
 
 int16_t mTodayEnergy_Wh;
 uint32_t mEnergyCounter_mWh;
-static uint8_t mTodayDayNumber;
+//static uint8_t mTodayDayNumber;
 static uint8_t mBatteryBalancedToday;
 
 static int16_t mTankTemp_C;
@@ -67,7 +67,7 @@ void ELH_Init(void)
 
 	mTodayEnergy_Wh = 0;
 	mEnergyCounter_mWh = 0;
-	mTodayDayNumber = 0;
+//	mTodayDayNumber = 0;
 	mBatteryBalancedToday = 0;
 
 }
@@ -80,6 +80,8 @@ void ELH_Update_1s(void)
 	int16_t soc;
 	int16_t charging_A;
 	int16_t load_A;
+	int16_t battCurr_A;
+	int16_t solarVoltage_V;
 
 
 	// measure the heater currents
@@ -113,12 +115,12 @@ void ELH_Update_1s(void)
 	VAR_SetVariable(VAR_EL_HEATER_CONS, mTodayEnergy_Wh, 1);
 
 	// reset the energy counter at midnight
-	if (mTodayDayNumber != RTC_GetTime().Day)
+/*	if (mTodayDayNumber != RTC_GetTime().Day)
 	{
 		mTodayEnergy_Wh = 0;
 		mTodayDayNumber = RTC_GetTime().Day;
 		mBatteryBalancedToday = 0;
-	}
+	}*/
 
 
 // collect the all informations to make decision about the power
@@ -132,6 +134,9 @@ void ELH_Update_1s(void)
 	soc				 = VAR_GetVariable(VAR_BAT_SOC,&invalid);  		// battery soc
 	charging_A = VAR_GetVariable(VAR_CHARGING_A10,&invalid)/10;  // charging current
 	load_A		 = VAR_GetVariable(VAR_LOAD_A10,&invalid)/10;  // load current
+	battCurr_A = VAR_GetVariable(VAR_BAT_CURRENT_A10,&invalid)/10;  // batt current
+	solarVoltage_V = VAR_GetVariable(VAR_MPPT_SOLAR_VOLTAGE_V100,&invalid)/100;  // FVE voltage
+
 	if(invalid)
 	{
 		mState = eElh_InvalidInputs;
@@ -201,9 +206,17 @@ void ELH_Update_1s(void)
 	if ( mSocEnableHys == 1)
 	{
 		// When SOC is being discharged from 100%, and charger is still disabled allow discharging 25A
-		if(soc > 95 && charging_A <=1)
+		if(soc > 96 && charging_A <=1)
 		{
-			mMaxHeaterLoad = MAX_LOAD_A;
+			if (solarVoltage_V >= 100) // if sun is still shining (panel voltage over 100V)
+			{
+				mMaxHeaterLoad = MAX_LOAD_A;
+			}
+			else
+			{
+				mMaxHeaterLoad = 0;
+			}
+
 		}
 		else  // if charger is enabled (Charging > 1A) adjust the load to maintain SOC around 97% (prevent charging to 100%)
 		{
@@ -213,19 +226,19 @@ void ELH_Update_1s(void)
 			}
 			else
 			{
-				mMaxHeaterLoad = ONE_COIL_LOAD_A + 1; // when SOC os over 97% we shod discharge more than charge
+				mMaxHeaterLoad = ONE_COIL_LOAD_A + 1; // when SOC is over 97% we should discharge more than charge
 			}
 
 		}
 
 		// Battery actual load
-		if (((load_A - charging_A) + ONE_COIL_LOAD_A) < mMaxHeaterLoad )
+		if (((-battCurr_A) + ONE_COIL_LOAD_A) < mMaxHeaterLoad )
 		{
 			mIncreaseRequest_cnt ++;
 			mDecreaseRequest_cnt = 0;
 			mState = eElh_Heating;
 		}
-		else if ((load_A - charging_A) < mMaxHeaterLoad )
+		else if ((-battCurr_A) < mMaxHeaterLoad )
 		{
 			// do nothig, this is the sweet spot we want to reach
 			mIncreaseRequest_cnt = 0;
@@ -270,7 +283,17 @@ void ELH_Update_1s(void)
 
 }
 
-uint16_t ELH_GetStatus(void);
+// reset at midnight
+void ELH_Midnight(void)
+{
+	mTodayEnergy_Wh = 0;
+	mBatteryBalancedToday = 0;
+}
+
+uint16_t ELH_GetStatus(void)
+{
+	return mState;
+}
 
 void ELH_SetTemp(int16_t tempTop, int16_t tempMiddle)
 {

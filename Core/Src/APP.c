@@ -181,6 +181,23 @@ void APP_Start(void)
 	}
 }
 
+void APP_Update_1s(void)
+{
+	// check midnight
+	static uint8_t dayNumber = 0;
+	uint8_t newDayNumber = 0;
+	newDayNumber = RTC_GetTime().Day;
+	if (dayNumber != newDayNumber)
+	{
+		dayNumber = newDayNumber;
+
+		// Reset counters
+		WM_ResetConsupmtions();
+		ELH_Midnight();
+	}
+}
+
+
 
 /*Private methods*/
 
@@ -224,5 +241,8 @@ static void ProcessMessage(s_CanRxMsg* msg)
 
 
 
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	WM_ExtiCallback(GPIO_Pin);
+}
 

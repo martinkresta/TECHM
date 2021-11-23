@@ -75,13 +75,13 @@ void WM_Update_10ms(void)
 		}
 	}
 
-	// reset the energy counter at midnight
+/*	// reset the energy counter at midnight
 	if (mTodayDayNumber != RTC_GetTime().Day)
 	{
 		mConsHot = 0;
 		mConsCold = 0;
 		mTodayDayNumber = RTC_GetTime().Day;
-	}
+	}*/
 
 }
 
@@ -113,9 +113,7 @@ void WM_ResetConsupmtions(void)
 }
 
 
-
-// exti interrupt callback
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+WM_ExtiCallback(uint16_t GPIO_Pin)
 {
 	if (GPIO_Pin == WM1_Pin)
 	{
@@ -127,5 +125,5 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		mConsHot += 3;
 		VAR_SetVariable(VAR_CONS_HOT, (int16_t)(mConsHot), 1);
 	}
-
 }
+

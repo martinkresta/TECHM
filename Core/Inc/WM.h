@@ -24,4 +24,6 @@ int16_t WM_GetConsumptionHot(void);
 
 void WM_ResetConsupmtions(void);
 
+WM_ExtiCallback(uint16_t GPIO_Pin);
+
 #endif /* INC_WM_H_ */
