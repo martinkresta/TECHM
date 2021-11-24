@@ -9,16 +9,23 @@
 #include "heating.h"
 #include "VARS.h"
 #include "DO.h"
+#include "UI.h"
 
 
 eBoilerState mBoilerState;
+eBoilerError mBoilerError;
 
+uint8_t mPumpFailure;
 uint8_t mPumpMask;
+
+
 
 void HC_Init(void)
 {
 	mBoilerState = eBs_Idle;
+	mBoilerError = eBe_NoError;
 	mPumpMask = 0x06;
+	mPumpFailure = 0;
 }
 
 
@@ -31,7 +38,7 @@ uint16_t HC_GetStatus(void)
 
 void HC_Update_1s(void)
 {
-	int16_t invalid;
+	uint16_t invalid;
 	int16_t boilerTemp_C;
 	int16_t boilerExhaust_C;
 	int16_t boilerIn_C;
@@ -40,12 +47,6 @@ void HC_Update_1s(void)
 	int16_t TankOutCold_C;
 	int16_t Tank_C;
 	int16_t boilerDiff;
-
-
-// collect the all informations to make decision about the power
-
-
-
 
 	// collect the variables
 	invalid = 0;
@@ -100,15 +101,11 @@ void HC_Update_1s(void)
 			}
 			break;
 		case eBS_Heating:
-			if (Tank_C > MAX_TANK_TEMP_C)
-			{
-				// TBD warning
-			}
 			if (boilerExhaust_C < 110  && boilerDiff <= 0) // if chimney is cooling down and exchanger does not put heat to water
 			{
 				mPumpMask &= ~PUMP_BOILER;  // turn off pump
 				DO_SetPumps(mPumpMask);
-
+				UI_Buzzer_SetMode(eUI_OFF);
 				mBoilerState = eBS_CoolDown;
 			}
 			break;
@@ -137,6 +134,44 @@ void HC_Update_1s(void)
 			break;
 	}
 
-	// simples
+	/* Detection of faults and signalization */
+	mBoilerError = eBe_NoError;
+
+	if (Tank_C > MAX_TANK_TEMP_C) // overheated tank
+	{
+		mBoilerError = eBe_OverheatedTank;
+	}
+
+	if (Tank_C > TEMP_BOILER_OVERHEAT) // overheated boiler
+	{
+		mBoilerError = eBe_OverheatedBoiler;
+	}
+
+	if (boilerTemp_C > 70 && (boilerTemp_C > (boilerOut_C + 3)))  // pump failure
+	{
+		mBoilerError = eBe_PumpFailure;
+	}
+
+
+	switch (mBoilerError)
+	{
+		case eBe_OverheatedTank:
+			UI_Buzzer_SetMode(eUI_BLINKING_SLOW);
+			UI_LED_R_SetMode(eUI_ON);
+			break;
+		case eBe_OverheatedBoiler:
+			UI_Buzzer_SetMode(eUI_BLINKING_SLOW);
+			UI_LED_R_SetMode(eUI_BLINKING_SLOW);
+			break;
+		case eBe_PumpFailure:
+			UI_Buzzer_SetMode(eUI_BLINKING_FAST);
+			UI_LED_R_SetMode(eUI_BLINKING_FAST);
+			break;
+		case eBe_NoError:
+		default:
+			UI_Buzzer_SetMode(eUI_OFF);
+			UI_LED_R_SetMode(eUI_OFF);
+	}
+
 
 }

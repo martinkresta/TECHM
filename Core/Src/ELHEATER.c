@@ -13,6 +13,7 @@
 #include "VARS.h"
 #include "DO.h"
 #include "ADC.h"
+#include "UI.h"
 
 
 // module variables

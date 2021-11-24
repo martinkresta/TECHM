@@ -22,13 +22,22 @@ typedef enum
 	eBS_InvalidInputs
 }eBoilerState;
 
+
+typedef enum
+{
+	eBe_NoError,
+	eBe_OverheatedTank,
+	eBe_OverheatedBoiler,
+	eBe_PumpFailure
+}eBoilerError;
+
 #define  TEMP_PUMP_ON							50
 #define  TEMP_PUMP_OFF						50
 
 #define  TEMP_BOILER_OVERHEAT			95
 #define  MIXVALVE_ERR_TEMP				80
 
-#define  MAX_TANK_TEMP_C					95
+#define  MAX_TANK_TEMP_C					90
 #define  MIN_SOC									10
 
 
