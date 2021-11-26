@@ -147,9 +147,12 @@ void HC_Update_1s(void)
 		mBoilerError = eBe_OverheatedBoiler;
 	}
 
-	if (boilerTemp_C > 70 && (boilerTemp_C > (boilerOut_C + 3)))  // pump failure
+	if(mBoilerState == eBs_HeatUp  || mBoilerState == eBS_Heating)  // check pump only in states where pump should be ON
 	{
-		mBoilerError = eBe_PumpFailure;
+		if (boilerTemp_C > 70 && (boilerTemp_C > (boilerOut_C + 3)))  // pump failure
+		{
+			mBoilerError = eBe_PumpFailure;
+		}
 	}
 
 

@@ -219,22 +219,13 @@ static void ProcessMessage(s_CanRxMsg* msg)
 		case  CMD_VAR_VALUE:
 			VAR_SetVariable(par1, par2, par3);  // tbd check valid flag
 			break;
-		case CMD_RPI_RTC_SYNC: // set RTC time
+		case CMD_RTC_SYNC: // set RTC time
 			unixtime |= msg->data[0] << 24;
 			unixtime |= msg->data[1] << 16;
 			unixtime |= msg->data[2] << 8;
 			unixtime |= msg->data[3];
 			RTC_SetUnixTime(unixtime);
 			break;
-	}
-	// TBD change cobID ! and put it to switch case
-	if (msg->header.StdId == CMD_RPI_RTC_SYNC)
-	{
-		unixtime |= msg->data[0] << 24;
-		unixtime |= msg->data[1] << 16;
-		unixtime |= msg->data[2] << 8;
-		unixtime |= msg->data[3];
-		RTC_SetUnixTime(unixtime);
 	}
 	return;
 }
