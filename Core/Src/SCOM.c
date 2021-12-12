@@ -249,7 +249,7 @@ static void ProcessMessage(void)
 				DO_SetElv(data1);
 				break;
 			case CMD_TM_SET_PUMPS:
-				DO_SetPumps(data1);
+				//DO_SetPumps(data1);
 				break;
 			case CMD_TM_SET_SERVOVALVES:
 				DO_SetServoRad(data1);

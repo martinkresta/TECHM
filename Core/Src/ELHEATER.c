@@ -206,7 +206,7 @@ void ELH_Update_1s(void)
 	// regulating load current to match to actual charging vs discharging
 	if ( mSocEnableHys == 1)
 	{
-		// When SOC is being discharged from 100%, and charger is still disabled allow discharging 25A
+		// When SOC is being discharged from 100%, and charger is still disabled allow discharging MAX_LOAD_A
 		if(soc > 96 && charging_A <=1)
 		{
 			if (solarVoltage_V >= 100) // if sun is still shining (panel voltage over 100V)

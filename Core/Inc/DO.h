@@ -24,14 +24,16 @@ void DO_Init();
 
 void	DO_SetElHeaters(uint8_t heaterMask);
 
-void  DO_SetPumps(uint8_t pumps);
+//void  DO_SetPumps(uint8_t pumps);
 
 void 	DO_SetElv(uint8_t elv);
-
-
 
 void  DO_SetServoRad(int16_t pct);
 
 void  DO_SetServoWall(int16_t pct);
+
+void  DO_SetPumpBoiler(uint8_t state);
+void  DO_SetPumpWall(uint8_t state);
+void  DO_SetPumpRad(uint8_t state);
 
 #endif /* INC_DO_H_ */

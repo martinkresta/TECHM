@@ -15,6 +15,7 @@
 #include "watchdog.h"
 #include "HEATING.h"
 #include "PTCTEMP.h"
+#include "TEMPCON.h"
 
 
 
@@ -267,6 +268,8 @@ static void Timer_Task_1s(void)
 	HC_Update_1s();
 	WDG_Refresh();
 	APP_Update_1s();
+	TC_Update_1s();
+
 	//LED_Error_SetMode(eLED_BLINK_ONCE);
 	//	OW_Read(0);
 	//		OW_ConvertAll();

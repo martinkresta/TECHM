@@ -64,8 +64,7 @@ void HC_Update_1s(void)
 	if (invalid)
 	{
 		mBoilerState = eBS_InvalidInputs;
-		mPumpMask | PUMP_BOILER;
-		DO_SetPumps(mPumpMask);
+		DO_SetPumpBoiler(1);
 		return;
 	}
 	else
@@ -73,8 +72,7 @@ void HC_Update_1s(void)
 		if (mBoilerState == eBS_InvalidInputs)
 		{
 			mBoilerState = eBs_Idle;
-			mPumpMask &= ~PUMP_BOILER;  // turn off pump
-			DO_SetPumps(mPumpMask);
+			DO_SetPumpBoiler(0); // turn off pump
 		}
 	}
 
@@ -83,8 +81,7 @@ void HC_Update_1s(void)
 		case eBs_Idle:
 			if (boilerTemp_C >= TEMP_PUMP_ON)
 			{
-				mPumpMask |= PUMP_BOILER;  // turn on pump
-				DO_SetPumps(mPumpMask);
+				DO_SetPumpBoiler(1); // turn on pump
 				mBoilerState = eBs_HeatUp;
 			}
 			break;
@@ -95,16 +92,14 @@ void HC_Update_1s(void)
 			}
 			if (boilerTemp_C < (TEMP_PUMP_ON - 5))
 			{
-				mPumpMask &= ~PUMP_BOILER;  // turn off pump
-				DO_SetPumps(mPumpMask);
+				DO_SetPumpBoiler(0);  // turn off pump
 				mBoilerState = eBs_Idle;
 			}
 			break;
 		case eBS_Heating:
 			if (boilerExhaust_C < 110  && boilerDiff <= 0) // if chimney is cooling down and exchanger does not put heat to water
 			{
-				mPumpMask &= ~PUMP_BOILER;  // turn off pump
-				DO_SetPumps(mPumpMask);
+				DO_SetPumpBoiler(0);  // turn off pump
 				UI_Buzzer_SetMode(eUI_OFF);
 				mBoilerState = eBS_CoolDown;
 			}
@@ -117,8 +112,7 @@ void HC_Update_1s(void)
 				}
 				if (boilerTemp_C > 85 || boilerExhaust_C > 115) // if it gets warm again, turn on the pump
 				{
-					mPumpMask |= PUMP_BOILER;  // turn on pump
-					DO_SetPumps(mPumpMask);
+					DO_SetPumpBoiler(1);  // turn on pump
 					mBoilerState = eBs_HeatUp;
 				}
 			}

@@ -26,7 +26,7 @@ typedef enum
 #define  MAX_BOARD_TEMP_C					55
 #define  MIN_UTIL_TEMP_C					45
 //#define  MIN_SOC									90
-#define  MAX_LOAD_A								65  //
+#define  MAX_LOAD_A								85  //
 #define  SOC_ENABLE								100
 #define  SOC_DISABLE							95
 #define  DEF_ENABLE_MASK					0x3F    // 0011 1111   // all coils enabled

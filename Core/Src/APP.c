@@ -24,6 +24,7 @@
 #include "WM.h"
 #include "watchdog.h"
 #include "HEATING.h"
+#include "TEMPCON.h"
 
 
 
@@ -51,6 +52,7 @@ void APP_Init(void)
 	WM_Init();
 	WDG_Init(3000);
 	HC_Init();
+	TC_Init();
 
 
 	/*Assign pins for onboard UI  */
@@ -159,7 +161,8 @@ void APP_Start(void)
 	DO_SetServoRad(0);   // close servo valves
 	DO_SetServoWall(0);
 
-	DO_SetPumps(0x06);
+	//DO_SetPumps(0x06);
+
 
 	MCAN_Start();
 
