@@ -63,8 +63,10 @@ void TC_Init(void)
 	mUpNightBegin = 18;
 	mUpNightEnd = 5;
 
-	mServoRadPct = 50;
-	mServoWallPct = 50;
+	mServoRadPct = 60;
+	mServoWallPct = 60;
+	DO_SetServoRad(mServoRadPct);
+	DO_SetServoWall(mServoWallPct);
 
 }
 
@@ -123,12 +125,12 @@ void TC_Update_1s(void)
 	mUpReqTemp = mUpReqTempNight;
 	mDownReqTemp = mDownReqTempNight;
 
-	if (hour >= mUpNightEnd && hour <mUpNightEnd)  // Upstairs
+	if (hour >= mUpNightEnd && hour < mUpNightBegin)  // Upstairs
 	{
 		mUpReqTemp = mUpReqTempDay;
 	}
 
-	if (hour >= mDownNightEnd && hour <mDownNightEnd) // downstairs
+	if (hour >= mDownNightEnd && hour < mDownNightBegin) // downstairs
 	{
 		mDownReqTemp = mDownReqTempDay;
 	}
@@ -221,12 +223,12 @@ void TC_Update_1s(void)
 		if (wallIn_C10 < WALL_WATER_TEMP_C10 - WATER_HYST)  // water too cold
 		{
 			mServoWallPct ++;
-			DO_SetServoRad(mServoWallPct);
+			DO_SetServoWall(mServoWallPct);
 		}
 		if (wallIn_C10 > WALL_WATER_TEMP_C10 + WATER_HYST)  // water too hot
 		{
 			mServoWallPct --;
-			DO_SetServoRad(mServoWallPct);
+			DO_SetServoWall(mServoWallPct);
 		}
 	}
 

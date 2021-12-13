@@ -20,12 +20,12 @@
 #define RAD_HYST_C10		2
 #define WALL_HYST_C10		2
 
-#define PUMP_ON_DELAY		30   // 30 seconds
-#define VALVE_REG_PERIOD	3	 // regulation period
+#define PUMP_ON_DELAY		10   	// 30 seconds
+#define VALVE_REG_PERIOD	30	// regulation period
 
 #define RAD_WATER_TEMP_C10	500
 #define WALL_WATER_TEMP_C10	450
-#define WATER_HYST					10
+#define WATER_HYST					15
 
 void TC_Init(void);
 
