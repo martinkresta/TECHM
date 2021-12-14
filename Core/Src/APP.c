@@ -142,6 +142,9 @@ void APP_Init(void)
 	COM_AddStreamedVariable(VAR_TEMP_TANK_IN_C, 3000);
 	COM_AddStreamedVariable(VAR_TEMP_TANK_OUT_C, 3000);
 
+	COM_AddStreamedVariable(VAR_HEAT_HEATING_WH, 3000);
+	COM_AddStreamedVariable(VAR_HEAT_TOTAL_WH, 3000);
+
 }
 
 void APP_Start(void)
