@@ -103,7 +103,19 @@ void TC_Update_1s(void)
 	invalid = 0;
 
 	tempDown_C10 = VAR_GetVariable(VAR_TEMP_DOWNSTAIRS,&invalid);
+	wallIn_C10 = VAR_GetVariable(VAR_TEMP_WALL_IN,&invalid);
+
 	tempUp_C10 = VAR_GetVariable(VAR_TEMP_KIDROOM, &invalid);
+	radIn_C10 = VAR_GetVariable(VAR_TEMP_RAD_H,&invalid);
+
+	if (invalid)
+	{
+		// pumps off
+		TurnOffWalls();
+		TurnOffRadiators();
+		return;
+	}
+
 	tank1_C = VAR_GetVariable(VAR_TEMP_TANK_1,&invalid)/10;
 	tank2_C = VAR_GetVariable(VAR_TEMP_TANK_2,&invalid)/10;
 	tank3_C = VAR_GetVariable(VAR_TEMP_TANK_3,&invalid)/10;
@@ -111,16 +123,6 @@ void TC_Update_1s(void)
 	tank5_C = VAR_GetVariable(VAR_TEMP_TANK_5,&invalid)/10;
 	tank6_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;
 	boilerExhaust_C = VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST,&invalid)/10;
-	wallIn_C10 = VAR_GetVariable(VAR_TEMP_WALL_IN,&invalid);
-	radIn_C10 = VAR_GetVariable(VAR_TEMP_RAD_H,&invalid);
-
-	if (invalid)
-	{
-		// pumps off
-		DO_SetPumpRad(0);
-		DO_SetPumpWall(0);
-		return;
-	}
 
 
 	// calculate available energy
