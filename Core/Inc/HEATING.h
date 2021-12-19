@@ -31,7 +31,7 @@ typedef enum
 	eBe_PumpFailure
 }eBoilerError;
 
-#define  TEMP_PUMP_ON							50
+#define  TEMP_PUMP_ON							60
 #define  TEMP_PUMP_OFF						50
 
 #define  TEMP_BOILER_OVERHEAT			95

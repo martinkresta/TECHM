@@ -208,13 +208,13 @@ void APP_Update_1s(void)
 static void ProcessMessage(s_CanRxMsg* msg)
 {
 	uint16_t cmd = msg->header.StdId & 0xFF0;  // maskout nodeid
-	uint8_t producer = msg->header.StdId & 0x00F;  // maskout cmd
-	int16_t par1,par2,par3,par4;
+	//uint8_t producer = msg->header.StdId & 0x00F;  // maskout cmd
+	int16_t par1,par2,par3; //,par4;
 	uint32_t unixtime = 0;
 	par1 = msg->data[0]*0xFF + msg->data[1];
 	par2 = msg->data[2]*0xFF + msg->data[3];
 	par3 = msg->data[4]*0xFF + msg->data[5];
-	par4 = msg->data[6]*0xFF + msg->data[7];
+//	par4 = msg->data[6]*0xFF + msg->data[7];
 
 	switch (cmd)
 	{

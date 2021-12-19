@@ -16,6 +16,9 @@
 #include "HEATING.h"
 #include "PTCTEMP.h"
 #include "TEMPCON.h"
+#include "APP.h"
+#include "COM.h"
+#include "MCAN.h"
 
 
 

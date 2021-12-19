@@ -57,6 +57,9 @@ uint16_t mReqWaterWall_C10;
 static void TurnOffRadiators(void);
 static void TurnOffWalls(void);
 
+static void TurnOnRadiators(uint8_t init_valve);
+static void TurnOnWalls(uint8_t init_valve);
+
 
 void TC_Init(void)
 {
@@ -96,9 +99,8 @@ void TC_Update_1s(void)
 	int16_t radIn_C10;
 
 	uint8_t hour = RTC_GetTime().Hour;
-	uint16_t mUpReqTemp;
-	uint16_t mDownReqTemp;
-	uint8_t mAvailableTemp;
+	uint16_t upReqTemp;
+	uint16_t downReqTemp;
 
 	invalid = 0;
 
@@ -116,25 +118,25 @@ void TC_Update_1s(void)
 		return;
 	}
 
-	tank1_C = VAR_GetVariable(VAR_TEMP_TANK_1,&invalid)/10;
-	tank2_C = VAR_GetVariable(VAR_TEMP_TANK_2,&invalid)/10;
-	tank3_C = VAR_GetVariable(VAR_TEMP_TANK_3,&invalid)/10;
-	tank4_C = VAR_GetVariable(VAR_TEMP_TANK_4,&invalid)/10;
-	tank5_C = VAR_GetVariable(VAR_TEMP_TANK_5,&invalid)/10;
-	tank6_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;
+	tank1_C = VAR_GetVariable(VAR_TEMP_TANK_1,&invalid);
+	tank2_C = VAR_GetVariable(VAR_TEMP_TANK_2,&invalid);
+	tank3_C = VAR_GetVariable(VAR_TEMP_TANK_3,&invalid);
+	tank4_C = VAR_GetVariable(VAR_TEMP_TANK_4,&invalid);
+	tank5_C = VAR_GetVariable(VAR_TEMP_TANK_5,&invalid);
+	tank6_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid);
 	boilerExhaust_C = VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST,&invalid)/10;
 
 
 	// calculate available energy
 
 	mAvailableEnergyWh = 0;
-	mAvailableEnergyWh +=  ((tank1_C + tank2_C) / 2 - TANK_BASE_TEMP) *  133;   // tank segment 1
-	mAvailableEnergyWh +=  ((tank2_C + tank3_C) / 2 - TANK_BASE_TEMP) *  133;  	// tank segment 2
-	mAvailableEnergyWh +=  ((tank3_C + tank4_C) / 2 - TANK_BASE_TEMP) *  101;   // tank segment 3
+	mAvailableEnergyWh +=  (((tank1_C + tank2_C) / 2 - TANK_BASE_TEMP) *  133)/10;   // tank segment 1
+	mAvailableEnergyWh +=  (((tank2_C + tank3_C) / 2 - TANK_BASE_TEMP) *  133)/10;  	// tank segment 2
+	mAvailableEnergyWh +=  (((tank3_C + tank4_C) / 2 - TANK_BASE_TEMP) *  101)/10;   // tank segment 3
 
 	mTotalEnergyWh = mAvailableEnergyWh;
-	mTotalEnergyWh +=  ((tank4_C + tank5_C) / 2 - 40) *  108;   // tank segment 4
-	mTotalEnergyWh +=  ((tank5_C + tank6_C) / 2 - 40) *  46;  	// tank segment 5
+	mTotalEnergyWh +=  (((tank4_C + tank5_C) / 2 - 400) *  108)/10;   // tank segment 4
+	mTotalEnergyWh +=  (((tank5_C + tank6_C) / 2 - 400) *  46)/10;  	// tank segment 5
 
 	VAR_SetVariable(VAR_HEAT_HEATING_WH, mAvailableEnergyWh, 1);
 	VAR_SetVariable(VAR_HEAT_TOTAL_WH, mTotalEnergyWh, 1);
@@ -142,17 +144,17 @@ void TC_Update_1s(void)
 
 	// Set required temperature, based on actual time and daily program
 
-	mUpReqTemp = mUpReqTempNight;
-	mDownReqTemp = mDownReqTempNight;
+	upReqTemp = mUpReqTempNight;
+	downReqTemp = mDownReqTempNight;
 
 	if (hour >= mUpNightEnd && hour < mUpNightBegin)  // Upstairs
 	{
-		mUpReqTemp = mUpReqTempDay;
+		upReqTemp = mUpReqTempDay;
 	}
 
 	if (hour >= mDownNightEnd && hour < mDownNightBegin) // downstairs
 	{
-		mDownReqTemp = mDownReqTempDay;
+		downReqTemp = mDownReqTempDay;
 	}
 
 
@@ -164,7 +166,7 @@ void TC_Update_1s(void)
 		{
 			TurnOffRadiators();
 		}
-		if (tempUp_C10 >= mUpReqTemp)  // OR temperature is high enough
+		if (tempUp_C10 >= upReqTemp)  // OR temperature is high enough
 		{
 			TurnOffRadiators();
 		}
@@ -174,10 +176,9 @@ void TC_Update_1s(void)
 		mRadOnTime = 0;
 		if (mAvailableEnergyWh >= MIN_ENERGY_RAD)  // if energy is available
 		{
-			if (tempUp_C10 <= (mUpReqTemp - RAD_HYST_C10))  // AND it is cold
+			if (tempUp_C10 <= (upReqTemp - RAD_HYST_C10))  // AND it is cold
 			{
-				mRadOn = 1;
-				DO_SetPumpRad(1);  // turn on radiators
+				TurnOnRadiators(135 - tank4_C/10);  // initial valve position set based on tank temperature
 			}
 		}
 	}
@@ -191,7 +192,7 @@ void TC_Update_1s(void)
 		{
 			TurnOffWalls();
 		}
-		if (tempDown_C10 >= mDownReqTemp)  // OR temperature is high enough
+		if (tempDown_C10 >= downReqTemp)  // OR temperature is high enough
 		{
 			TurnOffWalls();
 		}
@@ -205,12 +206,11 @@ void TC_Update_1s(void)
 		mWallOnTime = 0;
 		if (mAvailableEnergyWh >= MIN_ENERGY_WALL)  // if energy is available
 		{
-			if (tempDown_C10 <= (mDownReqTemp - WALL_HYST_C10))  // AND it is cold
+			if (tempDown_C10 <= (downReqTemp - WALL_HYST_C10))  // AND it is cold
 			{
 				if (boilerExhaust_C < 70)   // AND boiler is off
 				{
-					mWallOn = 1;
-					DO_SetPumpWall(1);  // turn on walls
+					TurnOnWalls(130 - tank4_C/10);  // initial valve position set based on tank temperature
 				}
 			}
 		}
@@ -218,11 +218,11 @@ void TC_Update_1s(void)
 
 	// Calculate required water temperature
 
-	mReqWaterRad_C10 = 350  + (mUpReqTemp - tempUp_C10) * 5;
+	mReqWaterRad_C10 = 340  + (upReqTemp - tempUp_C10) * 15;
 	if (mReqWaterRad_C10 > 600)  mReqWaterRad_C10 = 600;     // max 60C to radiators
 
-	mReqWaterWall_C10 = 380  + (mDownReqTemp - tempDown_C10) * 10;
-	if (mReqWaterWall_C10 > 480)  mReqWaterWall_C10 = 480;   // max 48C to walls
+	mReqWaterWall_C10 = 380  + (downReqTemp - tempDown_C10) * 10;
+	if (mReqWaterWall_C10 > 480)  mReqWaterWall_C10 = 500;   // max 48C to walls
 
 
  // Regulate the valves every VALVE_REG_PERIOD after the PUMP_ON_DELAY after pump is on
@@ -231,13 +231,19 @@ void TC_Update_1s(void)
 	{
 		if (radIn_C10 < mReqWaterRad_C10 - WATER_HYST)  // water too cold
 		{
-			mServoRadPct ++;
-			DO_SetServoRad(mServoRadPct);
+			if (mServoRadPct < 100)
+			{
+				mServoRadPct ++;
+				DO_SetServoRad(mServoRadPct);
+			}
 		}
 		if (radIn_C10 > mReqWaterRad_C10 + WATER_HYST)  // water too hot
 		{
-			mServoRadPct --;
-			DO_SetServoRad(mServoRadPct);
+			if (mServoRadPct > 0)
+			{
+				mServoRadPct --;
+				DO_SetServoRad(mServoRadPct);
+			}
 		}
 	}
 
@@ -245,16 +251,47 @@ void TC_Update_1s(void)
 	{
 		if (wallIn_C10 < mReqWaterWall_C10 - WATER_HYST)  // water too cold
 		{
-			mServoWallPct ++;
-			DO_SetServoWall(mServoWallPct);
+			if (mServoWallPct < 100)
+			{
+				mServoWallPct ++;
+				DO_SetServoWall(mServoWallPct);
+			}
 		}
 		if (wallIn_C10 > mReqWaterWall_C10 + WATER_HYST)  // water too hot
 		{
-			mServoWallPct --;
-			DO_SetServoWall(mServoWallPct);
+			if (mServoWallPct > 0)
+			{
+				mServoWallPct --;
+				DO_SetServoWall(mServoWallPct);
+			}
 		}
 	}
 
+}
+
+
+static void TurnOnRadiators(uint8_t init_valve)
+{
+	mServoRadPct  = 65;
+	if (init_valve < 100)
+	{
+		mServoRadPct = init_valve;
+	}
+	DO_SetServoRad(mServoRadPct);  // set initial valve position
+	mRadOn = 1;
+	DO_SetPumpRad(1);  // turn on radiators
+}
+
+static void TurnOnWalls(uint8_t init_valve)
+{
+	mServoWallPct  = 65;
+	if (init_valve < 100)
+	{
+		mServoWallPct = init_valve;
+	}
+	DO_SetServoWall(mServoWallPct);   // set initial valve position
+	mWallOn = 1;
+	DO_SetPumpWall(1);  // turn on walls
 }
 
 
@@ -262,14 +299,14 @@ static void TurnOffRadiators(void)
 {
 	mRadOn = 0;
 	DO_SetPumpRad(0);  // turn off radiators
-	mServoRadPct  = 65;
-	DO_SetServoRad(mServoRadPct);  // set default valve position
+	//mServoRadPct  = 65;
+	//DO_SetServoRad(mServoRadPct);  // set default valve position
 }
 
 static void TurnOffWalls(void)
 {
 	mWallOn = 0;
 	DO_SetPumpWall(0);  // turn off walls
-	mServoWallPct  = 65;
-	DO_SetServoWall(mServoWallPct);  // set default valve position
+	//mServoWallPct  = 65;
+	//DO_SetServoWall(mServoWallPct);  // set default valve position
 }

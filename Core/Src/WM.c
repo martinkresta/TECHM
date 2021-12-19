@@ -5,9 +5,11 @@
  *      Author: Martin
  */
 
+#include "WM.h"
 #include <RTC.h>
 #include "OW.h"
 #include "VARS.h"
+
 
 // private variables
 
@@ -113,7 +115,7 @@ void WM_ResetConsupmtions(void)
 }
 
 
-WM_ExtiCallback(uint16_t GPIO_Pin)
+void WM_ExtiCallback(uint16_t GPIO_Pin)
 {
 	if (GPIO_Pin == WM1_Pin)
 	{

@@ -17,6 +17,7 @@ eBoilerError mBoilerError;
 
 uint8_t mPumpFailure;
 uint8_t mPumpMask;
+uint16_t mLastWarningTime;
 
 
 
@@ -46,6 +47,7 @@ void HC_Update_1s(void)
 	int16_t TankInHot_C;
 	int16_t TankOutCold_C;
 	int16_t Tank_C;
+	int16_t Tank1_C;
 	int16_t boilerDiff;
 
 	// collect the variables
@@ -58,6 +60,7 @@ void HC_Update_1s(void)
 	TankInHot_C= VAR_GetVariable(VAR_TEMP_TANK_IN_H,&invalid)/10;
 	TankOutCold_C = VAR_GetVariable(VAR_TEMP_TANK_OUT_C,&invalid)/10;
 	Tank_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;
+	Tank1_C = VAR_GetVariable(VAR_TEMP_TANK_1,&invalid)/10;
 
 	boilerDiff = boilerOut_C - boilerIn_C;
 
@@ -110,7 +113,7 @@ void HC_Update_1s(void)
 				{
 					mBoilerState = eBs_Idle;
 				}
-				if (boilerTemp_C > 85 || boilerExhaust_C > 115) // if it gets warm again, turn on the pump
+				if (boilerTemp_C > 75 || boilerExhaust_C > 115) // if it gets warm again, turn on the pump
 				{
 					DO_SetPumpBoiler(1);  // turn on pump
 					mBoilerState = eBs_HeatUp;
@@ -143,7 +146,7 @@ void HC_Update_1s(void)
 
 	if(mBoilerState == eBs_HeatUp  || mBoilerState == eBS_Heating)  // check pump only in states where pump should be ON
 	{
-		if (boilerTemp_C > 70 && (boilerTemp_C > (boilerOut_C + 3)))  // pump failure
+		if (boilerTemp_C > 77 && (boilerTemp_C > (boilerOut_C + 3)))  // pump failure
 		{
 			mBoilerError = eBe_PumpFailure;
 		}
@@ -169,6 +172,19 @@ void HC_Update_1s(void)
 			UI_Buzzer_SetMode(eUI_OFF);
 			UI_LED_R_SetMode(eUI_OFF);
 	}
+
+	/* Low fuel warning */
+
+	mLastWarningTime++;
+	if (mBoilerError == eBe_NoError && mBoilerState == eBS_Heating && mLastWarningTime > 60)
+	{
+		mLastWarningTime = 0;
+		if (boilerExhaust_C < 150  && Tank1_C < 70)
+		{
+			UI_Buzzer_SetMode(eUI_BEEP_ONCE);
+		}
+	}
+
 
 
 }

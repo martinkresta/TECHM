@@ -12,7 +12,7 @@
 
 void WM_Init(void);
 
-void WM_Update_1s(void);
+void WM_Update_10ms(void);
 
 int16_t WM_GetFlowCold(void);
 
@@ -24,6 +24,6 @@ int16_t WM_GetConsumptionHot(void);
 
 void WM_ResetConsupmtions(void);
 
-WM_ExtiCallback(uint16_t GPIO_Pin);
+void WM_ExtiCallback(uint16_t GPIO_Pin);
 
 #endif /* INC_WM_H_ */
