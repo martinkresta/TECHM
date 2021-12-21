@@ -64,14 +64,14 @@ static void TurnOnWalls(uint8_t init_valve);
 void TC_Init(void)
 {
 
-	mDownReqTempDay = 220;
+	mDownReqTempDay = 221;
 	mDownReqTempNight = 210;
-	mUpReqTempDay = 220;
+	mUpReqTempDay = 221;
 	mUpReqTempNight = 200;
 	mDownNightBegin = 20;
 	mDownNightEnd = 4;
 	mUpNightBegin = 18;
-	mUpNightEnd = 5;
+	mUpNightEnd = 4;
 
 	mServoRadPct = 60;
 	mServoWallPct = 60;
@@ -113,8 +113,8 @@ void TC_Update_1s(void)
 	if (invalid)
 	{
 		// pumps off
-		TurnOffWalls();
-		TurnOffRadiators();
+	//	TurnOffWalls();
+	//	TurnOffRadiators();
 		return;
 	}
 
@@ -218,7 +218,7 @@ void TC_Update_1s(void)
 
 	// Calculate required water temperature
 
-	mReqWaterRad_C10 = 340  + (upReqTemp - tempUp_C10) * 15;
+	mReqWaterRad_C10 = 330  + (upReqTemp - tempUp_C10) * 15;
 	if (mReqWaterRad_C10 > 600)  mReqWaterRad_C10 = 600;     // max 60C to radiators
 
 	mReqWaterWall_C10 = 380  + (downReqTemp - tempDown_C10) * 10;
@@ -239,7 +239,7 @@ void TC_Update_1s(void)
 		}
 		if (radIn_C10 > mReqWaterRad_C10 + WATER_HYST)  // water too hot
 		{
-			if (mServoRadPct > 0)
+			if (mServoRadPct > 60)
 			{
 				mServoRadPct --;
 				DO_SetServoRad(mServoRadPct);
@@ -259,7 +259,7 @@ void TC_Update_1s(void)
 		}
 		if (wallIn_C10 > mReqWaterWall_C10 + WATER_HYST)  // water too hot
 		{
-			if (mServoWallPct > 0)
+			if (mServoWallPct > 60)
 			{
 				mServoWallPct --;
 				DO_SetServoWall(mServoWallPct);

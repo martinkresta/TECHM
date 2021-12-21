@@ -6,7 +6,7 @@
  *      Brief: Control logic of home heating system and solid fuel boiler
  */
 
-#include "heating.h"
+#include "HEATING.h"
 #include "VARS.h"
 #include "DO.h"
 #include "UI.h"
@@ -18,6 +18,9 @@ eBoilerError mBoilerError;
 uint8_t mPumpFailure;
 uint8_t mPumpMask;
 uint16_t mLastWarningTime;
+uint8_t mBeepCount;
+uint32_t mTodayHeat_Ws;
+uint16_t mTodayHeat_Wh;
 
 
 
@@ -27,6 +30,8 @@ void HC_Init(void)
 	mBoilerError = eBe_NoError;
 	mPumpMask = 0x06;
 	mPumpFailure = 0;
+	mBeepCount = 0;
+	mTodayHeat_Ws = 0;
 }
 
 
@@ -49,20 +54,39 @@ void HC_Update_1s(void)
 	int16_t Tank_C;
 	int16_t Tank1_C;
 	int16_t boilerDiff;
+	uint16_t power_W;
 
 	// collect the variables
 	invalid = 0;
 
 	boilerTemp_C = VAR_GetVariable(VAR_TEMP_BOILER,&invalid)/10;
 	boilerExhaust_C = VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST,&invalid)/10;
-	boilerIn_C= VAR_GetVariable(VAR_TEMP_BOILER_IN,&invalid)/10;
-	boilerOut_C= VAR_GetVariable(VAR_TEMP_BOILER_OUT,&invalid)/10;
+	boilerIn_C= VAR_GetVariable(VAR_TEMP_BOILER_IN,&invalid);  ///10;
+	boilerOut_C= VAR_GetVariable(VAR_TEMP_BOILER_OUT,&invalid); ///10;
 	TankInHot_C= VAR_GetVariable(VAR_TEMP_TANK_IN_H,&invalid)/10;
 	TankOutCold_C = VAR_GetVariable(VAR_TEMP_TANK_OUT_C,&invalid)/10;
 	Tank_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;
 	Tank1_C = VAR_GetVariable(VAR_TEMP_TANK_1,&invalid)/10;
 
 	boilerDiff = boilerOut_C - boilerIn_C;
+
+
+	/* Calculate power and today energy*/
+
+	// expected water flow is 750l/hod,  the pump has to be set to p = 1.5m, => P = 10W
+	// => Temperature difference of 0.1C equals to 92W of heating power
+	power_W = boilerDiff * 92;
+	mTodayHeat_Ws += power_W;
+	mTodayHeat_Wh = mTodayHeat_Ws / 3600;
+
+	VAR_SetVariable(VAR_BOILER_POWER, power_W, 1);
+	VAR_SetVariable(VAR_BOILER_HEAT, mTodayHeat_Wh, 1);
+
+
+	// rescale to full degrees of C for further conditions
+	boilerDiff /= 10;
+	boilerOut_C /=10;
+	boilerIn_C /=10;
 
 	if (invalid)
 	{
@@ -82,6 +106,7 @@ void HC_Update_1s(void)
 	switch (mBoilerState)
 	{
 		case eBs_Idle:
+			mBeepCount = 0;
 			if (boilerTemp_C >= TEMP_PUMP_ON)
 			{
 				DO_SetPumpBoiler(1); // turn on pump
@@ -113,7 +138,7 @@ void HC_Update_1s(void)
 				{
 					mBoilerState = eBs_Idle;
 				}
-				if (boilerTemp_C > 75 || boilerExhaust_C > 115) // if it gets warm again, turn on the pump
+				if (boilerTemp_C > 75 && boilerExhaust_C > 110) // if it gets warm again, turn on the pump
 				{
 					DO_SetPumpBoiler(1);  // turn on pump
 					mBoilerState = eBs_HeatUp;
@@ -181,10 +206,24 @@ void HC_Update_1s(void)
 		mLastWarningTime = 0;
 		if (boilerExhaust_C < 150  && Tank1_C < 70)
 		{
-			UI_Buzzer_SetMode(eUI_BEEP_ONCE);
+			if (mBeepCount < 3)
+			{
+				UI_Buzzer_SetMode(eUI_BEEP_ONCE);
+				mBeepCount++;
+			}
+		}
+		else
+		{
+			mBeepCount = 0;
 		}
 	}
 
 
 
+}
+
+
+void HC_Midnight(void)
+{
+	mTodayHeat_Ws = 0;  // reset boiler energy counter
 }

@@ -145,6 +145,9 @@ void APP_Init(void)
 	COM_AddStreamedVariable(VAR_HEAT_HEATING_WH, 3000);
 	COM_AddStreamedVariable(VAR_HEAT_TOTAL_WH, 3000);
 
+	COM_AddStreamedVariable(VAR_BOILER_POWER, 3000);
+	COM_AddStreamedVariable(VAR_BOILER_HEAT, 3000);
+
 }
 
 void APP_Start(void)
@@ -198,6 +201,7 @@ void APP_Update_1s(void)
 		// Reset counters
 		WM_ResetConsupmtions();
 		ELH_Midnight();
+		HC_Midnight();
 	}
 }
 
