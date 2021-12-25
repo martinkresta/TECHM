@@ -75,7 +75,14 @@ void HC_Update_1s(void)
 
 	// expected water flow is 750l/hod,  the pump has to be set to p = 1.5m, => P = 10W
 	// => Temperature difference of 0.1C equals to 92W of heating power
-	power_W = boilerDiff * 92;
+	if (mBoilerState == eBs_HeatUp || mBoilerState == eBS_Heating)
+	{
+		power_W = boilerDiff * 92;
+	}
+	else
+	{
+		power_W = 0;
+	}
 	mTodayHeat_Ws += power_W;
 	mTodayHeat_Wh = mTodayHeat_Ws / 3600;
 
@@ -226,4 +233,5 @@ void HC_Update_1s(void)
 void HC_Midnight(void)
 {
 	mTodayHeat_Ws = 0;  // reset boiler energy counter
+	mTodayHeat_Wh = 0;
 }

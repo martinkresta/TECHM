@@ -155,13 +155,13 @@ void APP_Start(void)
 
 	sDateTime now;
 	now.Day = 13;
-	now.Hour = 8;
-	now.Minute = 10;
+	now.Hour = 9;
+	now.Minute = 30;
 	now.Month = 12;
 	now.Second = 0;
 	now.Year = 2021;
 
-	RTC_SetTime(now);
+//	RTC_SetTime(now);
 
 	DO_SetElv(1);        // open watter supply valve
 
