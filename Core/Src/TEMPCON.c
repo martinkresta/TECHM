@@ -97,6 +97,7 @@ void TC_Update_1s(void)
 	int16_t boilerExhaust_C;
 	int16_t wallIn_C10;
 	int16_t radIn_C10;
+	int16_t outside_C10;
 
 	uint8_t hour = RTC_GetTime().Hour;
 	uint16_t upReqTemp;
@@ -125,6 +126,7 @@ void TC_Update_1s(void)
 	tank5_C = VAR_GetVariable(VAR_TEMP_TANK_5,&invalid);
 	tank6_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid);
 	boilerExhaust_C = VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST,&invalid)/10;
+	outside_C10 = VAR_GetVariable(VAR_TEMP_OUTSIDE,&invalid);
 
 
 	// calculate available energy
@@ -218,10 +220,14 @@ void TC_Update_1s(void)
 
 	// Calculate required water temperature
 
-	mReqWaterRad_C10 = 330  + (upReqTemp - tempUp_C10) * 15;
+	mReqWaterRad_C10 = 330;
+	if (outside_C10 < 0) mReqWaterRad_C10 -= outside_C10;  // compensate effect of outside temperature
+	mReqWaterRad_C10 += (upReqTemp - tempUp_C10) * 15;    // set action respective to error
 	if (mReqWaterRad_C10 > 600)  mReqWaterRad_C10 = 600;     // max 60C to radiators
 
-	mReqWaterWall_C10 = 380  + (downReqTemp - tempDown_C10) * 10;
+	mReqWaterWall_C10 = 380;
+	if (outside_C10 < 0) mReqWaterWall_C10 -= outside_C10;  // compensate effect of outside temperature
+	mReqWaterWall_C10	+= (downReqTemp - tempDown_C10) * 10;
 	if (mReqWaterWall_C10 > 480)  mReqWaterWall_C10 = 500;   // max 48C to walls
 
 

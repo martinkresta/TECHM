@@ -14,6 +14,7 @@
 
 eBoilerState mBoilerState;
 eBoilerError mBoilerError;
+eBoilerState mLastState;
 
 uint8_t mPumpFailure;
 uint8_t mPumpMask;
@@ -27,6 +28,7 @@ uint16_t mTodayHeat_Wh;
 void HC_Init(void)
 {
 	mBoilerState = eBs_Idle;
+	mLastState = eBs_Idle;
 	mBoilerError = eBe_NoError;
 	mPumpMask = 0x06;
 	mPumpFailure = 0;
@@ -97,17 +99,26 @@ void HC_Update_1s(void)
 
 	if (invalid)
 	{
+	/*	mLastState = mBoilerState;
 		mBoilerState = eBS_InvalidInputs;
-		DO_SetPumpBoiler(1);
+		DO_SetPumpBoiler(1); */
 		return;
 	}
 	else
 	{
-		if (mBoilerState == eBS_InvalidInputs)
+	/* 	if (mBoilerState == eBS_InvalidInputs)
 		{
-			mBoilerState = eBs_Idle;
-			DO_SetPumpBoiler(0); // turn off pump
-		}
+			mBoilerState = mLastState;
+			if (mBoilerState == eBs_Idle || mBoilerState == eBS_CoolDown)
+			{
+				DO_SetPumpBoiler(0); // turn off pump
+			}
+			else
+			{
+				DO_SetPumpBoiler(1); // turn on pump
+			}
+
+		} */
 	}
 
 	switch (mBoilerState)
@@ -125,7 +136,7 @@ void HC_Update_1s(void)
 			{
 				mBoilerState = eBS_Heating;
 			}
-			if (boilerTemp_C < (TEMP_PUMP_ON - 5))
+			if (boilerTemp_C < (TEMP_PUMP_ON - 10))
 			{
 				DO_SetPumpBoiler(0);  // turn off pump
 				mBoilerState = eBs_Idle;
