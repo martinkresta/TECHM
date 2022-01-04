@@ -234,6 +234,9 @@ static void ProcessMessage(s_CanRxMsg* msg)
 			unixtime |= msg->data[3];
 			RTC_SetUnixTime(unixtime);
 			break;
+		case CMD_BALANCE_INFO: // balancing information from ELECON to ELHEATER
+			ELH_SetBalanceInfo(par1, par2);
+			break;
 	}
 	return;
 }

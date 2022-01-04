@@ -20,7 +20,8 @@ typedef enum
 	eElh_BoardOveremerature,
 	eElh_InvalidInputs,
 	eElh_ELeconComError,
-	eElh_SwitchError
+	eElh_SwitchError,
+	eElh_BalanceSupport
 }eElhState;
 
 #define  MAX_BOARD_TEMP_C					55
@@ -46,5 +47,7 @@ uint16_t ELH_GetStatus(void);
 void ELH_SetTemp(int16_t tempTop, int16_t tempMiddle);
 
 void ELH_Midnight(void);
+
+void ELH_SetBalanceInfo(uint8_t balancedToday, int16_t optBalancingCurrent);
 
 #endif /* INC_ELHEATER_H_ */

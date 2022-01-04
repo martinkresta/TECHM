@@ -111,9 +111,9 @@ void TC_Update_1s(void)
 	tempUp_C10 = VAR_GetVariable(VAR_TEMP_KIDROOM, &invalid);
 	radIn_C10 = VAR_GetVariable(VAR_TEMP_RAD_H,&invalid);
 
-	if (invalid)
+	if (invalid || tempDown_C10 == 0 || tempUp_C10 == 0)
 	{
-		// pumps off
+	//  pumps off
 	//	TurnOffWalls();
 	//	TurnOffRadiators();
 		return;
@@ -221,12 +221,12 @@ void TC_Update_1s(void)
 	// Calculate required water temperature
 
 	mReqWaterRad_C10 = 330;
-	if (outside_C10 < 0) mReqWaterRad_C10 -= outside_C10;  // compensate effect of outside temperature
+	if (outside_C10 < 0) mReqWaterRad_C10 -= outside_C10/2;  // compensate effect of outside temperature
 	mReqWaterRad_C10 += (upReqTemp - tempUp_C10) * 15;    // set action respective to error
 	if (mReqWaterRad_C10 > 600)  mReqWaterRad_C10 = 600;     // max 60C to radiators
 
 	mReqWaterWall_C10 = 380;
-	if (outside_C10 < 0) mReqWaterWall_C10 -= outside_C10;  // compensate effect of outside temperature
+	//if (outside_C10 < 0) mReqWaterWall_C10 -= outside_C10;  // compensate effect of outside temperature
 	mReqWaterWall_C10	+= (downReqTemp - tempDown_C10) * 10;
 	if (mReqWaterWall_C10 > 480)  mReqWaterWall_C10 = 500;   // max 48C to walls
 

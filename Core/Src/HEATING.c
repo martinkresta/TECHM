@@ -70,7 +70,32 @@ void HC_Update_1s(void)
 	Tank_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;
 	Tank1_C = VAR_GetVariable(VAR_TEMP_TANK_1,&invalid)/10;
 
+	if (invalid)
+	{
+	/*	mLastState = mBoilerState;
+		mBoilerState = eBS_InvalidInputs;
+		DO_SetPumpBoiler(1); */
+		return;
+	}
+	else
+	{
+	/* 	if (mBoilerState == eBS_InvalidInputs)
+		{
+			mBoilerState = mLastState;
+			if (mBoilerState == eBs_Idle || mBoilerState == eBS_CoolDown)
+			{
+				DO_SetPumpBoiler(0); // turn off pump
+			}
+			else
+			{
+				DO_SetPumpBoiler(1); // turn on pump
+			}
+
+		} */
+	}
+
 	boilerDiff = boilerOut_C - boilerIn_C;
+
 
 
 	/* Calculate power and today energy*/
@@ -97,29 +122,6 @@ void HC_Update_1s(void)
 	boilerOut_C /=10;
 	boilerIn_C /=10;
 
-	if (invalid)
-	{
-	/*	mLastState = mBoilerState;
-		mBoilerState = eBS_InvalidInputs;
-		DO_SetPumpBoiler(1); */
-		return;
-	}
-	else
-	{
-	/* 	if (mBoilerState == eBS_InvalidInputs)
-		{
-			mBoilerState = mLastState;
-			if (mBoilerState == eBs_Idle || mBoilerState == eBS_CoolDown)
-			{
-				DO_SetPumpBoiler(0); // turn off pump
-			}
-			else
-			{
-				DO_SetPumpBoiler(1); // turn on pump
-			}
-
-		} */
-	}
 
 	switch (mBoilerState)
 	{
@@ -222,7 +224,7 @@ void HC_Update_1s(void)
 	if (mBoilerError == eBe_NoError && mBoilerState == eBS_Heating && mLastWarningTime > 60)
 	{
 		mLastWarningTime = 0;
-		if (boilerExhaust_C < 150  && Tank1_C < 70)
+		if (boilerExhaust_C < 150 && boilerExhaust_C > 125 && Tank1_C < 70 )
 		{
 			if (mBeepCount < 3)
 			{

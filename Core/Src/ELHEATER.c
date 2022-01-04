@@ -34,8 +34,8 @@ int16_t mMaxHeaterLoad;
 
 int16_t mTodayEnergy_Wh;
 uint32_t mEnergyCounter_mWh;
-//static uint8_t mTodayDayNumber;
 static uint8_t mBatteryBalancedToday;
+static int16_t mOptimalBalancingCurrent;
 
 static int16_t mTankTemp_C;
 
@@ -49,6 +49,7 @@ void DecreasePower(void);
 void SwitchOffImmediatelly(void);
 void CalculateHeaterLoad(void);
 int16_t ConvertAdcToCurrent_mA(uint16_t adcval);
+static void ControlHeaterPower(int16_t batteryCurrent_A);
 
 
 /*Global methods*/
@@ -56,7 +57,7 @@ int16_t ConvertAdcToCurrent_mA(uint16_t adcval);
 void ELH_Init(void)
 {
 	//mReqTankTemp = 50;
-	mReqTankTemp = 84;
+	mReqTankTemp = 90;
 	mHeaterMask = 0;
 	mHeaterEnaMask = DEF_ENABLE_MASK;
 	mState = eElh_NoFreePower;
@@ -68,19 +69,19 @@ void ELH_Init(void)
 
 	mTodayEnergy_Wh = 0;
 	mEnergyCounter_mWh = 0;
-//	mTodayDayNumber = 0;
 	mBatteryBalancedToday = 0;
+	mOptimalBalancingCurrent = 0;
 
 }
 
 void ELH_Update_1s(void)
 {
 
-	int16_t invalid;
+	uint16_t invalid;
 	int16_t boartTemp_C;
 	int16_t soc;
 	int16_t charging_A;
-	int16_t load_A;
+	//int16_t load_A;
 	int16_t battCurr_A;
 	int16_t solarVoltage_V;
 
@@ -115,17 +116,8 @@ void ELH_Update_1s(void)
 
 	VAR_SetVariable(VAR_EL_HEATER_CONS, mTodayEnergy_Wh, 1);
 
-	// reset the energy counter at midnight
-/*	if (mTodayDayNumber != RTC_GetTime().Day)
-	{
-		mTodayEnergy_Wh = 0;
-		mTodayDayNumber = RTC_GetTime().Day;
-		mBatteryBalancedToday = 0;
-	}*/
-
 
 // collect the all informations to make decision about the power
-
 
 
 	// collect the variables
@@ -134,7 +126,7 @@ void ELH_Update_1s(void)
 	mTankTemp_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;  // top tank sensor
 	soc				 = VAR_GetVariable(VAR_BAT_SOC,&invalid);  		// battery soc
 	charging_A = VAR_GetVariable(VAR_CHARGING_A10,&invalid)/10;  // charging current
-	load_A		 = VAR_GetVariable(VAR_LOAD_A10,&invalid)/10;  // load current
+//	load_A		 = VAR_GetVariable(VAR_LOAD_A10,&invalid)/10;  // load current
 	battCurr_A = VAR_GetVariable(VAR_BAT_CURRENT_A10,&invalid)/10;  // batt current
 	solarVoltage_V = VAR_GetVariable(VAR_MPPT_SOLAR_VOLTAGE_V100,&invalid)/100;  // FVE voltage
 
@@ -196,14 +188,14 @@ void ELH_Update_1s(void)
 	}
 
   // low soc
-	if (soc < SOC_DISABLE)
+	if (soc < SOC_DISABLE && mOptimalBalancingCurrent == 0)   // SOC too low AND balancing support not required
 	{
 		mSocEnableHys = 0;
 		mState = eElh_LowSOC;
 		SwitchOffImmediatelly();
 	}
 
-	// regulating load current to match to actual charging vs discharging
+	// regulating load current to match to actual charging vs discharging (executed only after battery was balanced today)
 	if ( mSocEnableHys == 1)
 	{
 		// When SOC is being discharged from 100%, and charger is still disabled allow discharging MAX_LOAD_A
@@ -232,49 +224,25 @@ void ELH_Update_1s(void)
 
 		}
 
-		// Battery actual load
-		if (((-battCurr_A) + ONE_COIL_LOAD_A) < mMaxHeaterLoad )
+		// compares required battery load with actual battery current and adjusts heater power to reach an optimum
+		ControlHeaterPower(battCurr_A);
+	}
+
+	// support for ELECON to lower charging current when solar power is too high for successful balancing  (happens only before battery is balanced today)
+	else if (mOptimalBalancingCurrent != 0  && mBatteryBalancedToday == 0)
+	{
+		if (mOptimalBalancingCurrent > 0)  // safety check, to prevent discharging battery by SW or COM error
 		{
-			mIncreaseRequest_cnt ++;
-			mDecreaseRequest_cnt = 0;
-			mState = eElh_Heating;
-		}
-		else if ((-battCurr_A) < mMaxHeaterLoad )
-		{
-			// do nothig, this is the sweet spot we want to reach
-			mIncreaseRequest_cnt = 0;
-			mDecreaseRequest_cnt = 0;
+			mMaxHeaterLoad = - mOptimalBalancingCurrent; // optimal balancing current is provided by ELECON
+			ControlHeaterPower(battCurr_A);
+			mState = eElh_BalanceSupport;  // overwrite state
 		}
 		else
 		{
-			mDecreaseRequest_cnt ++;
-			mIncreaseRequest_cnt = 0;
-
-			if (mHeaterLoad_A == 0)
-			{
-				mState = eElh_NoFreePower;
-			}
+			// TBD Error  - log
+			mState = eElh_LowSOC;
+			SwitchOffImmediatelly();
 		}
-
-		// increase power only every X seconds, to prevent switching all switches simultaneously
-		if (mIncreaseRequest_cnt > INCREASE_PERIOD_S)
-		{
-			mIncreaseRequest_cnt = 0;
-			IncreasePower();
-			mState = eElh_Heating;
-		}
-
-		if (mDecreaseRequest_cnt > INCREASE_PERIOD_S)
-		{
-			mDecreaseRequest_cnt = 0;
-			DecreasePower();
-			mState = eElh_Heating;
-			if (mHeaterLoad_A == 0)
-			{
-				mState = eElh_NoFreePower;
-			}
-		}
-
 	}
 	else  // heating not enabled
 	{
@@ -282,6 +250,15 @@ void ELH_Update_1s(void)
 		SwitchOffImmediatelly();
 	}
 
+}
+
+void ELH_SetBalanceInfo(uint8_t balancedToday, int16_t optBalancingCurrent)
+{
+	if (balancedToday == 1)
+	{
+		mBatteryBalancedToday = 1;
+	}
+	mOptimalBalancingCurrent = optBalancingCurrent;
 }
 
 // reset at midnight
@@ -304,7 +281,58 @@ void ELH_SetTemp(int16_t tempTop, int16_t tempMiddle)
 
 
 
+
 /*Private methods */
+
+// compares required battery load with actual battery current and adjusts heater power to reach an optimum
+static void ControlHeaterPower(int16_t batteryCurrent_A)
+{
+	// Battery actual load
+	if (((-batteryCurrent_A) + ONE_COIL_LOAD_A) < mMaxHeaterLoad )
+	{
+		mIncreaseRequest_cnt ++;
+		mDecreaseRequest_cnt = 0;
+		mState = eElh_Heating;
+	}
+	else if ((-batteryCurrent_A) < mMaxHeaterLoad )
+	{
+		// do nothig, this is the sweet spot we want to reach
+		mIncreaseRequest_cnt = 0;
+		mDecreaseRequest_cnt = 0;
+	}
+	else
+	{
+		mDecreaseRequest_cnt ++;
+		mIncreaseRequest_cnt = 0;
+
+		if (mHeaterLoad_A == 0)
+		{
+			mState = eElh_NoFreePower;
+		}
+	}
+
+	// increase power only every X seconds, to prevent switching all switches simultaneously
+	if (mIncreaseRequest_cnt > INCREASE_PERIOD_S)
+	{
+		mIncreaseRequest_cnt = 0;
+		IncreasePower();
+		mState = eElh_Heating;
+	}
+
+	if (mDecreaseRequest_cnt > INCREASE_PERIOD_S)
+	{
+		mDecreaseRequest_cnt = 0;
+		DecreasePower();
+		mState = eElh_Heating;
+		if (mHeaterLoad_A == 0)
+		{
+			mState = eElh_NoFreePower;
+		}
+	}
+
+}
+
+
 void IncreasePower(void)
 {
 	if (mTankTemp_C < MIN_UTIL_TEMP_C)  // top hlaft of the tank has higher protity
@@ -312,7 +340,7 @@ void IncreasePower(void)
 		// firstly ensure that top coils are on
 		if (mHeaterMask != 0)  // if some coil is already ON
 		{
-			while (mHeaterMask & 0x20 == 0) // mask of topmost coil
+			while ((mHeaterMask & 0x20) == 0) // mask of topmost coil
 			{
 				mHeaterMask = mHeaterMask << 1;   // shift until the topmost coil is ON
 			}
@@ -326,7 +354,7 @@ void IncreasePower(void)
 		// firstly ensure that bottom coils are on
 		if (mHeaterMask != 0)  // if some coil is already ON
 		{
-			while (mHeaterMask & 0x01 == 0) // mask of bottommost coil
+			while ((mHeaterMask & 0x01) == 0) // mask of bottommost coil
 			{
 				mHeaterMask = mHeaterMask >> 1;   // shift until the bottom coil is ON
 			}
@@ -347,7 +375,7 @@ void DecreasePower(void)
 			// firstly ensure that top coils are on
 			if (mHeaterMask != 0)  // if some coil is already ON
 			{
-				while (mHeaterMask & 0x20 == 0) // mask of topmost coil
+				while ((mHeaterMask & 0x20) == 0) // mask of topmost coil
 				{
 					mHeaterMask = mHeaterMask << 1;   // shift until the topmost coil is ON
 				}
@@ -360,7 +388,7 @@ void DecreasePower(void)
 			// firstly ensure that bottom coils are on
 			if (mHeaterMask != 0)  // if some coil is already ON
 			{
-				while (mHeaterMask & 0x01 == 0) // mask of bottommost coil
+				while ((mHeaterMask & 0x01) == 0) // mask of bottommost coil
 				{
 					mHeaterMask = mHeaterMask >> 1;   // shift until the bottom coil is ON
 				}

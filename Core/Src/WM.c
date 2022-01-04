@@ -112,6 +112,8 @@ void WM_ResetConsupmtions(void)
 {
 	mConsCold = 0;
 	mConsHot = 0;
+	VAR_SetVariable(VAR_CONS_COLD, (int16_t)(mConsCold), 1);
+	VAR_SetVariable(VAR_CONS_HOT, (int16_t)(mConsHot), 1);
 }
 
 
