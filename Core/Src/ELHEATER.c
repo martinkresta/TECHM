@@ -188,11 +188,15 @@ void ELH_Update_1s(void)
 	}
 
   // low soc
-	if (soc < SOC_DISABLE && mOptimalBalancingCurrent == 0)   // SOC too low AND balancing support not required
+
+	if (soc < SOC_DISABLE)   // SOC too low
 	{
 		mSocEnableHys = 0;
 		mState = eElh_LowSOC;
-		SwitchOffImmediatelly();
+		if (mOptimalBalancingCurrent == 0)  // SOC too low AND balancing support not required
+		{
+			SwitchOffImmediatelly();
+		}
 	}
 
 	// regulating load current to match to actual charging vs discharging (executed only after battery was balanced today)
@@ -213,13 +217,13 @@ void ELH_Update_1s(void)
 		}
 		else  // if charger is enabled (Charging > 1A) adjust the load to maintain SOC around 97% (prevent charging to 100%)
 		{
-			if (soc <= 97)
+			if (soc <= 98)
 			{
 				mMaxHeaterLoad = -2;  // at least 2 Amps should stay for charging
 			}
 			else
 			{
-				mMaxHeaterLoad = ONE_COIL_LOAD_A + 1; // when SOC is over 97% we should discharge more than charge
+				mMaxHeaterLoad = ONE_COIL_LOAD_A + 1; // when SOC is over 98% we should discharge more than charge
 			}
 
 		}
@@ -266,6 +270,7 @@ void ELH_Midnight(void)
 {
 	mTodayEnergy_Wh = 0;
 	mBatteryBalancedToday = 0;
+	mSocEnableHys = 0;
 }
 
 uint16_t ELH_GetStatus(void)
