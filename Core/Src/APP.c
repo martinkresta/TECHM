@@ -78,6 +78,7 @@ void APP_Init(void)
 
 	UI_Init(&uihw);
 	UI_LED_Life_SetMode(eUI_BLINKING_SLOW);
+	UI_LED_B_SetMode(eUI_ON);
 
 
 	/*Config temperature measurement*/
@@ -233,6 +234,7 @@ static void ProcessMessage(s_CanRxMsg* msg)
 			unixtime |= msg->data[2] << 8;
 			unixtime |= msg->data[3];
 			RTC_SetUnixTime(unixtime);
+			UI_LED_B_SetMode(eUI_OFF);  // debug: when blue led is OFF RTC was set
 			break;
 		case CMD_BALANCE_INFO: // balancing information from ELECON to ELHEATER
 			ELH_SetBalanceInfo(par1, par2);

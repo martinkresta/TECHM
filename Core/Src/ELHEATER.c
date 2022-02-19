@@ -57,7 +57,7 @@ static void ControlHeaterPower(int16_t batteryCurrent_A);
 void ELH_Init(void)
 {
 	//mReqTankTemp = 50;
-	mReqTankTemp = 90;
+	mReqTankTemp = 95;
 	mHeaterMask = 0;
 	mHeaterEnaMask = DEF_ENABLE_MASK;
 	mState = eElh_NoFreePower;
@@ -217,13 +217,13 @@ void ELH_Update_1s(void)
 		}
 		else  // if charger is enabled (Charging > 1A) adjust the load to maintain SOC around 97% (prevent charging to 100%)
 		{
-			if (soc <= 98)
+			if (soc <= 96)
 			{
 				mMaxHeaterLoad = -2;  // at least 2 Amps should stay for charging
 			}
 			else
 			{
-				mMaxHeaterLoad = ONE_COIL_LOAD_A + 1; // when SOC is over 98% we should discharge more than charge
+				mMaxHeaterLoad = ONE_COIL_LOAD_A + 5; // when SOC is over 96% we should discharge more than charge
 			}
 
 		}
@@ -299,7 +299,7 @@ static void ControlHeaterPower(int16_t batteryCurrent_A)
 		mDecreaseRequest_cnt = 0;
 		mState = eElh_Heating;
 	}
-	else if ((-batteryCurrent_A) < mMaxHeaterLoad )
+	else if ((-batteryCurrent_A) <= ( mMaxHeaterLoad + 1 ) )
 	{
 		// do nothig, this is the sweet spot we want to reach
 		mIncreaseRequest_cnt = 0;

@@ -24,10 +24,10 @@ typedef enum
 	eElh_BalanceSupport
 }eElhState;
 
-#define  MAX_BOARD_TEMP_C					55
+#define  MAX_BOARD_TEMP_C					60
 #define  MIN_UTIL_TEMP_C					45
 //#define  MIN_SOC									90
-#define  MAX_LOAD_A								85  //
+#define  MAX_LOAD_A								95  //
 #define  SOC_ENABLE								100
 #define  SOC_DISABLE							95
 #define  DEF_ENABLE_MASK					0x3F    // 0011 1111   // all coils enabled
@@ -35,7 +35,7 @@ typedef enum
 #define  ONE_COIL_LOAD_A					10
 #define  NUM_OF_COILS							6
 
-#define  INCREASE_PERIOD_S				5
+#define  INCREASE_PERIOD_S				7
 
 
 void ELH_Init(void);
