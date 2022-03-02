@@ -5,6 +5,7 @@
 #include "main.h"
 #include "VARS.h"
 #include "ADC.h"
+#include "APP.h"
 
 #include <math.h>
 

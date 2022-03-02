@@ -47,7 +47,7 @@ void APP_Init(void)
 	MCAN_Init(&hcan1, THIS_NODE);
   COM_Init(THIS_NODE);
   ELH_Init();
-	ADC_Init(&hadc1, &hdma_adc1);
+	ADC_Init(&hadc1, &hdma_adc1, NUM_OF_ADC_CHANNELS);
 	DO_Init();
 	WM_Init();
 	WDG_Init(3000);
