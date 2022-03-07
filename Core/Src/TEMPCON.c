@@ -198,7 +198,7 @@ void TC_Update_1s(void)
 		{
 			TurnOffWalls();
 		}
-		if (boilerExhaust_C >= 75)  // OR boiler is on
+		if (boilerExhaust_C >= 120 && (tempDown_C10 >= (downReqTemp - 20)))  // OR boiler is on
 		{
 			TurnOffWalls();
 		}
@@ -210,7 +210,7 @@ void TC_Update_1s(void)
 		{
 			if (tempDown_C10 <= (downReqTemp - WALL_HYST_C10))  // AND it is cold
 			{
-				if (boilerExhaust_C < 70)   // AND boiler is off
+				if (boilerExhaust_C < 120 || (tempDown_C10 < (downReqTemp - 20)))   // AND boiler is off
 				{
 					TurnOnWalls(130 - tank4_C/10);  // initial valve position set based on tank temperature
 				}

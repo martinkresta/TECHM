@@ -128,7 +128,7 @@ void ELH_Update_1s(void)
 	soc				 = VAR_GetVariable(VAR_BAT_SOC,&invalid);  		// battery soc
 	charging_A = VAR_GetVariable(VAR_CHARGING_A10,&invalid)/10;  // charging current
 //	load_A		 = VAR_GetVariable(VAR_LOAD_A10,&invalid)/10;  // load current
-	battCurr_A = VAR_GetVariable(VAR_BAT_CURRENT_A10,&invalid)/100;  // batt current
+	battCurr_A = VAR_GetVariable(VAR_BAT_CURRENT_A10,&invalid)/10;  // batt current
 	solarVoltage_V = VAR_GetVariable(VAR_MPPT_SOLAR_VOLTAGE_V100,&invalid)/100;  // FVE voltage
 
 	if(invalid)
