@@ -219,7 +219,7 @@ static void ProcessMessage(s_CanRxMsg* msg)
 	par1 = (msg->data[0] << 8) | msg->data[1];
 	par2 = (msg->data[2] << 8) | msg->data[3];
 	par3 = (msg->data[4] << 8) | msg->data[5];
-//	par4 = msg->data[6]*0xFF + msg->data[7];
+//	par4 = (msg->data[6] << 8) | msg->data[7];
 
 	switch (cmd)
 	{
