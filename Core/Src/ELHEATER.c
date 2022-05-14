@@ -6,7 +6,7 @@
  *       *      Brief: Control logic of electrical heating elements in accumulation tank
  */
 
-#include <RTC.h>
+#include "RTC.h"
 #include "main.h"
 #include "ELHEATER.h"
 #include "COM.h"
@@ -58,7 +58,7 @@ static void ControlHeaterPower(int16_t batteryCurrent_A);
 void ELH_Init(void)
 {
 	//mReqTankTemp = 50;
-	mReqTankTemp = 95;
+	mReqTankTemp = WINTER_REQ_TEMP;
 	mHeaterMask = 0;
 	mHeaterEnaMask = DEF_ENABLE_MASK;
 	mState = eElh_NoFreePower;
@@ -116,6 +116,18 @@ void ELH_Update_1s(void)
 	}
 
 	VAR_SetVariable(VAR_EL_HEATER_CONS, mTodayEnergy_Wh, 1);
+
+	// set the required target tempearture w.r.t year season
+	sDateTime now = RTC_GetTime();
+	if (now.Month > 4 && now.Month < 9)  // summer time  May - August
+	{
+		mReqTankTemp = SUMMER_REQ_TEMP;
+	}
+	else
+	{
+		mReqTankTemp = WINTER_REQ_TEMP;
+	}
+
 
 
 // collect the all informations to make decision about the power

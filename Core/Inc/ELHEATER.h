@@ -37,6 +37,9 @@ typedef enum
 
 #define  INCREASE_PERIOD_S				7
 
+#define  WINTER_REQ_TEMP				95
+#define  SUMMER_REQ_TEMP				70
+
 
 void ELH_Init(void);
 
