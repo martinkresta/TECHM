@@ -37,7 +37,7 @@ typedef enum
 
 #define  INCREASE_PERIOD_S				7
 
-#define  WINTER_REQ_TEMP				95
+#define  WINTER_REQ_TEMP				90
 #define  SUMMER_REQ_TEMP				70
 
 

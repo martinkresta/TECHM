@@ -64,10 +64,10 @@ static void TurnOnWalls(uint8_t init_valve);
 void TC_Init(void)
 {
 
-	mDownReqTempDay = 221;
-	mDownReqTempNight = 210;
-	mUpReqTempDay = 221;
-	mUpReqTempNight = 200;
+	mDownReqTempDay = 215;
+	mDownReqTempNight = 205;
+	mUpReqTempDay = 215;
+	mUpReqTempNight = 195;
 	mDownNightBegin = 20;
 	mDownNightEnd = 4;
 	mUpNightBegin = 18;
@@ -111,11 +111,11 @@ void TC_Update_1s(void)
 	tempUp_C10 = VAR_GetVariable(VAR_TEMP_KIDROOM, &invalid);
 	radIn_C10 = VAR_GetVariable(VAR_TEMP_RAD_H,&invalid);
 
-	if (invalid || tempDown_C10 == 0 || tempUp_C10 == 0)
+	if (invalid)
 	{
-	//  pumps off
-	//	TurnOffWalls();
-	//	TurnOffRadiators();
+	 // pumps off
+		TurnOffWalls();
+		TurnOffRadiators();
 		return;
 	}
 
