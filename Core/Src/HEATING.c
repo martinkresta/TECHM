@@ -10,6 +10,7 @@
 #include "VARS.h"
 #include "DO.h"
 #include "UI.h"
+#include "COM.h"
 
 
 eBoilerState mBoilerState;
@@ -129,6 +130,7 @@ void HC_Update_1s(void)
 			mBeepCount = 0;
 			if (boilerTemp_C >= TEMP_PUMP_ON)
 			{
+			  COM_SendACRemoteRequest(0,1,0xFFFF);  // keep AC On for ~ 18 hours
 				DO_SetPumpBoiler(1); // turn on pump
 				mBoilerState = eBs_HeatUp;
 			}
@@ -141,6 +143,7 @@ void HC_Update_1s(void)
 			if (boilerTemp_C < (TEMP_PUMP_ON - 10))
 			{
 				DO_SetPumpBoiler(0);  // turn off pump
+				COM_SendACRemoteRequest(0,0,1);  // Cancel the remote request
 				mBoilerState = eBs_Idle;
 			}
 			break;
@@ -149,6 +152,7 @@ void HC_Update_1s(void)
 			{
 				DO_SetPumpBoiler(0);  // turn off pump
 				UI_Buzzer_SetMode(eUI_OFF);
+				COM_SendACRemoteRequest(0,0,1);  // Cancel the remote request
 				mBoilerState = eBS_CoolDown;
 			}
 			break;
@@ -160,6 +164,7 @@ void HC_Update_1s(void)
 				}
 				if (boilerTemp_C > 75 && boilerExhaust_C > 110) // if it gets warm again, turn on the pump
 				{
+				  COM_SendACRemoteRequest(0,1,0xFFFF);  // keep AC On for ~ 18 hours
 					DO_SetPumpBoiler(1);  // turn on pump
 					mBoilerState = eBs_HeatUp;
 				}

@@ -27,6 +27,7 @@
 #include "main.h"
 #include "RTC.h"
 #include "DO.h"
+#include "COM.h"
 
 /* Configuration */
 uint16_t mDownReqTempDay;
@@ -111,7 +112,7 @@ void TC_Update_1s(void)
 	tempUp_C10 = VAR_GetVariable(VAR_TEMP_KIDROOM, &invalid);
 	radIn_C10 = VAR_GetVariable(VAR_TEMP_RAD_H,&invalid);
 
-	if (invalid)
+	if (invalid || tempDown_C10 == 0 || tempUp_C10 == 0)
 	{
 	 // pumps off
 		TurnOffWalls();
@@ -205,7 +206,7 @@ void TC_Update_1s(void)
 	}
 	else            // walls are off
 	{
-		mWallOnTime = 0;
+    mWallOnTime = 0;
 		if (mAvailableEnergyWh >= MIN_ENERGY_WALL)  // if energy is available
 		{
 			if (tempDown_C10 <= (downReqTemp - WALL_HYST_C10))  // AND it is cold
@@ -285,6 +286,7 @@ static void TurnOnRadiators(uint8_t init_valve)
 	}
 	DO_SetServoRad(mServoRadPct);  // set initial valve position
 	mRadOn = 1;
+	COM_SendACRemoteRequest(0,1,0xFFFF);  // keep AC On for ~ 18 hours
 	DO_SetPumpRad(1);  // turn on radiators
 }
 
@@ -297,6 +299,7 @@ static void TurnOnWalls(uint8_t init_valve)
 	}
 	DO_SetServoWall(mServoWallPct);   // set initial valve position
 	mWallOn = 1;
+	COM_SendACRemoteRequest(0,1,0xFFFF);  // keep AC On for ~ 18 hours
 	DO_SetPumpWall(1);  // turn on walls
 }
 
@@ -305,6 +308,7 @@ static void TurnOffRadiators(void)
 {
 	mRadOn = 0;
 	DO_SetPumpRad(0);  // turn off radiators
+	COM_SendACRemoteRequest(0,0,1);  // Cancel the remote request
 	//mServoRadPct  = 65;
 	//DO_SetServoRad(mServoRadPct);  // set default valve position
 }
@@ -313,6 +317,7 @@ static void TurnOffWalls(void)
 {
 	mWallOn = 0;
 	DO_SetPumpWall(0);  // turn off walls
+	COM_SendACRemoteRequest(0,0,1);  // Cancel the remote request
 	//mServoWallPct  = 65;
 	//DO_SetServoWall(mServoWallPct);  // set default valve position
 }

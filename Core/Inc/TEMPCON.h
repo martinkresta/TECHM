@@ -14,7 +14,7 @@
 
 
 #define TANK_BASE_TEMP	300    // minimal usable temperature
-#define MIN_ENERGY_RAD	0			// minimal available energy to start radiators
+#define MIN_ENERGY_RAD	300			// minimal available energy to start radiators
 #define MIN_ENERGY_WALL	3000  // minimal available energy to start walls
 
 #define RAD_HYST_C10		2
