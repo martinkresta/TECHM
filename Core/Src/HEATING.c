@@ -148,7 +148,7 @@ void HC_Update_1s(void)
 			}
 			break;
 		case eBS_Heating:
-			if (boilerExhaust_C < 110  && boilerDiff <= 0) // if chimney is cooling down and exchanger does not put heat to water
+			if (boilerExhaust_C < 110  && boilerDiff <= 0 && boilerTemp_C < (TEMP_BOILER_OVERHEAT-1)) // if chimney is cooling down and exchanger does not put heat to water
 			{
 				DO_SetPumpBoiler(0);  // turn off pump
 				UI_Buzzer_SetMode(eUI_OFF);
@@ -162,7 +162,7 @@ void HC_Update_1s(void)
 				{
 					mBoilerState = eBs_Idle;
 				}
-				if (boilerTemp_C > 75 && boilerExhaust_C > 110) // if it gets warm again, turn on the pump
+				if ((boilerTemp_C > 75 && boilerExhaust_C > 110)|| boilerTemp_C > TEMP_BOILER_OVERHEAT ) // if it gets warm again, turn on the pump
 				{
 				  COM_SendACRemoteRequest(0,1,0xFFFF);  // keep AC On for ~ 18 hours
 					DO_SetPumpBoiler(1);  // turn on pump
@@ -189,7 +189,7 @@ void HC_Update_1s(void)
 		mBoilerError = eBe_OverheatedTank;
 	}
 
-	if (Tank_C > TEMP_BOILER_OVERHEAT) // overheated boiler
+	if (boilerTemp_C > TEMP_BOILER_OVERHEAT) // overheated boiler
 	{
 		mBoilerError = eBe_OverheatedBoiler;
 	}
@@ -210,7 +210,7 @@ void HC_Update_1s(void)
 			UI_LED_R_SetMode(eUI_ON);
 			break;
 		case eBe_OverheatedBoiler:
-			UI_Buzzer_SetMode(eUI_BLINKING_SLOW);
+			UI_Buzzer_SetMode(eUI_BLINKING_FAST);
 			UI_LED_R_SetMode(eUI_BLINKING_SLOW);
 			break;
 		case eBe_PumpFailure:

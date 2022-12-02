@@ -66,13 +66,13 @@ void TC_Init(void)
 {
 
 	mDownReqTempDay = 215;
-	mDownReqTempNight = 205;
+	mDownReqTempNight = 215;
 	mUpReqTempDay = 215;
 	mUpReqTempNight = 195;
 	mDownNightBegin = 20;
-	mDownNightEnd = 4;
-	mUpNightBegin = 18;
-	mUpNightEnd = 4;
+	mDownNightEnd = 5;
+	mUpNightBegin = 19;
+	mUpNightEnd = 6;
 
 	mServoRadPct = 60;
 	mServoWallPct = 60;
