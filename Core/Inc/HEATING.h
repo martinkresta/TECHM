@@ -34,7 +34,7 @@ typedef enum
 #define  TEMP_PUMP_ON							60
 #define  TEMP_PUMP_OFF						50
 
-#define  TEMP_BOILER_OVERHEAT			88
+#define  TEMP_BOILER_OVERHEAT			86
 #define  MIXVALVE_ERR_TEMP				80
 
 #define  MAX_TANK_TEMP_C					95

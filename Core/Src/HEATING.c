@@ -162,7 +162,7 @@ void HC_Update_1s(void)
 				{
 					mBoilerState = eBs_Idle;
 				}
-				if ((boilerTemp_C > 75 && boilerExhaust_C > 110)|| boilerTemp_C > TEMP_BOILER_OVERHEAT ) // if it gets warm again, turn on the pump
+				if ((boilerTemp_C > 75 && boilerExhaust_C > 110)|| boilerTemp_C > TEMP_BOILER_OVERHEAT || (boilerTemp_C > (Tank1_C + 2)) ) // if it gets warm again, turn on the pump
 				{
 				  COM_SendACRemoteRequest(0,1,0xFFFF);  // keep AC On for ~ 18 hours
 					DO_SetPumpBoiler(1);  // turn on pump
