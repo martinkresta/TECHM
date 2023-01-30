@@ -23,6 +23,7 @@ uint16_t mLastWarningTime;
 uint8_t mBeepCount;
 uint32_t mTodayHeat_Ws;
 uint16_t mTodayHeat_Wh;
+uint32_t mPumpOnTime_s;
 
 
 
@@ -132,6 +133,7 @@ void HC_Update_1s(void)
 			{
 			  COM_SendACRemoteRequest(0,1,0xFFFF);  // keep AC On for ~ 18 hours
 				DO_SetPumpBoiler(1); // turn on pump
+				mPumpOnTime_s = 0;
 				mBoilerState = eBs_HeatUp;
 			}
 			break;
@@ -140,7 +142,7 @@ void HC_Update_1s(void)
 			{
 				mBoilerState = eBS_Heating;
 			}
-			if (boilerTemp_C < (TEMP_PUMP_ON - 10))
+			if (boilerTemp_C < (TEMP_PUMP_ON - 10) && mPumpOnTime_s > MIN_PUMP_ON_TIME)
 			{
 				DO_SetPumpBoiler(0);  // turn off pump
 				COM_SendACRemoteRequest(0,0,1);  // Cancel the remote request
@@ -148,7 +150,7 @@ void HC_Update_1s(void)
 			}
 			break;
 		case eBS_Heating:
-			if (boilerExhaust_C < 110  && boilerDiff <= 0 && boilerTemp_C < (TEMP_BOILER_OVERHEAT-1)) // if chimney is cooling down and exchanger does not put heat to water
+			if (boilerExhaust_C < 110  && boilerDiff <= 0 && boilerTemp_C < (TEMP_BOILER_OVERHEAT-1)  && mPumpOnTime_s > MIN_PUMP_ON_TIME) // if chimney is cooling down and exchanger does not put heat to water
 			{
 				DO_SetPumpBoiler(0);  // turn off pump
 				UI_Buzzer_SetMode(eUI_OFF);
@@ -162,10 +164,12 @@ void HC_Update_1s(void)
 				{
 					mBoilerState = eBs_Idle;
 				}
-				if ((boilerTemp_C > 75 && boilerExhaust_C > 110)|| boilerTemp_C > TEMP_BOILER_OVERHEAT || (boilerTemp_C > (Tank1_C + 2)) ) // if it gets warm again, turn on the pump
+				//if ((boilerTemp_C > 75 && boilerExhaust_C > 110)|| boilerTemp_C > TEMP_BOILER_OVERHEAT || (boilerTemp_C > (Tank1_C + 2)) ) // if it gets warm again, turn on the pump
+				if (boilerTemp_C > TEMP_BOILER_OVERHEAT || ( boilerTemp_C >= 70 && (boilerTemp_C > (Tank1_C + 2))) ) // if it gets warm again, turn on the pump
 				{
 				  COM_SendACRemoteRequest(0,1,0xFFFF);  // keep AC On for ~ 18 hours
 					DO_SetPumpBoiler(1);  // turn on pump
+					mPumpOnTime_s = 0;
 					mBoilerState = eBs_HeatUp;
 				}
 			}
@@ -196,9 +200,13 @@ void HC_Update_1s(void)
 
 	if(mBoilerState == eBs_HeatUp  || mBoilerState == eBS_Heating)  // check pump only in states where pump should be ON
 	{
+	  mPumpOnTime_s ++ ;
 		if (boilerTemp_C > 77 && (boilerTemp_C > (boilerOut_C + 3)))  // pump failure
 		{
-			mBoilerError = eBe_PumpFailure;
+		  if(mPumpOnTime_s > 60)
+		  {
+		    mBoilerError = eBe_PumpFailure;
+		  }
 		}
 	}
 

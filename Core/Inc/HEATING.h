@@ -40,6 +40,8 @@ typedef enum
 #define  MAX_TANK_TEMP_C					95
 #define  MIN_SOC									10
 
+#define MIN_PUMP_ON_TIME          60
+
 
 void HC_Init(void);
 
