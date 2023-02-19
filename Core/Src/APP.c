@@ -32,11 +32,14 @@ s_CanRxMsg rmsg;
 
 static void ProcessMessage(s_CanRxMsg* msg);
 
+uint8_t mBoilerCleaningMode;
+
 // public methods
 void APP_Init(void)
 {
 
 	sUIHwInit uihw;
+	mBoilerCleaningMode = 0;
 
 	Scheduler_Init();
 
@@ -204,6 +207,29 @@ void APP_Update_1s(void)
 		ELH_Midnight();
 		HC_Midnight();
 	}
+
+	// check Boiler digital inputs
+
+
+	// cleaning button
+
+  //while heating,  check the door switch
+
+  if(mBoilerCleaningMode == 0 && GPIO_PIN_SET == HAL_GPIO_ReadPin(WM4_GPIO_Port, WM4_Pin)) // button pressed
+  {
+    mBoilerCleaningMode = 1;
+    // send RECU remote request
+    COM_SendRecuRemoteRequest(errm_MaxOverpressure, 600);
+  }
+
+  if(mBoilerCleaningMode == 1 &&  GPIO_PIN_SET == HAL_GPIO_ReadPin(WM4_GPIO_Port, WM4_Pin))  //button pressed
+  {
+    mBoilerCleaningMode = 0;
+    // cancel RECU remote request
+    COM_SendRecuRemoteRequest(errm_AutoControl, 0);
+  }
+
+
 }
 
 
