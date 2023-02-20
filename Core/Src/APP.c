@@ -222,7 +222,7 @@ void APP_Update_1s(void)
     COM_SendRecuRemoteRequest(errm_MaxOverpressure, 600);
   }
 
-  if(mBoilerCleaningMode == 1 &&  GPIO_PIN_SET == HAL_GPIO_ReadPin(WM4_GPIO_Port, WM4_Pin))  //button pressed
+  else if(mBoilerCleaningMode == 1 &&  GPIO_PIN_SET == HAL_GPIO_ReadPin(WM4_GPIO_Port, WM4_Pin))  //button pressed
   {
     mBoilerCleaningMode = 0;
     // cancel RECU remote request

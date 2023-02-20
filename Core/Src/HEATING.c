@@ -255,28 +255,21 @@ void HC_Update_1s(void)
 	}
 
 
-	//while heating,  check the door switch
+	// check the door switch
 
-	if(mBoilerState != eBs_Idle)
-	{
-	  if(mBoilerLoading == 0 && GPIO_PIN_RESET == HAL_GPIO_ReadPin(WM3_GPIO_Port, WM3_Pin)) // doors were opened
-    {
-      mBoilerLoading = 1;
-      // send RECU remote request
-      COM_SendRecuRemoteRequest(errm_SligtOvepressure, 60);
-    }
+  if(mBoilerLoading == 0 && GPIO_PIN_RESET == HAL_GPIO_ReadPin(WM3_GPIO_Port, WM3_Pin)) // doors were opened
+  {
+    mBoilerLoading = 1;
+    // send RECU remote request
+    COM_SendRecuRemoteRequest(errm_SligtOvepressure, 60);
+  }
 
-    if(mBoilerLoading == 1 &&  GPIO_PIN_SET == HAL_GPIO_ReadPin(WM3_GPIO_Port, WM3_Pin))  // doors closed
-    {
-      mBoilerLoading = 0;
-      // cancel RECU remote request
-      COM_SendRecuRemoteRequest(errm_AutoControl, 0);
-    }
-
-	}
-
-
-
+  else if(mBoilerLoading == 1 &&  GPIO_PIN_SET == HAL_GPIO_ReadPin(WM3_GPIO_Port, WM3_Pin))  // doors closed
+  {
+    mBoilerLoading = 0;
+    // cancel RECU remote request
+    COM_SendRecuRemoteRequest(errm_AutoControl, 0);
+  }
 
 
 
