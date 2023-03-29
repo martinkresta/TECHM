@@ -5,9 +5,11 @@
  *      Author: Martin
  */
 
+#include "WM.h"
+#include <RTC.h>
 #include "OW.h"
 #include "VARS.h"
-#include "RTC.h"
+
 
 // private variables
 
@@ -75,13 +77,13 @@ void WM_Update_10ms(void)
 		}
 	}
 
-	// reset the energy counter at midnight
+/*	// reset the energy counter at midnight
 	if (mTodayDayNumber != RTC_GetTime().Day)
 	{
 		mConsHot = 0;
 		mConsCold = 0;
 		mTodayDayNumber = RTC_GetTime().Day;
-	}
+	}*/
 
 }
 
@@ -110,12 +112,12 @@ void WM_ResetConsupmtions(void)
 {
 	mConsCold = 0;
 	mConsHot = 0;
+	VAR_SetVariable(VAR_CONS_COLD, (int16_t)(mConsCold), 1);
+	VAR_SetVariable(VAR_CONS_HOT, (int16_t)(mConsHot), 1);
 }
 
 
-
-// exti interrupt callback
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+void WM_ExtiCallback(uint16_t GPIO_Pin)
 {
 	if (GPIO_Pin == WM1_Pin)
 	{
@@ -127,5 +129,5 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		mConsHot += 3;
 		VAR_SetVariable(VAR_CONS_HOT, (int16_t)(mConsHot), 1);
 	}
-
 }
+

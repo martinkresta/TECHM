@@ -88,7 +88,7 @@ void	DO_SetElHeaters(uint8_t heaters)
 
 }
 
-void  DO_SetPumps(uint8_t pumps)
+/*void  DO_SetPumps(uint8_t pumps)
 {
 	if (pumps & 0x01)  // boiler
 	{
@@ -107,6 +107,44 @@ void  DO_SetPumps(uint8_t pumps)
 		HAL_GPIO_WritePin(PUMP_WALL_GPIO_Port, PUMP_WALL_Pin, GPIO_PIN_RESET);
 	}
 	if (pumps & 0x04)  // radiators
+	{
+		HAL_GPIO_WritePin(PUMP_RAD_GPIO_Port, PUMP_RAD_Pin, GPIO_PIN_SET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(PUMP_RAD_GPIO_Port, PUMP_RAD_Pin, GPIO_PIN_RESET);
+	}
+}*/
+
+
+void  DO_SetPumpBoiler(uint8_t state)
+{
+	if (state)
+	{
+		HAL_GPIO_WritePin(PUMP_BOIL_GPIO_Port, PUMP_BOIL_Pin, GPIO_PIN_SET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(PUMP_BOIL_GPIO_Port, PUMP_BOIL_Pin, GPIO_PIN_RESET);
+	}
+}
+
+void  DO_SetPumpWall(uint8_t state)
+{
+	if (state)  // wall
+	{
+		HAL_GPIO_WritePin(PUMP_WALL_GPIO_Port, PUMP_WALL_Pin, GPIO_PIN_SET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(PUMP_WALL_GPIO_Port, PUMP_WALL_Pin, GPIO_PIN_RESET);
+	}
+}
+
+
+void  DO_SetPumpRad(uint8_t state)
+{
+	if (state)  // radiators
 	{
 		HAL_GPIO_WritePin(PUMP_RAD_GPIO_Port, PUMP_RAD_Pin, GPIO_PIN_SET);
 	}

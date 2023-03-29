@@ -141,7 +141,7 @@ static void InitPcScanList(void)
 	UpdateScanList(VAR_EL_HEATER_CURRENT,1000);
 
 	UpdateScanList(VAR_BAT_SOC,1000);
-	UpdateScanList(VAR_LOAD_A10,1000);
+	UpdateScanList(VAR_LOAD_A100,1000);
 	UpdateScanList(VAR_CHARGING_A10,1000);
 
 	UpdateScanList(VAR_FLOW_COLD,240);
@@ -249,7 +249,7 @@ static void ProcessMessage(void)
 				DO_SetElv(data1);
 				break;
 			case CMD_TM_SET_PUMPS:
-				DO_SetPumps(data1);
+				//DO_SetPumps(data1);
 				break;
 			case CMD_TM_SET_SERVOVALVES:
 				DO_SetServoRad(data1);

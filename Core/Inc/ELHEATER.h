@@ -20,23 +20,25 @@ typedef enum
 	eElh_BoardOveremerature,
 	eElh_InvalidInputs,
 	eElh_ELeconComError,
-	eElh_SwitchError
+	eElh_SwitchError,
+	eElh_BalanceSupport
 }eElhState;
 
-#define  MAX_BOARD_TEMP_C					55
-#define  MAX_TANK_TEMP_C					70
+#define  MAX_BOARD_TEMP_C					60
 #define  MIN_UTIL_TEMP_C					45
 //#define  MIN_SOC									90
-#define  MAX_LOAD_A								35  //
+#define  MAX_LOAD_A								95  //
 #define  SOC_ENABLE								100
-#define  SOC_DISABLE							90
-//#define  DEF_ENABLE_MASK					0x3E    // 0011 1110   // five uppest coils enabled
+#define  SOC_DISABLE							95
 #define  DEF_ENABLE_MASK					0x3F    // 0011 1111   // all coils enabled
 
 #define  ONE_COIL_LOAD_A					10
 #define  NUM_OF_COILS							6
 
-#define  INCREASE_PERIOD_S				10
+#define  INCREASE_PERIOD_S				7
+
+#define  WINTER_REQ_TEMP				90
+#define  SUMMER_REQ_TEMP				70
 
 
 void ELH_Init(void);
@@ -46,5 +48,9 @@ void ELH_Update_1s(void);
 uint16_t ELH_GetStatus(void);
 
 void ELH_SetTemp(int16_t tempTop, int16_t tempMiddle);
+
+void ELH_Midnight(void);
+
+void ELH_SetBalanceInfo(uint8_t balancedToday, int16_t optBalancingCurrent);
 
 #endif /* INC_ELHEATER_H_ */

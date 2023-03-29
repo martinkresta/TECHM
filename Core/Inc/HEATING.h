@@ -22,14 +22,25 @@ typedef enum
 	eBS_InvalidInputs
 }eBoilerState;
 
-#define  TEMP_PUMP_ON							40
-#define  TEMP_PUMP_OFF						40
 
-#define  TEMP_BOILER_OVERHEAT			95
+typedef enum
+{
+	eBe_NoError,
+	eBe_OverheatedTank,
+	eBe_OverheatedBoiler,
+	eBe_PumpFailure
+}eBoilerError;
+
+#define  TEMP_PUMP_ON							60
+#define  TEMP_PUMP_OFF						50
+
+#define  TEMP_BOILER_OVERHEAT			86
 #define  MIXVALVE_ERR_TEMP				80
 
 #define  MAX_TANK_TEMP_C					95
 #define  MIN_SOC									10
+
+#define MIN_PUMP_ON_TIME          60
 
 
 void HC_Init(void);
@@ -37,6 +48,8 @@ void HC_Init(void);
 void HC_Update_1s(void);
 
 uint16_t HC_GetStatus(void);
+
+void HC_Midnight(void);
 
 
 #endif /* INC_HEATING_H_ */

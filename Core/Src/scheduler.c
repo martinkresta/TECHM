@@ -4,8 +4,8 @@
 // Project: Robodof
 
 
+#include "UI.h"
 #include "scheduler.h"
-#include "leds.h"
 #include "OW.h"
 #include "TEMP.h"
 #include "SCOM.h"
@@ -14,6 +14,11 @@
 #include "WM.h"
 #include "watchdog.h"
 #include "HEATING.h"
+#include "PTCTEMP.h"
+#include "TEMPCON.h"
+#include "APP.h"
+#include "COM.h"
+#include "MCAN.h"
 
 
 
@@ -198,7 +203,7 @@ static void Timer_Task_10ms(void)
 {
 	MCAN_Update_10ms();
 	COM_Update_10ms();
-	LED_Update_10ms();
+	UI_Update_10ms();
 	SCOM_Update_10ms();
 	WM_Update_10ms();
 }
@@ -225,6 +230,7 @@ static void Timer_Task_100ms(void)
 {
 
 	TEMP_Update100ms();
+	PTCTEMP_Convert();
 	ADC_StartConversion();
 }
 
@@ -264,6 +270,9 @@ static void Timer_Task_1s(void)
 	ELH_Update_1s();
 	HC_Update_1s();
 	WDG_Refresh();
+	APP_Update_1s();
+	TC_Update_1s();
+
 	//LED_Error_SetMode(eLED_BLINK_ONCE);
 	//	OW_Read(0);
 	//		OW_ConvertAll();
