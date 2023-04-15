@@ -508,7 +508,7 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.OCMode = TIM_OCMODE_FORCED_INACTIVE;
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -661,8 +661,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ETS_Pin WM3_Pin AV_ENC2_Pin AV_ENC1_Pin */
-  GPIO_InitStruct.Pin = ETS_Pin|WM3_Pin|AV_ENC2_Pin|AV_ENC1_Pin;
+  /*Configure GPIO pins : ETS_Pin DI2_Pin AVC_Pin AV_HOME_Pin */
+  GPIO_InitStruct.Pin = ETS_Pin|DI2_Pin|AVC_Pin|AV_HOME_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -673,11 +673,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : WM4_Pin */
-  GPIO_InitStruct.Pin = WM4_Pin;
+  /*Configure GPIO pin : DI1_Pin */
+  GPIO_InitStruct.Pin = DI1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(WM4_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(DI1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PUMP_RAD_Pin PUMP_WALL_Pin PUMP_BOIL_Pin */
   GPIO_InitStruct.Pin = PUMP_RAD_Pin|PUMP_WALL_Pin|PUMP_BOIL_Pin;
@@ -686,11 +686,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PG_48V_Pin */
-  GPIO_InitStruct.Pin = PG_48V_Pin;
+  /*Configure GPIO pins : PG_48V_Pin AV_ENC2_Pin */
+  GPIO_InitStruct.Pin = PG_48V_Pin|AV_ENC2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(PG_48V_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : OUT4_Pin OUT5_Pin OUT6_Pin OUT1_Pin
                            OUT2_Pin OUT3_Pin OW3_Pin ELV_Pin
@@ -702,6 +702,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : AV_ENC1_Pin */
+  GPIO_InitStruct.Pin = AV_ENC1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(AV_ENC1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : AV1_Pin */
   GPIO_InitStruct.Pin = AV1_Pin;

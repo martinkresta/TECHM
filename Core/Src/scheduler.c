@@ -19,6 +19,8 @@
 #include "APP.h"
 #include "COM.h"
 #include "MCAN.h"
+#include "AVC.h"
+#include "BOILER_AIR.h"
 
 
 
@@ -177,7 +179,7 @@ void Scheduler_Check_Flag(void)
 */
 static void Timer_Task_1ms(void)
 {	
-	//DI_Read_All();
+	DI_Read_All();
 }
 
 /**
@@ -206,6 +208,7 @@ static void Timer_Task_10ms(void)
 	UI_Update_10ms();
 	SCOM_Update_10ms();
 	WM_Update_10ms();
+	AVC_Update_10ms();
 }
 /**
 **********************************************************************
@@ -272,6 +275,7 @@ static void Timer_Task_1s(void)
 	WDG_Refresh();
 	APP_Update_1s();
 	TC_Update_1s();
+	BAC_Update_1s();
 
 	//LED_Error_SetMode(eLED_BLINK_ONCE);
 	//	OW_Read(0);

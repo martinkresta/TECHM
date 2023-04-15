@@ -16,7 +16,6 @@
 #include "TEMP.h"
 #include "VARS.h"
 #include "SCOM.h"
-//#include "MCAN.h"
 #include "COM.h"
 #include "DO.h"
 #include "ADC.h"
@@ -25,6 +24,10 @@
 #include "watchdog.h"
 #include "HEATING.h"
 #include "TEMPCON.h"
+#include "BOILER_AIR.h"
+#include "GEST.h"
+#include "di.h"
+#include "AVC.h"
 
 
 
@@ -39,6 +42,8 @@ void APP_Init(void)
 {
 
 	sUIHwInit uihw;
+	uint8_t gi = 0;   //gesture index
+	sGestInit gestInit;
 	mBoilerCleaningMode = 0;
 
 	Scheduler_Init();
@@ -83,6 +88,35 @@ void APP_Init(void)
 	UI_LED_Life_SetMode(eUI_BLINKING_SLOW);
 	UI_LED_B_SetMode(eUI_ON);
 
+
+	/*Gestures definition*/
+
+	  gestInit.id = gi++;
+    gestInit.action = GEST_STOVE_AV_TOGGLE;
+    gestInit.type = egt_MultiTouch;
+    gestInit.num_of_buttons = 1;
+    gestInit.timeout = 500;
+    gestInit.num_of_touches = 2;
+    gestInit.btnIds[0] = IN1_STOVE_BTN;
+    GEST_AddGesture(&gestInit);
+
+	  gestInit.id = gi++;
+	  gestInit.action = GEST_STOVE_AV_AUTO;
+	  gestInit.type = egt_MultiTouch;
+	  gestInit.num_of_buttons = 1;
+	  gestInit.timeout = 500;
+	  gestInit.num_of_touches = 3;
+	  gestInit.btnIds[0] = IN1_STOVE_BTN;
+	  GEST_AddGesture(&gestInit);
+
+    gestInit.id = gi++;
+    gestInit.action = GEST_STOVE_CELANING;
+    gestInit.type = egt_MultiTouch;
+    gestInit.num_of_buttons = 1;
+    gestInit.timeout = 500;
+    gestInit.num_of_touches = 4;
+    gestInit.btnIds[0] = IN1_STOVE_BTN;
+    GEST_AddGesture(&gestInit);
 
 	/*Config temperature measurement*/
 
@@ -157,20 +191,7 @@ void APP_Init(void)
 void APP_Start(void)
 {
 
-	sDateTime now;
-	now.Day = 13;
-	now.Hour = 9;
-	now.Minute = 30;
-	now.Month = 12;
-	now.Second = 0;
-	now.Year = 2021;
-
-//	RTC_SetTime(now);
-
 	DO_SetElv(1);        // open watter supply valve
-
-	//DO_SetPumps(0x06);
-
 
 	MCAN_Start();
 
@@ -208,28 +229,77 @@ void APP_Update_1s(void)
 		HC_Midnight();
 	}
 
-	// check Boiler digital inputs
+
+}
 
 
-	// cleaning button
-
-  //while heating,  check the door switch
-
-  if(mBoilerCleaningMode == 0 && GPIO_PIN_SET == HAL_GPIO_ReadPin(WM4_GPIO_Port, WM4_Pin)) // button pressed
+// map the digital input to the button ID and propagate the information
+void APP_DiInputChanged(uint8_t inputId, eDI state)
+{
+  switch (inputId)
   {
-    mBoilerCleaningMode = 1;
-    // send RECU remote request
-    COM_SendRecuRemoteRequest(errm_MaxOverpressure, 600);
+    case IN1_STOVE_BTN:
+      if(state == eDI_HI)
+      {
+        // start heating by simple button press
+        BAC_StartHeating();
+      }
+      else
+      {
+        // button released, do nothing
+      }
+      break;
+    case IN2_STOVE_DOOR:
+      if(state == eDI_HI) // door closed
+      {
+        // inform heating controller
+        HC_DoorClosed();
+        if (mBoilerCleaningMode == 1)
+        {
+          mBoilerCleaningMode = 0;
+          // cancel RECU remote request
+          COM_SendRecuRemoteRequest(errm_AutoControl, 0);
+        }
+      }
+      else // door opened
+      {
+        // inform heating controller
+        HC_DoorOpened();
+        // inform  Air valve control
+        BAC_DoorOpenDetected();
+      }
+      break;
+    case IN3_AV_HOMEPOS:
+      // do nothing, intput is processed asynchronously in AVC.c
+      break;
   }
+}
 
-  else if(mBoilerCleaningMode == 1 &&  GPIO_PIN_SET == HAL_GPIO_ReadPin(WM4_GPIO_Port, WM4_Pin))  //button pressed
+void APP_GestureDetected(uint8_t action)
+{
+  switch(action)
   {
-    mBoilerCleaningMode = 0;
-    // cancel RECU remote request
-    COM_SendRecuRemoteRequest(errm_AutoControl, 0);
+    case GEST_STOVE_AV_TOGGLE:
+      break;
+    case GEST_STOVE_AV_AUTO:
+      break;
+    case GEST_STOVE_CELANING:
+
+      if(mBoilerCleaningMode == 0)
+      {
+        mBoilerCleaningMode = 1;
+        // send RECU remote request
+        COM_SendRecuRemoteRequest(errm_MaxOverpressure, 600);
+      }
+      else if(mBoilerCleaningMode == 1)
+      {
+        mBoilerCleaningMode = 0;
+        // cancel RECU remote request
+        COM_SendRecuRemoteRequest(errm_AutoControl, 0);
+      }
+      break;
   }
-
-
+ // SendGesture(action);
 }
 
 
@@ -273,6 +343,14 @@ static void ProcessMessage(s_CanRxMsg* msg)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	WM_ExtiCallback(GPIO_Pin);
+  if(GPIO_Pin == WM1_Pin || GPIO_Pin == WM2_Pin )
+  {
+    WM_ExtiCallback(GPIO_Pin);
+  }
+
+  if(GPIO_Pin == AV_ENC1_Pin)
+  {
+    AVC_ExtiCallback(GPIO_Pin);
+  }
 }
 

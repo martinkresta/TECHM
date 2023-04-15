@@ -49,6 +49,9 @@ void HC_Update_1s(void);
 
 uint16_t HC_GetStatus(void);
 
+void HC_DoorOpened(void);
+void HC_DoorClosed(void);
+
 void HC_Midnight(void);
 
 
