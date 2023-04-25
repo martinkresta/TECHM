@@ -102,12 +102,12 @@ void AVC_Update_10ms(void)
       dutycycle = AVC_DEFAULT_DUTYCYCLE;
     }
 
-    htim2.Instance->CCR1 = dutycycle;
+    htim2.Instance->CCR2 = dutycycle;
   }
 
 
   // home pos switch
-  if (DI_Get(IN3_AV_HOMEPOS))
+  if (!DI_Get(IN3_AV_HOMEPOS))
   {
     mValvePosRaw = 0;
     if(mValveState == evs_Homing)
@@ -246,7 +246,7 @@ void Stop(void)
 
 }
 
-
+//EXTI15_10_IRQHandler
 
 void AVC_ExtiCallback(uint16_t GPIO_Pin)
 {

@@ -21,6 +21,7 @@
 #include "MCAN.h"
 #include "AVC.h"
 #include "BOILER_AIR.h"
+#include "GEST.h"
 
 
 
@@ -209,6 +210,7 @@ static void Timer_Task_10ms(void)
 	SCOM_Update_10ms();
 	WM_Update_10ms();
 	AVC_Update_10ms();
+	GEST_Update_10ms();
 }
 /**
 **********************************************************************

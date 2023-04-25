@@ -38,6 +38,9 @@ void DI_Init(void)
 	init_struct.Pin								= DI2_Pin;
 	DI_Struct_Initialisation(init_struct,IN2_STOVE_DOOR);
 	//----------------------------------------------------------------------------------------
+	init_struct.Main_Status       = eDI_HI;
+	init_struct.Actual_Status     = eDI_HI;
+	init_struct.Last_Status       = eDI_HI;
   init_struct.Port              = AV_HOME_GPIO_Port;   // air valve home pos
   init_struct.Pin               = AV_HOME_Pin;
   DI_Struct_Initialisation(init_struct,IN3_AV_HOMEPOS);

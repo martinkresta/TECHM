@@ -48,6 +48,7 @@ void APP_Init(void)
 
 	Scheduler_Init();
 
+	DI_Init();
 	OW_Init();
 	TEMP_Init();
 	VAR_Init();
@@ -61,6 +62,9 @@ void APP_Init(void)
 	WDG_Init(3000);
 	HC_Init();
 	TC_Init();
+
+
+
 
 
 	/*Assign pins for onboard UI  */
@@ -193,6 +197,9 @@ void APP_Start(void)
 
 	DO_SetElv(1);        // open watter supply valve
 
+	AVC_Init();
+	BAC_SetAutoMode();
+
 	MCAN_Start();
 
 	VAR_SetVariable(VAR_BAT_VOLTAGE_V10, 520, 1);
@@ -280,8 +287,10 @@ void APP_GestureDetected(uint8_t action)
   switch(action)
   {
     case GEST_STOVE_AV_TOGGLE:
+      BAC_ManualToggle();
       break;
     case GEST_STOVE_AV_AUTO:
+      BAC_SetAutoMode();
       break;
     case GEST_STOVE_CELANING:
 

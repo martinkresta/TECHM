@@ -235,6 +235,16 @@ void EXTI2_IRQHandler(void)
   /* USER CODE END EXTI2_IRQn 1 */
 }
 
+
+void EXTI15_10_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI4_15_IRQn 0 */
+  /* USER CODE END EXTI4_15_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(AV_ENC1_Pin);
+  /* USER CODE BEGIN EXTI4_15_IRQn 1 */
+  /* USER CODE END EXTI4_15_IRQn 1 */
+}
+
 /**
   * @brief This function handles DMA1 channel1 global interrupt.
   */
