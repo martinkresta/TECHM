@@ -29,10 +29,10 @@ typedef enum
 }eValveDir;
 
 
-#define AVC_DEFAULT_DUTYCYCLE   50
-#define AVC_MIN_DUTYCYCLE       7
+#define AVC_DEFAULT_DUTYCYCLE   55
+#define AVC_MIN_DUTYCYCLE       8
 
-#define AVC_POS_TOLERANCE  1
+#define AVC_POS_TOLERANCE  2
 #define AVC_VALVE_MECH_PLAY  4    // compensation of mechanical play
 
 #define AVC_FULL_OPEN_PCT     80

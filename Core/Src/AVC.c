@@ -30,7 +30,7 @@ GPIO_InitTypeDef GPIO_InitStruct = {0};
 int32_t mValvePosRaw;
 int16_t mValvePosPct;
 int16_t mRequestPosPct;
-uint16_t mIterm;
+int16_t mIterm;
 
 eValveState mValveState;
 eValveDir mLastDirection;  // direction of last movement
@@ -70,8 +70,8 @@ void AVC_Init(void)
 
 void AVC_Update_10ms(void)
 {
+  int16_t max_Iterm;
   mValvePosPct = (mValvePosRaw * 10) / 165;  // encoder resolution ratio  // 100% = valve in 90degree angle from closed position = fully open
-
 
   // PWM control - power to the motor
   if(mValveState != evs_Stopped)
@@ -84,17 +84,23 @@ void AVC_Update_10ms(void)
     }
     else
     {
-      if (mIterm < 400)
+      if (mIterm < 600)
       {
-        mIterm++;
+        mIterm += (1 + (err/10));
       }
-
     }
 
     uint16_t dutycycle = AVC_MIN_DUTYCYCLE + err + mIterm/20;
     if(dutycycle > AVC_DEFAULT_DUTYCYCLE)
     {
       dutycycle = AVC_DEFAULT_DUTYCYCLE;
+
+      max_Iterm = ((AVC_DEFAULT_DUTYCYCLE - err - 1)*20);
+
+      if ( mIterm > max_Iterm)  // anti windup
+      {
+        mIterm = max_Iterm;  // limit the iTerm if it is growing uselessly too big
+      }
     }
 
     if(mValveState == evs_Homing)
