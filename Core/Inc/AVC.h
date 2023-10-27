@@ -35,10 +35,10 @@ typedef enum
 #define AVC_POS_TOLERANCE  2
 #define AVC_VALVE_MECH_PLAY  4    // compensation of mechanical play
 
-#define AVC_FULL_OPEN_PCT     80
+#define AVC_FULL_OPEN_PCT     70
 #define AVC_FULL_CLOSE_PCT    0
-#define AVC_MINIMAL_OPEN_PCT  15
-#define AVC_DEFAULT_PCT       60
+#define AVC_MINIMAL_OPEN_PCT  18
+#define AVC_DEFAULT_PCT       45
 #define AVC_COOLDOWN_PCT      AVC_MINIMAL_OPEN_PCT
 
 

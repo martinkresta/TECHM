@@ -11,18 +11,20 @@
 #include "main.h"
 #include <stdbool.h>
 
-#define HEATUP_MAX_TEMP       200
+#define HEATUP_MAX_TEMP       196
+#define CONTROL_MAX_TEMP      200
+
 #define HEATUP_TIMEOUT        (60*30)   // 30 minutes
 
 #define COOLDOWN_ENTER_TEMP   140
-#define COOLDOWN_LEAVE_TEMP   180
+#define COOLDOWN_LEAVE_TEMP   190
 
 #define STOP_TEMP             80
 
 
 #define AV_FULL_CLOSE_PCT   0
 
-#define CONTROL_PERIOD      3  // 3sec
+#define CONTROL_PERIOD      9  // 9sec
 
 
 

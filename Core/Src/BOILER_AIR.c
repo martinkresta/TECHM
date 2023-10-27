@@ -194,9 +194,9 @@ void ControlLogic(uint16_t temp)
     mFilterSum = 0;
     mConErr = 0;
 
-    if(mConVal > HEATUP_MAX_TEMP)  // band of non-sensitivity
+    if(mConVal > CONTROL_MAX_TEMP)  // band of non-sensitivity
     {
-      mConErr = mConVal - HEATUP_MAX_TEMP;
+      mConErr = mConVal - CONTROL_MAX_TEMP;
     }
     else if(mConVal < COOLDOWN_LEAVE_TEMP)
     {
