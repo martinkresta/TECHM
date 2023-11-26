@@ -35,7 +35,7 @@ typedef enum
 #define AVC_POS_TOLERANCE  2
 #define AVC_VALVE_MECH_PLAY  4    // compensation of mechanical play
 
-#define AVC_FULL_OPEN_PCT     70
+#define AVC_FULL_OPEN_PCT     55
 #define AVC_FULL_CLOSE_PCT    0
 #define AVC_MINIMAL_OPEN_PCT  18
 #define AVC_DEFAULT_PCT       45
@@ -44,7 +44,11 @@ typedef enum
 
 void AVC_Init(void);
 
+int16_t AVC_GetValvePos(void);
+int16_t AVC_GetRequestPos(void);
+
 void AVC_SetRequestPos(uint16_t pos);
+void AVC_ChangePosBy(int16_t pos_diff);
 
 void AVC_Update_10ms(void);
 
@@ -52,6 +56,7 @@ void AVC_Update_10ms(void);
 void AVC_GoHome(void);
 
 void AVC_ExtiCallback(uint16_t GPIO_Pin);
+
 
 
 

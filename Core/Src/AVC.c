@@ -140,13 +140,20 @@ void AVC_Update_10ms(void)
   // Run open condition
   if((mValvePosPct < (mRequestPosPct - AVC_POS_TOLERANCE)) && mValveState != evs_RunOpen)
   {
+    if (mLastDirection == evd_Closing && mValvePosPct > 1)
+     {
+       mRequestPosPct += AVC_VALVE_MECH_PLAY;
+     }
     RunOpen();
   }
 
   // run close condition
   if((mValvePosPct > (mRequestPosPct + AVC_POS_TOLERANCE)) && mValveState != evs_RunClose)
   {
-     mRequestPosPct -= AVC_VALVE_MECH_PLAY;
+     if (mLastDirection == evd_Opening)
+     {
+       mRequestPosPct -= AVC_VALVE_MECH_PLAY;
+     }
      RunClose();
   }
 
@@ -159,7 +166,7 @@ void AVC_Update_10ms(void)
 }
 
 
-// run in closing direction until Home swithc is activated
+// run in closing direction until Home switch is activated
 void AVC_GoHome(void)
 {
   if(GPIO_PIN_SET == HAL_GPIO_ReadPin(AV_HOME_GPIO_Port, AV_HOME_Pin))
@@ -168,6 +175,18 @@ void AVC_GoHome(void)
     RunClose();
     mValveState = evs_Homing;
   }
+}
+
+
+int16_t AVC_GetValvePos(void)
+{
+  return mValvePosPct;
+}
+
+
+int16_t AVC_GetRequestPos(void)
+{
+  return mRequestPosPct;
 }
 
 
@@ -186,6 +205,29 @@ void AVC_SetRequestPos(uint16_t pos)
   }
 }
 
+// Changes actual valve position by pos_diff percent
+void AVC_ChangePosBy(int16_t pos_diff)
+{
+  if (pos_diff < 0)
+  {
+    pos_diff -= AVC_POS_TOLERANCE;
+  }
+  if (pos_diff > 0)
+  {
+    pos_diff += AVC_POS_TOLERANCE;
+  }
+
+  mRequestPosPct = mValvePosPct + pos_diff;
+
+  if(mRequestPosPct > 100)
+  {
+    mRequestPosPct = 100;
+  }
+  if(mRequestPosPct < 1)
+  {
+    mRequestPosPct = 0;
+  }
+}
 
 // Private method, run in opening direction
 void RunOpen(void)
@@ -194,6 +236,7 @@ void RunOpen(void)
   htim2.Instance->CCMR1 &= ~TIM_CCMR1_OC2M;
   htim2.Instance->CCMR1 |= (TIM_OCMODE_FORCED_INACTIVE << 8);  // channel 2 is shifted by 8 bits
   htim2.Instance->CCR2 = AVC_MIN_DUTYCYCLE;
+  mLastDirection = evd_Opening;
 
   HAL_Delay(150);
 
@@ -204,8 +247,6 @@ void RunOpen(void)
 
   HAL_Delay(150);
 
-
-  mLastDirection = evd_Opening;
   mValveState = evs_RunOpen;
   htim2.Instance->CCMR1 &= ~TIM_CCMR1_OC2M;
   htim2.Instance->CCMR1 |= (TIM_OCMODE_PWM1 << 8);
@@ -218,6 +259,7 @@ void RunClose(void)
   htim2.Instance->CCMR1 &= ~TIM_CCMR1_OC2M;
   htim2.Instance->CCMR1 |= (TIM_OCMODE_FORCED_INACTIVE << 8);  // channel 2 is shifted by 8 bits
   htim2.Instance->CCR2 = AVC_MIN_DUTYCYCLE;
+  mLastDirection = evd_Closing;
 
   HAL_Delay(150);
 
@@ -228,7 +270,7 @@ void RunClose(void)
 
   HAL_Delay(150);
 
-  mLastDirection = evd_Closing;
+
   mValveState = evs_RunClose;
   htim2.Instance->CCMR1 &= ~TIM_CCMR1_OC2M;
   htim2.Instance->CCMR1 |= (TIM_OCMODE_PWM1 << 8);

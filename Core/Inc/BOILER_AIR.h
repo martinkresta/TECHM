@@ -12,7 +12,8 @@
 #include <stdbool.h>
 
 #define HEATUP_MAX_TEMP       196
-#define CONTROL_MAX_TEMP      200
+#define CONTROL_MIN_TEMP      200
+#define CONTROL_MAX_TEMP      205
 
 #define HEATUP_TIMEOUT        (60*30)   // 30 minutes
 
@@ -24,7 +25,7 @@
 
 #define AV_FULL_CLOSE_PCT   0
 
-#define CONTROL_PERIOD      9  // 9sec
+#define CONTROL_PERIOD      10  // 10sec
 
 
 

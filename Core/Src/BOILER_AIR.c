@@ -9,12 +9,14 @@
 static eControlMode mMode;
 static eState mState;
 static uint16_t mRequestValvePct;
+static int16_t mRequestValveDiffPct;
 static uint16_t mStateTimer;
 static int16_t mConVal;  // actual value of controlled variable
 static int16_t mLastConVal;  // last value of controlled variable
 
 static int16_t mConErr;  // control error
 static int16_t mConValDiff; // time derivation of controlled variable
+static uint16_t mControlLogicTimer;  // measuring period of valve control logic
 
 static uint16_t mFilterSum;
 
@@ -35,15 +37,21 @@ void BAC_Update_1s(void)
     mStateTimer ++;
   }
 
-
-
   switch (mState)
   {
     case es_Off:
       // manual control, do nothing
+      if(mMode == ecm_Auto)
+      {
+        AVC_SetRequestPos(mRequestValvePct);
+      }
       break;
     case es_Idle:
       // only waiting for start signal
+      if(mMode == ecm_Auto)
+      {
+        AVC_SetRequestPos(mRequestValvePct);
+      }
       break;
     case es_HeatUp:
       if(mExhaustTemp_C > HEATUP_MAX_TEMP)
@@ -54,10 +62,18 @@ void BAC_Update_1s(void)
       {
         SetState(es_Idle);
       }
+      if(mMode == ecm_Auto)
+      {
+        AVC_SetRequestPos(mRequestValvePct);
+      }
       break;
     case es_AirControl:
       ControlLogic(mExhaustTemp_C);
-      AVC_SetRequestPos(mRequestValvePct);
+      if(mMode == ecm_Auto && mRequestValveDiffPct != 0)
+      {
+        AVC_ChangePosBy(mRequestValveDiffPct);
+        //AVC_SetRequestPos(mRequestValvePct);
+      }
       if(mExhaustTemp_C < COOLDOWN_ENTER_TEMP)
       {
         SetState(es_CoolDown);
@@ -72,13 +88,11 @@ void BAC_Update_1s(void)
       {
         SetState(es_Idle);
       }
-
+      if(mMode == ecm_Auto)
+      {
+        AVC_SetRequestPos(mRequestValvePct);
+      }
       break;
-  }
-
-  if(mMode == ecm_Auto)
-  {
-    AVC_SetRequestPos(mRequestValvePct);
   }
 }
 
@@ -162,6 +176,7 @@ void SetState(eState newState)
       mState = es_HeatUp;
       break;
     case es_AirControl:
+      mControlLogicTimer = 0;
       mRequestValvePct = AVC_DEFAULT_PCT;
       AVC_SetRequestPos(AVC_DEFAULT_PCT);
       mState = es_AirControl;
@@ -177,17 +192,16 @@ void SetState(eState newState)
 
 void ControlLogic(uint16_t temp)
 {
+  mRequestValveDiffPct = 0;
 
-  static uint16_t controlTimer;
-
-  if(controlTimer < CONTROL_PERIOD) // control period not occurred
+  if(mControlLogicTimer < CONTROL_PERIOD) // control period not occurred
   {
-    controlTimer++;
+    mControlLogicTimer++;
     mFilterSum += temp;
   }
   else   // do the control magic now
   {
-    controlTimer = 0;
+    mControlLogicTimer = 0;
     mConVal = mFilterSum / CONTROL_PERIOD;  // calculate filtered value
     mConValDiff = mConVal - mLastConVal;
     mLastConVal = mConVal;
@@ -198,42 +212,69 @@ void ControlLogic(uint16_t temp)
     {
       mConErr = mConVal - CONTROL_MAX_TEMP;
     }
-    else if(mConVal < COOLDOWN_LEAVE_TEMP)
+    else if(mConVal < CONTROL_MIN_TEMP)
     {
-      mConErr = mConVal - COOLDOWN_LEAVE_TEMP;
+      mConErr = mConVal - CONTROL_MIN_TEMP;
     }
 
     // control logic
-    // if temp is too low but is raising, do nothing
-    if(mConErr < 0  && mConValDiff > 1)
+
+    if (AVC_GetValvePos() <  AVC_FULL_OPEN_PCT)  // opening enabled
     {
-      // do nothing
-    }
-    //if temp is too low and is  falling
-    else if(mConErr < 0 &&  mConValDiff < -1)
-    {
-      mRequestValvePct += 3;   // open the valve more
-    }
-    // temp is too low and is steady
-    else if (mConErr < 0)
-    {
-      mRequestValvePct += 1;   // open the valve bit more
+      // if temp is too low but is raising, do nothing
+      if(mConErr < 0  && mConValDiff > 1)
+      {
+        mRequestValveDiffPct = 0;
+      }
+      //if temp is too low and is  falling
+      if(mConErr < 0 &&  mConValDiff < -1)
+      {
+        mRequestValveDiffPct = 2;
+        //mRequestValvePct += 3;   // open the valve more
+      }
+      // temp is too low and is steady
+      else if (mConErr < 0)
+      {
+        mRequestValveDiffPct = 1;
+        //mRequestValvePct += 1;   // open the valve bit more
+      }
     }
 
-    // if temp is too high  but is falling, do nothing
-    if(mConErr > 0  && mConValDiff < -1)
+
+    if (AVC_GetValvePos() > AVC_MINIMAL_OPEN_PCT) // closing enabled
     {
-      // do nothing
-    }
-    //if temp is too high and is  rising
-    else if(mConErr > 0 &&  mConValDiff < -1)
-    {
-      mRequestValvePct -= 3;   // close the valve more
-    }
-    // temp is too high and is steady
-    else if (mConErr > 0)
-    {
-      mRequestValvePct -= 1;   // close the valve bit more
+       // if temp is too high  but is falling, do nothing
+       if(mConErr > 0  && mConValDiff < -1)
+       {
+         mRequestValveDiffPct = 0;
+       }
+
+       //if temp is too high and is  rising
+       else if(mConErr > 0 &&  mConValDiff < -1)
+       {
+         if (AVC_GetValvePos() > 34)
+         {
+           mRequestValveDiffPct = 32 - AVC_GetValvePos();
+         }
+         else
+         {
+           mRequestValveDiffPct = -2;
+         }
+         //mRequestValvePct -= 3;   // close the valve more
+       }
+       // temp is too high and is steady
+       else if (mConErr > 0)
+       {
+         if (AVC_GetValvePos() > 30)
+          {
+            mRequestValveDiffPct = 27 - AVC_GetValvePos();
+          }
+          else
+          {
+            mRequestValveDiffPct = -1;
+          }
+         //mRequestValvePct -= 1;   // close the valve bit more
+       }
     }
   }
 
