@@ -101,8 +101,8 @@ void Error_Handler(void);
 #define PUMP_BOIL_GPIO_Port GPIOA
 #define PG_48V_Pin GPIO_PIN_0
 #define PG_48V_GPIO_Port GPIOB
-#define AV_ENC2_Pin GPIO_PIN_1
-#define AV_ENC2_GPIO_Port GPIOB
+#define GPIO1_Pin GPIO_PIN_1
+#define GPIO1_GPIO_Port GPIOB
 #define OUT4_Pin GPIO_PIN_2
 #define OUT4_GPIO_Port GPIOB
 #define OUT5_Pin GPIO_PIN_10
@@ -129,8 +129,8 @@ void Error_Handler(void);
 #define SERVO_WALL_GPIO_Port GPIOA
 #define SERVO_RAD_Pin GPIO_PIN_9
 #define SERVO_RAD_GPIO_Port GPIOA
-#define AV_ENC1_Pin GPIO_PIN_10
-#define AV_ENC1_GPIO_Port GPIOA
+#define SERVO_AV_Pin GPIO_PIN_10
+#define SERVO_AV_GPIO_Port GPIOA
 #define AV4_Pin GPIO_PIN_10
 #define AV4_GPIO_Port GPIOC
 #define AV3_Pin GPIO_PIN_11
@@ -139,8 +139,8 @@ void Error_Handler(void);
 #define AV2_GPIO_Port GPIOC
 #define AV1_Pin GPIO_PIN_2
 #define AV1_GPIO_Port GPIOD
-#define AV_PWM_Pin GPIO_PIN_3
-#define AV_PWM_GPIO_Port GPIOB
+#define AV_EN_Pin GPIO_PIN_3
+#define AV_EN_GPIO_Port GPIOB
 #define ELV_Pin GPIO_PIN_5
 #define ELV_GPIO_Port GPIOB
 #define LED_B_Pin GPIO_PIN_3
@@ -149,6 +149,7 @@ void Error_Handler(void);
 #define LED_G_GPIO_Port GPIOB
 #define LED_R_Pin GPIO_PIN_9
 #define LED_R_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -22,7 +22,6 @@ void DO_Init()
 	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
 	sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
 	sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-
 }
 
 void	DO_SetElHeaters(uint8_t heaters)
@@ -173,7 +172,7 @@ void  DO_SetServoRad(int16_t pct)
 	uint32_t dutycycle = 0;
 	if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PG_48V_GPIO_Port,PG_48V_Pin))
 	{
-		// not available power suuply for servo valves
+		// not available power supply for servo valves
 //		HAL_TIM_PWM_Stop(TIM_SERVOS, CHANNEL_RAD);
 	//	return;
 	}
@@ -217,6 +216,31 @@ void  DO_SetServoWall(int16_t pct)
 		Error_Handler();
 	}
 	HAL_TIM_PWM_Start(TIM_SERVOS, CHANNEL_WALL);  // and this fcn is then not able to start  (HAL HELL ! )
+}
+
+void  DO_SetServoAirValve(int16_t pct)
+{
+
+  uint32_t dutycycle = 0;
+  if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PG_48V_GPIO_Port,PG_48V_Pin))
+  {
+    // not available power suuply for servo valves
+//    HAL_TIM_PWM_Stop(TIM_SERVOS, CHANNEL_WALL);
+//    return;
+  }
+  if (pct < 0) pct = 0;
+  if (pct > 100) pct = 100;
+  dutycycle = (pct * 940)  / 100;  // for analog voltage output 10.0V is needed PWM dutycycle 94%
+
+  sConfigOC.Pulse = dutycycle;
+
+  HAL_TIM_PWM_Stop(TIM_SERVOS, CHANNEL_AV); // we have to stop here
+
+  if (HAL_TIM_PWM_ConfigChannel(TIM_SERVOS, &sConfigOC, CHANNEL_AV) != HAL_OK)  // because this fcn will stop it in register CCER - CCxE
+  {
+    Error_Handler();
+  }
+  HAL_TIM_PWM_Start(TIM_SERVOS, CHANNEL_AV);  // and this fcn is then not able to start  (HAL HELL ! )
 }
 
 

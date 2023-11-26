@@ -9,6 +9,7 @@
 #define BOILER_AIR_H
 
 #include "main.h"
+#include "AVC_V2.h"
 #include <stdbool.h>
 
 #define HEATUP_MAX_TEMP       196
@@ -23,7 +24,13 @@
 #define STOP_TEMP             80
 
 
-#define AV_FULL_CLOSE_PCT   0
+#define BAC_FULL_CLOSE_PCT    AVC_PCT_HOME
+#define BAC_FULL_OPEN_PCT     60
+#define BAC_MINIMAL_OPEN_PCT  18
+#define BAC_DEFAULT_PCT       45
+#define BAC_COOLDOWN_PCT      BAC_MINIMAL_OPEN_PCT
+
+//#define AV_FULL_CLOSE_PCT   0
 
 #define CONTROL_PERIOD      10  // 10sec
 

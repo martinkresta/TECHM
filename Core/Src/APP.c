@@ -357,9 +357,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     WM_ExtiCallback(GPIO_Pin);
   }
 
-  if(GPIO_Pin == AV_ENC1_Pin)
+ /* if(GPIO_Pin == AV_ENC1_Pin)   // OBSOLETE, used only for AVC_V1
   {
     AVC_ExtiCallback(GPIO_Pin);
-  }
+  }*/
 }
 

@@ -14,6 +14,7 @@
 #define TIM_SERVOS		&htim1
 #define CHANNEL_RAD		TIM_CHANNEL_2
 #define CHANNEL_WALL	TIM_CHANNEL_1
+#define CHANNEL_AV    TIM_CHANNEL_3
 
 #define PUMP_BOILER			0x01
 #define PUMP_WALL				0x02
@@ -31,6 +32,8 @@ void 	DO_SetElv(uint8_t elv);
 void  DO_SetServoRad(int16_t pct);
 
 void  DO_SetServoWall(int16_t pct);
+
+void  DO_SetServoAirValve(int16_t pct);
 
 void  DO_SetPumpBoiler(uint8_t state);
 void  DO_SetPumpWall(uint8_t state);

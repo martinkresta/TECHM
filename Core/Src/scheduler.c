@@ -19,7 +19,7 @@
 #include "APP.h"
 #include "COM.h"
 #include "MCAN.h"
-#include "AVC.h"
+#include "AVC_V2.h"
 #include "BOILER_AIR.h"
 #include "GEST.h"
 
