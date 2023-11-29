@@ -30,15 +30,12 @@ typedef enum
 
 
 
-#define   AVC_PCT_HOME             5
-#define   AVC_PCT_FULL_OPEN        90
+#define   AVC_PCT_HOME             0
+#define   AVC_PCT_FULL_OPEN        80
 #define   AVC_POS_TOLERANCE        0
 
-/*#define AVC_FULL_OPEN_PCT     55
-#define AVC_FULL_CLOSE_PCT    0
-#define AVC_MINIMAL_OPEN_PCT  18
-#define AVC_DEFAULT_PCT       45
-#define AVC_COOLDOWN_PCT      AVC_MINIMAL_OPEN_PCT  */
+
+#define   AVC_SERVO_ANGLE_OFFSET_D      3         // angle between axis of tubing and mounted servo drive (ideally 0)
 
 
 void AVC_Init(void);
@@ -52,9 +49,6 @@ void AVC_ChangePosBy(int16_t pos_diff);
 void AVC_Update_10ms(void);
 
 void AVC_GoHome(void);
-
-
-
 
 
 

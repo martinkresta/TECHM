@@ -101,8 +101,8 @@ void Error_Handler(void);
 #define PUMP_BOIL_GPIO_Port GPIOA
 #define PG_48V_Pin GPIO_PIN_0
 #define PG_48V_GPIO_Port GPIOB
-#define GPIO1_Pin GPIO_PIN_1
-#define GPIO1_GPIO_Port GPIOB
+#define ADC_AVC_Pin GPIO_PIN_1
+#define ADC_AVC_GPIO_Port GPIOB
 #define OUT4_Pin GPIO_PIN_2
 #define OUT4_GPIO_Port GPIOB
 #define OUT5_Pin GPIO_PIN_10

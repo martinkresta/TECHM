@@ -143,12 +143,12 @@ void BAC_ManualToggle(void)
   SetState(es_Off);
   if(mRequestValvePct < 50)
   {
-    mRequestValvePct = BAC_FULL_OPEN_PCT;
+    mRequestValvePct = AVC_PCT_FULL_OPEN;
     AVC_SetRequestPos(mRequestValvePct);
   }
   else
   {
-    mRequestValvePct = BAC_FULL_CLOSE_PCT;
+    mRequestValvePct = AVC_PCT_HOME;
     AVC_SetRequestPos(mRequestValvePct);
     AVC_GoHome();
   }
@@ -170,8 +170,8 @@ void SetState(eState newState)
       mState = es_Idle;
       break;
     case es_HeatUp:
-      mRequestValvePct = BAC_FULL_OPEN_PCT;
-      AVC_SetRequestPos(BAC_FULL_OPEN_PCT);
+      mRequestValvePct = BAC_HEATUP_PCT;
+      AVC_SetRequestPos(BAC_HEATUP_PCT);
       mState = es_HeatUp;
       break;
     case es_AirControl:
@@ -218,7 +218,7 @@ void ControlLogic(uint16_t temp)
 
     // control logic
 
-    if (AVC_GetValvePos() <  BAC_FULL_OPEN_PCT)  // opening enabled
+    if (AVC_GetValvePos() <  BAC_CTRL_MAX_PCT)  // opening enabled
     {
       // if temp is too low but is raising, do nothing
       if(mConErr < 0  && mConValDiff > 1)
@@ -240,7 +240,7 @@ void ControlLogic(uint16_t temp)
     }
 
 
-    if (AVC_GetValvePos() > BAC_MINIMAL_OPEN_PCT) // closing enabled
+    if (AVC_GetValvePos() > BAC_CTRL_MIN_PCT) // closing enabled
     {
        // if temp is too high  but is falling, do nothing
        if(mConErr > 0  && mConValDiff < -1)
@@ -280,13 +280,13 @@ void ControlLogic(uint16_t temp)
 
   // limit the requested valve position to Control limits
 
-  if(mRequestValvePct > BAC_FULL_OPEN_PCT)
+  if(mRequestValvePct > BAC_CTRL_MAX_PCT)
   {
-    mRequestValvePct = BAC_FULL_OPEN_PCT;
+    mRequestValvePct = BAC_CTRL_MAX_PCT;
   }
-  if(mRequestValvePct < BAC_MINIMAL_OPEN_PCT)
+  if(mRequestValvePct < BAC_CTRL_MIN_PCT)
   {
-    mRequestValvePct = BAC_MINIMAL_OPEN_PCT;
+    mRequestValvePct = BAC_CTRL_MIN_PCT;
   }
 
 }

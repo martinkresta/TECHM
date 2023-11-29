@@ -21,18 +21,41 @@
 #include "AVC_V2.h"
 #include "main.h"
 #include "stdlib.h"
-#include "DO.h"
+#include "do.h"
+#include "math.h"
+
 
 GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 int16_t mValvePosPct;
-int16_t mRequestPosPct;
+int16_t mRequestPosPct;     // crossection Pct
+float mFlapAngle;
+float mServoAngle;
+float mVoltage;
+int16_t mSignalDC;
 
 eValveDir mLastDirection;  // direction of last movement
+
 
 void RunOpen(void);
 void RunClose(void);
 void Stop(void);
+
+void LinearizeAndMove(uint16_t reqSectionPct)
+{
+  mFlapAngle = acosf((100 - reqSectionPct)/101.55) * 180/M_PI;
+
+  mServoAngle = mFlapAngle - AVC_SERVO_ANGLE_OFFSET_D;
+  if (mServoAngle < 0 )    mServoAngle = 0;
+  if (mServoAngle > 90 )   mServoAngle = 90;
+
+  mVoltage = 2 + ((8.0/90)*mServoAngle);
+
+  mSignalDC = round(mVoltage * 10);
+
+  DO_SetServoAirValve(mSignalDC);
+}
+
 
 
 // initialize the peripherals and close the valve
@@ -61,7 +84,7 @@ void AVC_Update_10ms(void)
 // run in closing direction until Home switch is activated
 void AVC_GoHome(void)
 {
-  DO_SetServoAirValve(AVC_PCT_HOME);
+  LinearizeAndMove(AVC_PCT_HOME);
   mLastDirection = evd_Closing;
   mValvePosPct = AVC_PCT_HOME;
   mRequestPosPct = AVC_PCT_HOME;
@@ -92,7 +115,7 @@ void AVC_SetRequestPos(uint16_t pos)
   {
     mRequestPosPct = pos;
   }
-  DO_SetServoAirValve(mRequestPosPct);
+  LinearizeAndMove(mRequestPosPct);
   mValvePosPct = mRequestPosPct;
 }
 

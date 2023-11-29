@@ -25,10 +25,11 @@
 
 
 #define BAC_FULL_CLOSE_PCT    AVC_PCT_HOME
-#define BAC_FULL_OPEN_PCT     60
-#define BAC_MINIMAL_OPEN_PCT  18
-#define BAC_DEFAULT_PCT       45
-#define BAC_COOLDOWN_PCT      BAC_MINIMAL_OPEN_PCT
+#define BAC_CTRL_MAX_PCT      55
+#define BAC_CTRL_MIN_PCT      15
+#define BAC_DEFAULT_PCT       35
+#define BAC_COOLDOWN_PCT      BAC_CTRL_MIN_PCT
+#define BAC_HEATUP_PCT        70
 
 //#define AV_FULL_CLOSE_PCT   0
 
