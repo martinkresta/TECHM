@@ -74,6 +74,7 @@ void AVC_Init(void)
 
 }
 
+
 void AVC_Update_10ms(void)
 {
   // Nothing here

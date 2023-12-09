@@ -3,28 +3,44 @@
 #include "BOILER_AIR.h"
 #include "AVC_V2.h"
 #include "VARS.h"
+#include "PID.h"
 
 
 
 static eControlMode mMode;
 static eState mState;
 static uint16_t mRequestValvePct;
-static int16_t mRequestValveDiffPct;
 static uint16_t mStateTimer;
-static int16_t mConVal;  // actual value of controlled variable
-static int16_t mLastConVal;  // last value of controlled variable
+//static int16_t mConVal;  // actual value of controlled variable
+//static int16_t mLastConVal;  // last value of controlled variable
 
-static int16_t mConErr;  // control error
-static int16_t mConValDiff; // time derivation of controlled variable
+//static int16_t mConErr;  // control error
+//static int16_t mConValDiff; // time derivation of controlled variable
 static uint16_t mControlLogicTimer;  // measuring period of valve control logic
 
-static uint16_t mFilterSum;
 
-volatile uint16_t mExhaustTemp_C;
+uint16_t mExhaustTemp_C;
+
+float mPidSetpoint_C;
+
+tPid mExhaustPid;
 
 void SetState(eState newState);
-
 void ControlLogic(uint16_t temp);
+void ControlAlgoV2(void);
+
+// Init Function
+void BAC_Init(void)
+{
+  // configure the PID controller
+  mExhaustPid.maxAction = BAC_CTRL_MAX_PCT - BAC_DEFAULT_PCT;
+  mExhaustPid.minAction = BAC_CTRL_MIN_PCT - BAC_DEFAULT_PCT;
+  mExhaustPid.period_s = BAC_PID_PERIOD;
+  mExhaustPid.pFactor = BAC_PID_KP;
+  mExhaustPid.iFactor = BAC_PID_KI;
+  mExhaustPid.dFactor = BAC_PID_KD;
+
+}
 
 // cyclic update function executing auto control algorithm
 void BAC_Update_1s(void)
@@ -54,37 +70,38 @@ void BAC_Update_1s(void)
       }
       break;
     case es_HeatUp:
-      if(mExhaustTemp_C > HEATUP_MAX_TEMP)
+      ControlAlgoV2();
+      if(mMode == ecm_Auto)
+      {
+        AVC_SetRequestPos(mRequestValvePct);
+      }
+      if(mExhaustTemp_C > BAC_DEF_HEATUP_TEMP)
       {
         SetState(es_AirControl);
       }
       if(mStateTimer >= HEATUP_TIMEOUT)
       {
-        SetState(es_Idle);
+        SetState(es_AirControl);
       }
+      break;
+    case es_AirControl:
+      //ControlLogic(mExhaustTemp_C);
+      ControlAlgoV2();
       if(mMode == ecm_Auto)
       {
         AVC_SetRequestPos(mRequestValvePct);
       }
-      break;
-    case es_AirControl:
-      ControlLogic(mExhaustTemp_C);
-      if(mMode == ecm_Auto && mRequestValveDiffPct != 0)
-      {
-        AVC_ChangePosBy(mRequestValveDiffPct);
-        //AVC_SetRequestPos(mRequestValvePct);
-      }
-      if(mExhaustTemp_C < COOLDOWN_ENTER_TEMP)
+      if(mExhaustTemp_C < BAC_DEF_COOLDOWN_LEAVE_TEMP)
       {
         SetState(es_CoolDown);
       }
       break;
     case es_CoolDown:
-      if(mExhaustTemp_C > COOLDOWN_LEAVE_TEMP)
+      if(mExhaustTemp_C > BAC_DEF_COOLDOWN_LEAVE_TEMP)
       {
         SetState(es_AirControl);
       }
-      if(mExhaustTemp_C < STOP_TEMP)
+      if(mExhaustTemp_C < BAC_DEF_STOP_TEMP)
       {
         SetState(es_Idle);
       }
@@ -170,8 +187,10 @@ void SetState(eState newState)
       mState = es_Idle;
       break;
     case es_HeatUp:
+      PID_Init(&mExhaustPid);
       mRequestValvePct = BAC_HEATUP_PCT;
       AVC_SetRequestPos(BAC_HEATUP_PCT);
+      mPidSetpoint_C = BAC_DEF_HEATUP_TEMP;
       mState = es_HeatUp;
       break;
     case es_AirControl:
@@ -189,11 +208,51 @@ void SetState(eState newState)
   mStateTimer = 0;
 }
 
+
+void ControlAlgoV2(void)
+{
+  // read the regulated variable
+  uint16_t invalid;
+  int16_t action;
+  float ExhaustTemp_C, err;
+
+
+  if(mControlLogicTimer < BAC_CONTROL_PERIOD) // control period not occurred
+  {
+    mControlLogicTimer++;
+    //mFilterSum += temp;
+  }
+  else   // do the control magic now
+  {
+    ExhaustTemp_C = (VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST, &invalid) / 10.0);
+    // calculate the error
+    err = ExhaustTemp_C - mPidSetpoint_C;
+    // execute the PID
+    action = (int16_t)PID_Update(&mExhaustPid, err);
+    // adjust the action variable (offset)
+    action += BAC_DEFAULT_PCT;
+    // Set the flap
+    if(action > BAC_CTRL_MAX_PCT)
+     {
+      action = BAC_CTRL_MAX_PCT;
+     }
+     if(action < BAC_CTRL_MIN_PCT)
+     {
+       action = BAC_CTRL_MIN_PCT;
+     }
+    mRequestValvePct = (uint16_t)(action);
+  }
+
+
+
+ // AVC_SetRequestPos((uint16_t)(action));
+}
+/*
 void ControlLogic(uint16_t temp)
 {
   mRequestValveDiffPct = 0;
 
-  if(mControlLogicTimer < CONTROL_PERIOD) // control period not occurred
+  if(mControlLogicTimer < BAC_CONTROL_PERIOD) // control period not occurred
   {
     mControlLogicTimer++;
     mFilterSum += temp;
@@ -201,7 +260,7 @@ void ControlLogic(uint16_t temp)
   else   // do the control magic now
   {
     mControlLogicTimer = 0;
-    mConVal = mFilterSum / CONTROL_PERIOD;  // calculate filtered value
+    mConVal = mFilterSum / BAC_CONTROL_PERIOD;  // calculate filtered value
     mConValDiff = mConVal - mLastConVal;
     mLastConVal = mConVal;
     mFilterSum = 0;
@@ -289,4 +348,4 @@ void ControlLogic(uint16_t temp)
     mRequestValvePct = BAC_CTRL_MIN_PCT;
   }
 
-}
+}*/

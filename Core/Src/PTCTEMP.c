@@ -37,6 +37,8 @@ void PTCTEMP_Convert(void)
 	double temp = (Rpt - 1000) * 2.61;		// 10ths of degree C
 	mPtcTemp = (int16_t)temp;
 
+	// TBD filter the value ?
+
 	if(PtcRaw != 0 && PtcRaw != 4096)
 	{
 		VAR_SetVariable(VAR_TEMP_BOILER_EXHAUST, mPtcTemp, 1);

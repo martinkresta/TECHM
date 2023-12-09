@@ -18,10 +18,14 @@
 
 #define HEATUP_TIMEOUT        (60*30)   // 30 minutes
 
-#define COOLDOWN_ENTER_TEMP   140
-#define COOLDOWN_LEAVE_TEMP   190
 
-#define STOP_TEMP             80
+
+
+#define BAC_DEF_HEATUP_TEMP           200
+#define BAC_DEF_CONTROL_TEMP          180
+#define BAC_DEF_COOLDOWN_ENTER_TEMP   140
+#define BAC_DEF_COOLDOWN_LEAVE_TEMP   160
+#define BAC_DEF_STOP_TEMP             80
 
 
 #define BAC_FULL_CLOSE_PCT    AVC_PCT_HOME
@@ -33,7 +37,12 @@
 
 //#define AV_FULL_CLOSE_PCT   0
 
-#define CONTROL_PERIOD      10  // 10sec
+#define BAC_CONTROL_PERIOD      5  // sec
+
+#define BAC_PID_PERIOD      5  // sec
+#define BAC_PID_KP          0.5
+#define BAC_PID_KI          0.05
+#define BAC_PID_KD          5
 
 
 
