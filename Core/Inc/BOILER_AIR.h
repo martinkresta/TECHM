@@ -62,6 +62,8 @@ typedef enum
   es_CoolDown,
 }eState;
 
+void BAC_Init(void);
+
 // cyclic update function executing auto control algorithm
 void BAC_Update_1s(void);
 

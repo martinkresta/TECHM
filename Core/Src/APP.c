@@ -62,9 +62,7 @@ void APP_Init(void)
 	WDG_Init(3000);
 	HC_Init();
 	TC_Init();
-
-
-
+	BAC_Init();
 
 
 	/*Assign pins for onboard UI  */
