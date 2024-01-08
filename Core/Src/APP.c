@@ -28,6 +28,7 @@
 #include "GEST.h"
 #include "di.h"
 #include "AVC.h"
+#include "UHAMON.h"
 
 
 
@@ -342,6 +343,11 @@ static void ProcessMessage(s_CanRxMsg* msg)
 		case CMD_BALANCE_INFO: // balancing information from ELECON to ELHEATER
 			ELH_SetBalanceInfo(par1, par2);
 			break;
+		case CMD_UHAMON_RECIEVE:  // uhamon message received
+		  // set the SEND function:
+		  UHAMON_SetSendFunction(&COM_SendUhamonMessage);
+		  UHAMON_ProcessInput(msg->data);
+		  break;
 	}
 	return;
 }
