@@ -12,13 +12,11 @@
 #include "AVC_V2.h"
 #include <stdbool.h>
 
-#define HEATUP_MAX_TEMP       196
-#define CONTROL_MIN_TEMP      200
-#define CONTROL_MAX_TEMP      205
+//#define HEATUP_MAX_TEMP       196
+//#define CONTROL_MIN_TEMP      200
+//#define CONTROL_MAX_TEMP      205
 
-#define HEATUP_TIMEOUT        (60*30)   // 30 minutes
-
-
+#define HEATUP_TIMEOUT        (60*40)   // 30 minutes
 
 
 #define BAC_DEF_HEATUP_TEMP           200
@@ -30,7 +28,7 @@
 
 #define BAC_FULL_CLOSE_PCT    AVC_PCT_HOME
 #define BAC_CTRL_MAX_PCT      55
-#define BAC_CTRL_MIN_PCT      15
+#define BAC_CTRL_MIN_PCT      8
 #define BAC_DEFAULT_PCT       35
 #define BAC_COOLDOWN_PCT      BAC_CTRL_MIN_PCT
 #define BAC_HEATUP_PCT        70

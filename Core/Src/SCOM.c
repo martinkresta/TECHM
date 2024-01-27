@@ -11,6 +11,7 @@
 #include "SCOM.h"
 #include "VARS.h"
 #include "DO.h"
+#include "APP.h"
 
 
 typedef struct
@@ -50,7 +51,7 @@ void SCOM_Init(UART_HandleTypeDef* uart)
 	mNewDataReady = 0;
 	mTxBusy = 0;
 	mPcConnected = 0;
-	InitPcScanList();
+//	InitPcScanList();
 
 	// enable receiver
 	HAL_UART_Receive_DMA(ComUart, mRxBuffer, 10);
@@ -105,6 +106,14 @@ void SCOM_Update_10ms(void)
 	}
 }
 
+
+// function  for sending UHAMON messages
+void SCOM_SendUhamonMessage(uint8_t* uhamonMsg)
+{
+  memcpy(mTxBuffer, uhamonMsg, 8);
+  mTxBuffer[0] = THIS_NODE;
+  Send();
+}
 /* private methods */
 
 
@@ -258,6 +267,10 @@ static void ProcessMessage(void)
 			case CMD_SET_VAR_VALUE:
 				VAR_SetVariable(data1 & 0x7FFF, data2, ((data1 & 0x8000)? 0 : 1));
 				break;
+			case CMD_UHAMON_RECIEVE:
+			  UHAMON_SetSendFunction(&SCOM_SendUhamonMessage);
+			  UHAMON_ProcessInput(&(mRxBuffer[2]));
+			  break;
 		}
 
 	HAL_UART_Receive_DMA(ComUart, mRxBuffer, 10);

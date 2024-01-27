@@ -34,6 +34,9 @@
 #define  CMD_MASTER_HB  					0x777
 #define  CMD_NETWORK_STATUS				0x765
 
+#define  CMD_UHAMON_RECIEVE       0x600
+#define  CMD_UHAMON_SEND          0x610
+
 
 #define  CMD_TM_DEV_ID  					0x210
 #define  CMD_TM_STATUS  					0x212
@@ -55,6 +58,9 @@
 
 void SCOM_Init(UART_HandleTypeDef* uart);
 void SCOM_Update_10ms(void);
+
+// function  for sending UHAMON messages
+void SCOM_SendUhamonMessage(uint8_t* uhamonMsg);
 
 
 
