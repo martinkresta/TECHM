@@ -110,8 +110,10 @@ void SCOM_Update_10ms(void)
 // function  for sending UHAMON messages
 void SCOM_SendUhamonMessage(uint8_t* uhamonMsg)
 {
-  memcpy(mTxBuffer, uhamonMsg, 8);
-  mTxBuffer[0] = THIS_NODE;
+  mTxBuffer[0] = CMD_UHAMON_SEND >> 8;
+  mTxBuffer[1] = CMD_UHAMON_SEND & 0xFF;
+  memcpy(&(mTxBuffer[2]), uhamonMsg, 8);
+  mTxBuffer[2] = THIS_NODE;
   Send();
 }
 /* private methods */

@@ -7,10 +7,10 @@
 
 
 
-static eControlMode mMode;
-static eState mState;
+static eControlMode mBacMode;
+static eState mBacState;
 static uint16_t mRequestValvePct;
-static uint16_t mStateTimer;
+static uint16_t mBacStateTimer;
 //static int16_t mConVal;  // actual value of controlled variable
 //static int16_t mLastConVal;  // last value of controlled variable
 
@@ -48,30 +48,30 @@ void BAC_Update_1s(void)
   uint16_t invalid;
   mExhaustTemp_C = ( VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST, &invalid) / 10);
 
-  if(mStateTimer < 10000)
+  if(mBacStateTimer < 10000)
   {
-    mStateTimer ++;
+    mBacStateTimer ++;
   }
 
-  switch (mState)
+  switch (mBacState)
   {
     case es_Off:
       // manual control, do nothing
-      if(mMode == ecm_Auto)
+      if(mBacMode == ecm_Auto)
       {
         AVC_SetRequestPos(mRequestValvePct);
       }
       break;
     case es_Idle:
       // only waiting for start signal
-      if(mMode == ecm_Auto)
+      if(mBacMode == ecm_Auto)
       {
         AVC_SetRequestPos(mRequestValvePct);
       }
       break;
     case es_HeatUp:
       ControlAlgoV2();
-      if(mMode == ecm_Auto)
+      if(mBacMode == ecm_Auto)
       {
         AVC_SetRequestPos(mRequestValvePct);
       }
@@ -79,7 +79,7 @@ void BAC_Update_1s(void)
       {
         SetState(es_AirControl);
       }
-      if(mStateTimer >= HEATUP_TIMEOUT)
+      if(mBacStateTimer >= HEATUP_TIMEOUT)
       {
         SetState(es_AirControl);
       }
@@ -87,11 +87,11 @@ void BAC_Update_1s(void)
     case es_AirControl:
       //ControlLogic(mExhaustTemp_C);
       ControlAlgoV2();
-      if(mMode == ecm_Auto)
+      if(mBacMode == ecm_Auto)
       {
         AVC_SetRequestPos(mRequestValvePct);
       }
-      if(mExhaustTemp_C < BAC_DEF_COOLDOWN_LEAVE_TEMP)
+      if(mExhaustTemp_C < BAC_DEF_COOLDOWN_ENTER_TEMP)
       {
         SetState(es_CoolDown);
       }
@@ -105,7 +105,7 @@ void BAC_Update_1s(void)
       {
         SetState(es_Idle);
       }
-      if(mMode == ecm_Auto)
+      if(mBacMode == ecm_Auto)
       {
         AVC_SetRequestPos(mRequestValvePct);
       }
@@ -116,7 +116,7 @@ void BAC_Update_1s(void)
 // activates automatic air valve control
 void BAC_SetAutoMode(void)
 {
-  mMode = ecm_Auto;
+  mBacMode = ecm_Auto;
   if (mExhaustTemp_C < 60)
   {
     SetState(es_Idle);
@@ -130,7 +130,7 @@ void BAC_SetAutoMode(void)
 // event door open detected
 void BAC_DoorOpenDetected(void)
 {
-  if (mState == es_AirControl || mState == es_CoolDown)
+  if (mBacState == es_AirControl || mBacState == es_CoolDown)
   {
     SetState(es_HeatUp);
   }
@@ -147,7 +147,7 @@ void BAC_SafetyCloseAir(void)
 // start the new hating cycle
 void BAC_StartHeating(void)
 {
-  if(mState == es_Idle)
+  if(mBacState == es_Idle)
   {
     SetState(es_HeatUp);
   }
@@ -156,7 +156,7 @@ void BAC_StartHeating(void)
 // Activates the manual control mode and toggles the vlave state (full open/full close)
 void BAC_ManualToggle(void)
 {
-  mMode = ecm_Manual;
+  mBacMode = ecm_Manual;
   SetState(es_Off);
   if(mRequestValvePct < 50)
   {
@@ -178,34 +178,35 @@ void SetState(eState newState)
   switch (newState)
   {
     case es_Off:  // (manual control)
-      mState = es_Off;
+      mBacState = es_Off;
       break;
     case es_Idle:
       mRequestValvePct = BAC_FULL_CLOSE_PCT;
       AVC_SetRequestPos(BAC_FULL_CLOSE_PCT);
       AVC_GoHome();
-      mState = es_Idle;
+      mBacState = es_Idle;
       break;
     case es_HeatUp:
       PID_Init(&mExhaustPid);
       mRequestValvePct = BAC_HEATUP_PCT;
       AVC_SetRequestPos(BAC_HEATUP_PCT);
       mPidSetpoint_C = BAC_DEF_HEATUP_TEMP;
-      mState = es_HeatUp;
+      mBacState = es_HeatUp;
       break;
     case es_AirControl:
       mControlLogicTimer = 0;
       mRequestValvePct = BAC_DEFAULT_PCT;
       AVC_SetRequestPos(BAC_DEFAULT_PCT);
-      mState = es_AirControl;
+      mPidSetpoint_C = BAC_DEF_CONTROL_TEMP;
+      mBacState = es_AirControl;
       break;
     case es_CoolDown:
       mRequestValvePct = BAC_COOLDOWN_PCT;
       AVC_SetRequestPos(BAC_COOLDOWN_PCT);
-      mState = es_CoolDown;
+      mBacState = es_CoolDown;
       break;
   }
-  mStateTimer = 0;
+  mBacStateTimer = 0;
 }
 
 
@@ -224,6 +225,8 @@ void ControlAlgoV2(void)
   }
   else   // do the control magic now
   {
+    mControlLogicTimer = 1;
+
     ExhaustTemp_C = (VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST, &invalid) / 10.0);
     // calculate the error
     err = ExhaustTemp_C - mPidSetpoint_C;

@@ -64,6 +64,7 @@ void APP_Init(void)
 	HC_Init();
 	TC_Init();
 	BAC_Init();
+	UHAMON_Init();
 
 
 	/*Assign pins for onboard UI  */
