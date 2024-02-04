@@ -195,8 +195,8 @@ void SetState(eState newState)
       break;
     case es_AirControl:
       mControlLogicTimer = 0;
-      mRequestValvePct = BAC_DEFAULT_PCT;
-      AVC_SetRequestPos(BAC_DEFAULT_PCT);
+     // mRequestValvePct = BAC_DEFAULT_PCT;
+     // AVC_SetRequestPos(BAC_DEFAULT_PCT);
       mPidSetpoint_C = BAC_DEF_CONTROL_TEMP;
       mBacState = es_AirControl;
       break;
