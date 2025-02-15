@@ -24,7 +24,7 @@ typedef enum
 	eElh_BalanceSupport
 }eElhState;
 
-#define  MAX_BOARD_TEMP_C					60
+#define  MAX_BOARD_TEMP_C					65
 #define  MIN_UTIL_TEMP_C					45
 //#define  MIN_SOC									90
 #define  MAX_LOAD_A								95  //

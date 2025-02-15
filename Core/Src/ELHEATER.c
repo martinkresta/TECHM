@@ -138,7 +138,7 @@ void ELH_Update_1s(void)
 	boartTemp_C= VAR_GetVariable(VAR_TEMP_TECHM_BOARD,&invalid)/10;  // techm board temperature
 	mTankTemp_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;  // top tank sensor
 	soc				 = VAR_GetVariable(VAR_BAT_SOC,&invalid);  		// battery soc
-	charging_A = VAR_GetVariable(VAR_CHARGING_A10,&invalid)/10;  // charging current
+	charging_A = VAR_GetVariable(VAR_CHARGING_A10,&invalid)/10;  // charging current   !!!
 //	load_A		 = VAR_GetVariable(VAR_LOAD_A10,&invalid)/10;  // load current
 	battCurr_A = VAR_GetVariable(VAR_BAT_CURRENT_A10,&invalid)/10;  // batt current
 	solarVoltage_V = VAR_GetVariable(VAR_MPPT_SOLAR_VOLTAGE_V100,&invalid)/100;  // FVE voltage
