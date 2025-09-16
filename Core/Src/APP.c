@@ -29,6 +29,7 @@
 #include "di.h"
 #include "AVC.h"
 #include "UHAMON.h"
+#include "LOG.h"
 
 
 
@@ -204,6 +205,7 @@ void APP_Start(void)
 
 	VAR_SetVariable(VAR_BAT_VOLTAGE_V10, 520, 1);
 
+	LOG_Startup();
 
 	while (1)   // endless loop
 	{

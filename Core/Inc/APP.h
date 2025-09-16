@@ -37,7 +37,6 @@ void APP_Init(void);
 void APP_Start(void);
 void APP_ProcessMessages(void);
 void APP_Update_1s(void);
-
 void APP_DiInputChanged(uint8_t inputId, uint8_t state);
 void APP_GestureDetected(uint8_t action);
 
