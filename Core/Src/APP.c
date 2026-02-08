@@ -35,6 +35,8 @@
 
 s_CanRxMsg rmsg;
 
+static uint32_t mAppUpTime;
+
 static void ProcessMessage(s_CanRxMsg* msg);
 
 uint8_t mBoilerCleaningMode;
@@ -238,7 +240,7 @@ void APP_Update_1s(void)
 		HC_Midnight();
 	}
 
-
+	mAppUpTime++;
 }
 
 
@@ -351,6 +353,23 @@ static void ProcessMessage(s_CanRxMsg* msg)
 		  UHAMON_SetSendFunction(&COM_SendUhamonMessage);
 		  UHAMON_ProcessInput(msg->data);
 		  break;
+		case CMD_SYSINFO_REQ:
+      if(msg->data[0] == COM_GetNodeId())
+      {
+         switch (msg->data[1])
+         {
+           case esit_ASW_version:
+             COM_SendSysInfo(esit_ASW_version, (uint32_t)ASW_VERSION);
+             break;
+           case esit_UpTime:
+             COM_SendSysInfo(esit_UpTime, mAppUpTime);
+             break;
+           case esit_HWID:
+             COM_SendSysInfo(esit_HWID, (uint32_t)HWID);
+             break;
+         }
+      }
+      break;
 	}
 	return;
 }
