@@ -39,6 +39,7 @@ static uint8_t mBatteryBalancedToday;
 static int16_t mOptimalBalancingCurrent;
 
 static int16_t mTankTemp_C;
+static uint8_t mSocComfortEna;
 
 
 
@@ -72,6 +73,7 @@ void ELH_Init(void)
 	mEnergyCounter_mWh = 0;
 	mBatteryBalancedToday = 0;
 	mOptimalBalancingCurrent = 0;
+	mSocComfortEna = 0;
 
 }
 
@@ -160,6 +162,16 @@ void ELH_Update_1s(void)
 		mSocEnableHys = 1;
 	}
 
+	// Summer comfort heat SOC hysteresis: enable at 43%, disable below 40%
+	if (soc >= COMFORT_SOC_ENABLE)
+	{
+		mSocComfortEna = 1;
+	}
+	if (soc < COMFORT_SOC_DISABLE)
+	{
+		mSocComfortEna = 0;
+	}
+
 	// Safety checks
 	// Over temperature input (emergency thermostate)
 	if (GPIO_PIN_SET == HAL_GPIO_ReadPin(ETS_GPIO_Port,ETS_Pin))
@@ -202,12 +214,12 @@ void ELH_Update_1s(void)
 
   // low soc
 
-	if (soc < SOC_DISABLE)   // SOC too low
+	if (soc < SOC_DISABLE)   // SOC too low for main mode
 	{
 		mSocEnableHys = 0;
-		mState = eElh_LowSOC;
-		if (mOptimalBalancingCurrent == 0)  // SOC too low AND balancing support not required
+		if (mOptimalBalancingCurrent == 0 && mSocComfortEna == 0)  // neither balance support nor comfort heat will run
 		{
+			mState = eElh_LowSOC;
 			SwitchOffImmediatelly();
 		}
 	}
@@ -245,7 +257,18 @@ void ELH_Update_1s(void)
 		ControlHeaterPower(battCurr_A);
 	}
 
-	// support for ELECON to lower charging current when solar power is too high for successful balancing  (happens only before battery is balanced today)
+	// Summer comfort heat: higher priority than balance support — ensure minimum tank temp first
+	else if (mSocComfortEna == 1 && (now.Month >= 4 && now.Month <= 9) && mTankTemp_C < COMFORT_REQ_TEMP)
+	{
+		if (mTankTemp_C < (COMFORT_REQ_TEMP - 1))  // turn on below 49°C; hold between 49–50°C
+		{
+			mHeaterMask = COMFORT_COIL_MASK & mHeaterEnaMask;
+			DO_SetElHeaters(mHeaterMask);
+			CalculateHeaterLoad();
+		}
+		mState = eElh_ComfortHeat;
+	}
+	// support for ELECON to regulate charging current / excess power utilization (happens only before battery is balanced today)
 	else if (mOptimalBalancingCurrent != 0  && mBatteryBalancedToday == 0)
 	{
 		if (mOptimalBalancingCurrent > 0)  // safety check, to prevent discharging battery by SW or COM error

@@ -21,7 +21,8 @@ typedef enum
 	eElh_InvalidInputs,
 	eElh_ELeconComError,
 	eElh_SwitchError,
-	eElh_BalanceSupport
+	eElh_BalanceSupport,
+	eElh_ComfortHeat
 }eElhState;
 
 #define  MAX_BOARD_TEMP_C					65
@@ -39,6 +40,11 @@ typedef enum
 
 #define  WINTER_REQ_TEMP				90
 #define  SUMMER_REQ_TEMP				70
+
+#define  COMFORT_SOC_ENABLE				43   // summer comfort heat: enable above this SOC
+#define  COMFORT_SOC_DISABLE			40   // summer comfort heat: disable below this SOC
+#define  COMFORT_REQ_TEMP				55   // summer comfort heat: target tank temperature
+#define  COMFORT_COIL_MASK				0x38 // summer comfort heat: top 3 coils only (bits 3,4,5)
 
 
 void ELH_Init(void);
