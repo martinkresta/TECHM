@@ -26,7 +26,7 @@ typedef enum
 }eElhState;
 
 #define  MAX_BOARD_TEMP_C					65
-#define  MIN_UTIL_TEMP_C					45
+#define  MIN_UTIL_TEMP_C					55
 //#define  MIN_SOC									90
 #define  MAX_LOAD_A								95  //
 #define  SOC_ENABLE								100
