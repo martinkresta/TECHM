@@ -9,7 +9,7 @@
 
 
 // values are parsed by python script ! do not change define
-#define  ASW_VERSION      102
+#define  ASW_VERSION      103
 
 #define  HWID             0x103
 #define  DEVICE_STR       "TECHM"
