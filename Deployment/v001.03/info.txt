@@ -1,0 +1,6 @@
+DEVICE        : TECHM
+SW VERSION    : v001.03
+BUILD TIME    : 01.11.2026 09:02:48
+CRC           : 0x1C59800E
+HWID          : 0x00000103
+SIZE          : 59020 B
