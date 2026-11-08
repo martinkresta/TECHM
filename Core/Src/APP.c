@@ -59,6 +59,7 @@ void APP_Init(void)
 	SCOM_Init(&huart1);
 	MCAN_Init(&hcan1, THIS_NODE);
   COM_Init(THIS_NODE);
+  VAR_EnableVars2Read();   // remote variables are read from VARS2
   ELH_Init();
 	ADC_Init(&hadc1, &hdma_adc1, NUM_OF_ADC_CHANNELS);
 	DO_Init();
