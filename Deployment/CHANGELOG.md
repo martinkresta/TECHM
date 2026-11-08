@@ -2,6 +2,16 @@
 
 Newest version first. Versions before v001.03 are not listed.
 
+## v001.05 (2026-11-08)
+
+- Task: VARS2 read layer, part B (`UHA_COMMON/tasks/vars2_read_layer.md`), branch `feature/vars2_read_techm`
+- CRC: `0x7F4C9243`
+
+- `VAR_EnableVars2Read()` after `COM_Init()`: remote variables are read from VARS2: `BAT_VOLTAGE_V10`, `BAT_SOC`, `CHARGING_A10`, `BAT_CURRENT_A10`, `MPPT_SOLAR_VOLTAGE_V100` (ELHEATER, from ELECON) and `TEMP_DOWNSTAIRS` (IOBOARD_D), `TEMP_KIDROOM`, `TEMP_OUTSIDE` (ELECON) in TEMPCON.
+- Behaviour after a producer timeout (3 s for battery/MPPT values, 9 s for temperatures): the value is flagged invalid, ELHEATER goes to `eElh_InvalidInputs` and switches the heater off immediately, TEMPCON switches the heating pumps off. Before, the last value was used indefinitely.
+- Own variables (tank, boiler, board temperatures) are still read from `Vars[]`; the local initial `BAT_VOLTAGE_V10 = 520` (APP.c) is kept until the first VARS2 frame arrives.
+- `SCOM.c` is not used on this node and was not changed.
+
 ## v001.04 (2026-11-08)
 
 - Task: VARS2 step 2 (`UHA_COMMON/tasks/elecon_vars2_tunel.md`), branch `feature/elecon_vars2_tunel`
