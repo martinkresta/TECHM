@@ -2,6 +2,15 @@
 
 Newest version first. Versions before v001.03 are not listed.
 
+## v001.06 (2026-11-13)
+
+- Task: VARS2 step 6b part B (`UHA_COMMON/tasks/vars2_stop_legacy_tx.md`), branch `feature/vars2_stop_legacy_tx`
+- CRC: `0x9C4988D8`
+
+- Old variable frame `0x110+node` is no longer sent; only VARS2 `0x180+node` (shared `COM.c`, part A).
+- `CMD_VAR_VALUE` RX case removed from `APP.c`. All remote variables read here (ELHEATER battery/MPPT values, TEMPCON room/outdoor temperatures) have a VARS2 row and are read through the read layer since v001.05.
+- First TECHM build with the MCAN CAN TX supervision (dead-TX self-reset, ABOM, TEC/REC monitor) and the `NETWORK_STATUS` row in `VarMeta`.
+
 ## v001.05 (2026-11-08)
 
 - Task: VARS2 read layer, part B (`UHA_COMMON/tasks/vars2_read_layer.md`), branch `feature/vars2_read_techm`
