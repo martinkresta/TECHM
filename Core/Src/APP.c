@@ -324,19 +324,15 @@ static void ProcessMessage(s_CanRxMsg* msg)
 {
 	uint16_t cmd = msg->header.StdId & 0xFF0;  // maskout nodeid
 	//uint8_t producer = msg->header.StdId & 0x00F;  // maskout cmd
-	int16_t par1,par2,par3; //,par4;
+	int16_t par1,par2; //,par3,par4;
 	uint32_t unixtime = 0;
 	par1 = (msg->data[0] << 8) | msg->data[1];
 	par2 = (msg->data[2] << 8) | msg->data[3];
-	par3 = (msg->data[4] << 8) | msg->data[5];
 //	par4 = (msg->data[6] << 8) | msg->data[7];
 
 	switch (cmd)
 	{
 		case CMD_BUTTON_STATE:
-			break;
-		case  CMD_VAR_VALUE:
-			VAR_SetVariable(par1, par2, par3);  // tbd check valid flag
 			break;
 		case CMD_RTC_SYNC: // set RTC time
 			unixtime |= msg->data[0] << 24;
