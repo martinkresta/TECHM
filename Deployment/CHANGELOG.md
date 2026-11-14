@@ -5,7 +5,7 @@ Newest version first. Versions before v001.03 are not listed.
 ## v001.07 (2026-11-14)
 
 - Task: VARS2 direct access part B (`UHA_COMMON/tasks/vars2_direct_access.md`), branch `feature/vars2_direct_access`
-- CRC: `0x7BFCAFD1`
+- CRC: `0x370114A8`
 
 - Variables live in `Vars2` (value in physical units + valid flag); the old `Vars[]` / `VAR_*` API is no longer used here.
 - ELHEATER, HEATING, TEMPCON and BOILER_AIR read their inputs directly and compute in degC / A / %. The
