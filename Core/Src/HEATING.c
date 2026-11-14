@@ -125,7 +125,7 @@ void HC_Update_1s(void)
 	}
 	if (power_W > 0)   // negative power (exchanger colder at the outlet) is not counted
 	{
-		mTodayHeat_Ws += (uint32_t)power_W;
+		mTodayHeat_Ws += (uint32_t)(power_W + 0.5f);   // rounded: same as the old integer power
 	}
 	mTodayHeat_Wh = mTodayHeat_Ws / 3600;
 
