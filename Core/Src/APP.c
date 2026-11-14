@@ -14,8 +14,7 @@
 #include "scheduler.h"
 #include "OW.h"
 #include "TEMP.h"
-#include "VARS.h"
-#include "SCOM.h"
+#include "VARS2.h"   /* Vars2: APP.c wires the groups to the modules */
 #include "COM.h"
 #include "DO.h"
 #include "ADC.h"
@@ -55,19 +54,16 @@ void APP_Init(void)
 	DI_Init();
 	OW_Init();
 	TEMP_Init();
-	VAR_Init();
-	SCOM_Init(&huart1);
 	MCAN_Init(&hcan1, THIS_NODE);
   COM_Init(THIS_NODE);
-  VAR_EnableVars2Read();   // remote variables are read from VARS2
-  ELH_Init();
+  ELH_Init(&Vars2.ElHeater, &Vars2.Temperatures.Techm, &Vars2.GlobalEnergy.Battery, &Vars2.Mppt);
 	ADC_Init(&hadc1, &hdma_adc1, NUM_OF_ADC_CHANNELS);
 	DO_Init();
-	WM_Init();
+	WM_Init(&Vars2.Water);
 	WDG_Init(3000);
-	HC_Init();
-	TC_Init();
-	BAC_Init();
+	HC_Init(&Vars2.Boiler, &Vars2.Temperatures.Techm);
+	TC_Init(&Vars2.Tank, &Vars2.Temperatures);
+	BAC_Init(&Vars2.Temperatures.Techm);
 	UHAMON_Init();
 
 
@@ -134,65 +130,28 @@ void APP_Init(void)
 	// TEMP_AddHwBus(2,OW3_GPIO_Port, OW3_Pin);  // not used so far
 
 	// assign sensors on OW1 :
-	TEMP_AssignSensor(T_TECHM, VAR_TEMP_TECHM_BOARD, 0);
-	TEMP_AssignSensor(T108, VAR_TEMP_TANK_IN_H, 0);
-	TEMP_AssignSensor(T109, VAR_TEMP_TANK_OUT_H, 0);
-	TEMP_AssignSensor(T301, VAR_TEMP_TANK_1, 0);
-	TEMP_AssignSensor(T302, VAR_TEMP_TANK_2, 0);
-	TEMP_AssignSensor(T103, VAR_TEMP_TANK_3, 0);
-	TEMP_AssignSensor(T104, VAR_TEMP_TANK_4, 0);
-	TEMP_AssignSensor(T105, VAR_TEMP_TANK_5, 0);
-	TEMP_AssignSensor(T306, VAR_TEMP_TANK_6, 0);
+	TEMP_AssignSensor(T_TECHM, VID_TEMP_TECHM_BOARD_C, 0);
+	TEMP_AssignSensor(T108, VID_TEMP_TANK_IN_H_C, 0);
+	TEMP_AssignSensor(T109, VID_TEMP_TANK_OUT_H_C, 0);
+	TEMP_AssignSensor(T301, VID_TEMP_TANK_1_C, 0);
+	TEMP_AssignSensor(T302, VID_TEMP_TANK_2_C, 0);
+	TEMP_AssignSensor(T103, VID_TEMP_TANK_3_C, 0);
+	TEMP_AssignSensor(T104, VID_TEMP_TANK_4_C, 0);
+	TEMP_AssignSensor(T105, VID_TEMP_TANK_5_C, 0);
+	TEMP_AssignSensor(T306, VID_TEMP_TANK_6_C, 0);
 
 	// assign sensors on OW2 :
-	TEMP_AssignSensor(T303, VAR_TEMP_BOILER, 1);
-	TEMP_AssignSensor(T110, VAR_TEMP_BOILER_IN, 1);
-	TEMP_AssignSensor(T107, VAR_TEMP_BOILER_OUT, 1);
-	TEMP_AssignSensor(T101, VAR_TEMP_RAD_H, 1);
-	TEMP_AssignSensor(T106, VAR_TEMP_RAD_C, 1);
-	TEMP_AssignSensor(T102, VAR_TEMP_TANK_IN_C, 1);
-	TEMP_AssignSensor(T8, VAR_TEMP_TANK_OUT_C, 1);
-	TEMP_AssignSensor(T2, VAR_TEMP_WALL_IN, 1);
-	TEMP_AssignSensor(T3, VAR_TEMP_WALL_OUT, 1);
+	TEMP_AssignSensor(T303, VID_TEMP_BOILER_C, 1);
+	TEMP_AssignSensor(T110, VID_TEMP_BOILER_IN_C, 1);
+	TEMP_AssignSensor(T107, VID_TEMP_BOILER_OUT_C, 1);
+	TEMP_AssignSensor(T101, VID_TEMP_RAD_H_C, 1);
+	TEMP_AssignSensor(T106, VID_TEMP_RAD_C_C, 1);
+	TEMP_AssignSensor(T102, VID_TEMP_TANK_IN_C_C, 1);
+	TEMP_AssignSensor(T8, VID_TEMP_TANK_OUT_C_C, 1);
+	TEMP_AssignSensor(T2, VID_TEMP_WALL_IN_C, 1);
+	TEMP_AssignSensor(T3, VID_TEMP_WALL_OUT_C, 1);
 
-	/* Configure CAN streamed variables */
-
-	COM_AddStreamedVariable(VAR_TEMP_TECHM_BOARD,1000);
-	COM_AddStreamedVariable(VAR_EL_HEATER_STATUS, 3000);
-	COM_AddStreamedVariable(VAR_EL_HEATER_POWER, 3000);
-	COM_AddStreamedVariable(VAR_EL_HEATER_CURRENT, 3000);
-	COM_AddStreamedVariable(VAR_EL_HEATER_CONS, 3000);
-
-	COM_AddStreamedVariable(VAR_FLOW_COLD, 3000);
-	COM_AddStreamedVariable(VAR_FLOW_HOT, 3000);
-	COM_AddStreamedVariable(VAR_CONS_COLD, 3000);
-	COM_AddStreamedVariable(VAR_CONS_HOT, 3000);
-
-
-	COM_AddStreamedVariable(VAR_TEMP_BOILER, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_BOILER_IN, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_BOILER_OUT, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_IN_H, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_OUT_H, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_1, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_2, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_3, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_4, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_5, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_6, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_WALL_IN, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_WALL_OUT, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_BOILER_EXHAUST, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_RAD_H, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_RAD_C, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_IN_C, 3000);
-	COM_AddStreamedVariable(VAR_TEMP_TANK_OUT_C, 3000);
-
-	COM_AddStreamedVariable(VAR_HEAT_HEATING_WH, 3000);
-	COM_AddStreamedVariable(VAR_HEAT_TOTAL_WH, 3000);
-
-	COM_AddStreamedVariable(VAR_BOILER_POWER, 3000);
-	COM_AddStreamedVariable(VAR_BOILER_HEAT, 3000);
+	/* CAN: VARS2 sends this node's variables (Temperatures.Techm, ElHeater, Water, Tank, Boiler) by the YAML period_ms */
 
 }
 
@@ -205,8 +164,6 @@ void APP_Start(void)
 	BAC_SetAutoMode();
 
 	MCAN_Start();
-
-	VAR_SetVariable(VAR_BAT_VOLTAGE_V10, 520, 1);
 
 	LOG_Startup();
 
