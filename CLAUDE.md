@@ -23,7 +23,6 @@ Controls the house heating system: solid-fuel boiler, 6-coil electrical heater, 
 | WM | Water flow meter pulse counting (cold + hot) |
 | DO | Digital output drivers (pumps, heater relays, servo signals) |
 | PTCTEMP | PTC analog temperature sensor linearization |
-| SCOM | Serial comms to PC application |
 
 ---
 
@@ -141,6 +140,8 @@ Radiator target: 40°C. Wall target: 47°C. Minimum tank energy thresholds enfor
 
 ## Published VARS (CAN stream, 1–3s intervals)
 
+VARS2 groups produced here: `ElHeater` (ELHEATER), `Boiler` (HEATING), `Tank` (TEMPCON), `Water` (WM), `Temperatures.Techm` (TEMP + PTCTEMP by id); reads `GlobalEnergy.Battery`, `Mppt`, `Temperatures`. Ids, periods and producers: `UHA_COMMON/VarDefs/uha_vars.yaml` (VARS2 sends them by `period_ms`, no stream list). The `VAR_*` names below are the YAML `legacy` names.
+
 | Group | VARs |
 |-------|------|
 | Temperatures | VAR_TEMP_TECHM_BOARD, VAR_TEMP_BOILER, VAR_TEMP_BOILER_IN/OUT, VAR_TEMP_TANK_1–6, VAR_TEMP_RAD_H/C, VAR_TEMP_WALL_IN/OUT, VAR_TEMP_TANK_IN_H/C, VAR_TEMP_TANK_OUT_H/C, VAR_TEMP_BOILER_EXHAUST |
@@ -158,5 +159,4 @@ Radiator target: 40°C. Wall target: 47°C. Minimum tank energy thresholds enfor
 
 ## Notes for Future Work
 - TECHM is the most complex node — multiple interdependent control loops
-- PC serial interface (SCOM, 57600 baud) for diagnostics
 - Watchdog: 3-second timeout
