@@ -2,6 +2,22 @@
 
 Newest version first. Versions before v001.03 are not listed.
 
+## v001.07 (2026-11-14)
+
+- Task: VARS2 direct access part B (`UHA_COMMON/tasks/vars2_direct_access.md`), branch `feature/vars2_direct_access`
+- CRC: `0x7BFCAFD1`
+
+- Variables live in `Vars2` (value in physical units + valid flag); the old `Vars[]` / `VAR_*` API is no longer used here.
+- ELHEATER, HEATING, TEMPCON and BOILER_AIR read their inputs directly and compute in degC / A / %. The
+  thresholds switch at the same values as before (the old code used truncated whole units); same
+  invalid-input handling (electric heater off when any of its 6 inputs is invalid).
+- WM: the water meter interrupt only counts pulses; consumption and flow are published from the main loop.
+- The start-up write of the battery voltage (52.0 V) is gone: until ELECON is received the value is invalid.
+- Obsolete serial PC link (`SCOM`) removed.
+- VARS2 sends this node's variables by the YAML `period_ms` (same 31 variables and periods as the removed
+  `COM_AddStreamedVariable()` list).
+- Flash -1.3 KB, RAM -2.3 KB.
+
 ## v001.06 (2026-11-13)
 
 - Task: VARS2 step 6b part B (`UHA_COMMON/tasks/vars2_stop_legacy_tx.md`), branch `feature/vars2_stop_legacy_tx`
