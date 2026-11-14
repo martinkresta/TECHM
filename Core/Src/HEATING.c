@@ -7,7 +7,7 @@
  */
 
 #include "HEATING.h"
-#include "VARS.h"
+#include "VARS2.h"
 #include "DO.h"
 #include "UI.h"
 #include "COM.h"
@@ -27,10 +27,15 @@ uint32_t mPumpOnTime_s;
 
 uint8_t mBoilerLoading; // flag indicating that doors were opened while heating (loading wood)
 
+static sVarsBoiler* mpVars;                    /* produced */
+static const sVarsTemperaturesTechm* mpTemps;  /* read */
 
 
-void HC_Init(void)
+
+void HC_Init(sVarsBoiler* pVars, const sVarsTemperaturesTechm* pTemps)
 {
+	mpVars = pVars;
+	mpTemps = pTemps;
 	mBoilerState = eBs_Idle;
 	mLastState = eBs_Idle;
 	mBoilerError = eBe_NoError;
@@ -74,55 +79,35 @@ void HC_DoorClosed(void)
 
 void HC_Update_1s(void)
 {
-	uint16_t invalid;
-	int16_t boilerTemp_C;
-	int16_t boilerExhaust_C;
-	int16_t boilerIn_C;
-	int16_t boilerOut_C;
-	int16_t TankInHot_C;
-	int16_t TankOutCold_C;
-	int16_t Tank_C;
-	int16_t Tank1_C;
-	int16_t boilerDiff;
-	uint16_t power_W;
+	// inputs in degC. The old code compared whole degC (truncated); the comparisons below switch at the
+	// same values (e.g. "trunc > 86" is ">= 87")
+	float boilerTemp_C;
+	float boilerExhaust_C;
+	float boilerIn_C;
+	float boilerOut_C;
+	float TankInHot_C;
+	float Tank_C;
+	float Tank1_C;
+	float boilerDiff_C;
+	float power_W;
 
 	// collect the variables
-	invalid = 0;
+	boilerTemp_C = mpTemps->Boiler_C.value;
+	boilerExhaust_C = mpTemps->BoilerExhaust_C.value;
+	boilerIn_C = mpTemps->BoilerIn_C.value;
+	boilerOut_C = mpTemps->BoilerOut_C.value;
+	TankInHot_C = mpTemps->TankInHot_C.value;
+	Tank_C = mpTemps->Tank6_C.value;
+	Tank1_C = mpTemps->Tank1_C.value;
 
-	boilerTemp_C = VAR_GetVariable(VAR_TEMP_BOILER,&invalid)/10;
-	boilerExhaust_C = VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST,&invalid)/10;
-	boilerIn_C= VAR_GetVariable(VAR_TEMP_BOILER_IN,&invalid);  ///10;
-	boilerOut_C= VAR_GetVariable(VAR_TEMP_BOILER_OUT,&invalid); ///10;
-	TankInHot_C= VAR_GetVariable(VAR_TEMP_TANK_IN_H,&invalid)/10;
-	TankOutCold_C = VAR_GetVariable(VAR_TEMP_TANK_OUT_C,&invalid)/10;
-	Tank_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;
-	Tank1_C = VAR_GetVariable(VAR_TEMP_TANK_1,&invalid)/10;
-
-	if (invalid)
+	if (!(mpTemps->Boiler_C.valid && mpTemps->BoilerExhaust_C.valid && mpTemps->BoilerIn_C.valid &&
+	      mpTemps->BoilerOut_C.valid && mpTemps->TankInHot_C.valid && mpTemps->TankOutCold_C.valid &&
+	      mpTemps->Tank6_C.valid && mpTemps->Tank1_C.valid))
 	{
-	/*	mLastState = mBoilerState;
-		mBoilerState = eBS_InvalidInputs;
-		DO_SetPumpBoiler(1); */
-		return;
-	}
-	else
-	{
-	/* 	if (mBoilerState == eBS_InvalidInputs)
-		{
-			mBoilerState = mLastState;
-			if (mBoilerState == eBs_Idle || mBoilerState == eBS_CoolDown)
-			{
-				DO_SetPumpBoiler(0); // turn off pump
-			}
-			else
-			{
-				DO_SetPumpBoiler(1); // turn on pump
-			}
-
-		} */
+		return;   // invalid inputs: no action, state kept (as before)
 	}
 
-	boilerDiff = boilerOut_C - boilerIn_C;
+	boilerDiff_C = boilerOut_C - boilerIn_C;
 
 
 
@@ -132,23 +117,21 @@ void HC_Update_1s(void)
 	// => Temperature difference of 0.1C equals to 92W of heating power
 	if (mBoilerState == eBs_HeatUp || mBoilerState == eBS_Heating)
 	{
-		power_W = boilerDiff * 92;
+		power_W = boilerDiff_C * BOILER_W_PER_C;
 	}
 	else
 	{
 		power_W = 0;
 	}
-	mTodayHeat_Ws += power_W;
+	if (power_W > 0)   // negative power (exchanger colder at the outlet) is not counted
+	{
+		mTodayHeat_Ws += (uint32_t)(power_W + 0.5f);   // rounded: same as the old integer power
+	}
 	mTodayHeat_Wh = mTodayHeat_Ws / 3600;
 
-	VAR_SetVariable(VAR_BOILER_POWER, power_W, 1);
-	VAR_SetVariable(VAR_BOILER_HEAT, mTodayHeat_Wh, 1);
-
-
-	// rescale to full degrees of C for further conditions
-	boilerDiff /= 10;
-	boilerOut_C /=10;
-	boilerIn_C /=10;
+	mpVars->Power_W.value = power_W;
+	mpVars->HeatToday_Wh.value = (float)mTodayHeat_Wh;
+	VARS2_SetGroupValid(mpVars, 1);
 
 
 	switch (mBoilerState)
@@ -176,7 +159,8 @@ void HC_Update_1s(void)
 			}
 			break;
 		case eBS_Heating:
-			if (boilerExhaust_C < 110  && boilerDiff <= 0 && boilerTemp_C < (TEMP_BOILER_OVERHEAT-1)  && mPumpOnTime_s > MIN_PUMP_ON_TIME) // if chimney is cooling down and exchanger does not put heat to water
+			// boilerDiff_C < 0.95: whole degC diff <= 0 (old: 0.1 degC diff truncated to degC)
+			if (boilerExhaust_C < 110  && boilerDiff_C < 0.95f && boilerTemp_C < (TEMP_BOILER_OVERHEAT-1)  && mPumpOnTime_s > MIN_PUMP_ON_TIME) // if chimney is cooling down and exchanger does not put heat to water
 			{
 				DO_SetPumpBoiler(0);  // turn off pump
 				UI_Buzzer_SetMode(eUI_OFF);
@@ -191,7 +175,7 @@ void HC_Update_1s(void)
 					mBoilerState = eBs_Idle;
 				}
 				//if ((boilerTemp_C > 75 && boilerExhaust_C > 110)|| boilerTemp_C > TEMP_BOILER_OVERHEAT || (boilerTemp_C > (Tank1_C + 2)) ) // if it gets warm again, turn on the pump
-				if (boilerTemp_C > TEMP_BOILER_OVERHEAT || ( boilerTemp_C >= 70 && (boilerTemp_C > (Tank1_C + 2))) ) // if it gets warm again, turn on the pump
+				if (boilerTemp_C >= (TEMP_BOILER_OVERHEAT + 1) || ( boilerTemp_C >= 70 && (boilerTemp_C > (Tank1_C + 2))) ) // if it gets warm again, turn on the pump
 				{
 				  COM_SendACRemoteRequest(0,1,0xFFFF);  // keep AC On for ~ 18 hours
 					DO_SetPumpBoiler(1);  // turn on pump
@@ -214,12 +198,12 @@ void HC_Update_1s(void)
 	/* Detection of faults and signalization */
 	mBoilerError = eBe_NoError;
 
-	if (Tank_C > MAX_TANK_TEMP_C) // overheated tank
+	if (Tank_C >= (MAX_TANK_TEMP_C + 1)) // overheated tank (whole degC > MAX_TANK_TEMP_C)
 	{
 		mBoilerError = eBe_OverheatedTank;
 	}
 
-	if (boilerTemp_C > TEMP_BOILER_OVERHEAT) // overheated boiler
+	if (boilerTemp_C >= (TEMP_BOILER_OVERHEAT + 1)) // overheated boiler (whole degC > TEMP_BOILER_OVERHEAT)
 	{
 		mBoilerError = eBe_OverheatedBoiler;
 	}
@@ -227,7 +211,7 @@ void HC_Update_1s(void)
 	if(mBoilerState == eBs_HeatUp  || mBoilerState == eBS_Heating)  // check pump only in states where pump should be ON
 	{
 	  mPumpOnTime_s ++ ;
-		if (boilerTemp_C > 77 && (boilerTemp_C > (boilerOut_C + 3)))  // pump failure
+		if (boilerTemp_C >= 78 && (boilerTemp_C > (boilerOut_C + 3)))  // pump failure (whole degC > 77)
 		{
 		  if(mPumpOnTime_s > 60)
 		  {
@@ -263,7 +247,7 @@ void HC_Update_1s(void)
 	if (mBoilerError == eBe_NoError && mBoilerState == eBS_Heating && mLastWarningTime > 60)
 	{
 		mLastWarningTime = 0;
-		if (boilerExhaust_C < 150 && boilerExhaust_C > 125 && Tank1_C < 70 )
+		if (boilerExhaust_C < 150 && boilerExhaust_C >= 126 && Tank1_C < 70 )   // whole degC exhaust > 125
 		{
 			if (mBeepCount < 3)
 			{

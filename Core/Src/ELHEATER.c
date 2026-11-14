@@ -10,7 +10,7 @@
 #include "main.h"
 #include "ELHEATER.h"
 #include "COM.h"
-#include "VARS.h"
+#include "VARS2.h"
 #include "DO.h"
 #include "ADC.h"
 #include "UI.h"
@@ -38,8 +38,13 @@ uint32_t mEnergyCounter_mWh;
 static uint8_t mBatteryBalancedToday;
 static int16_t mOptimalBalancingCurrent;
 
-static int16_t mTankTemp_C;
+static float mTankTemp_C;
 static uint8_t mComfortEna;
+
+static sVarsElHeater* mpVars;                      /* produced */
+static const sVarsTemperaturesTechm* mpTemps;      /* read: board, tank top */
+static const sVarsGlobalEnergyBattery* mpBattery;  /* read: SOC, current, voltage (ELECON) */
+static const sVarsMppt* mpMppt;                    /* read: charging current, solar voltage (ELECON) */
 
 
 
@@ -56,8 +61,13 @@ static void ControlHeaterPower(int16_t batteryCurrent_A);
 
 /*Global methods*/
 
-void ELH_Init(void)
+void ELH_Init(sVarsElHeater* pVars, const sVarsTemperaturesTechm* pTemps,
+              const sVarsGlobalEnergyBattery* pBattery, const sVarsMppt* pMppt)
 {
+	mpVars = pVars;
+	mpTemps = pTemps;
+	mpBattery = pBattery;
+	mpMppt = pMppt;
 	//mReqTankTemp = 50;
 	mReqTankTemp = WINTER_REQ_TEMP;
 	mHeaterMask = 0;
@@ -80,13 +90,13 @@ void ELH_Init(void)
 void ELH_Update_1s(void)
 {
 
-	uint16_t invalid;
-	int16_t boartTemp_C;
-	int16_t soc;
-	int16_t charging_A;
-	//int16_t load_A;
-	int16_t battCurr_A;
-	int16_t solarVoltage_V;
+	// inputs in physical units. The old code worked with whole units (truncated); the comparisons below
+	// are written so that they switch at the same values (e.g. "trunc > 65" is ">= 66")
+	float boartTemp_C;
+	float soc;
+	float charging_A;
+	float battCurr_A;
+	float solarVoltage_V;
 
 
 	// measure the heater currents
@@ -97,14 +107,14 @@ void ELH_Update_1s(void)
 	mHeaterCurrents_mA[4] = ConvertAdcToCurrent_mA( ADC_GetValue(ADC_CHANNEL_HEATER_5));
 	mHeaterCurrents_mA[5] = ConvertAdcToCurrent_mA( ADC_GetValue(ADC_CHANNEL_HEATER_6));
 
-	// insert actual variables to VARS module
+	// publish the actual values (state of the previous second, as before)
 	CalculateHeaterLoad();
-	VAR_SetVariable(VAR_EL_HEATER_STATUS, mState, 1);
-	VAR_SetVariable(VAR_EL_HEATER_POWER, mHeaterLoad_A, 1);
-	VAR_SetVariable(VAR_EL_HEATER_CURRENT, mOveralCurrent_10mA, 1);
+	mpVars->State.value = (int32_t)mState;
+	mpVars->Load_A.value = (float)mHeaterLoad_A;
+	mpVars->Current_A.value = (float)mOveralCurrent_10mA / 100.0f;
 
-	// calculate consumed energy today
-	uint32_t mPowerW = mHeaterLoad_A * VAR_GetVariable(VAR_BAT_VOLTAGE_V10, &invalid)/10;
+	// calculate consumed energy today (battery voltage validity not checked, as before; 0 until received)
+	uint32_t mPowerW = (uint32_t)(mHeaterLoad_A * mpBattery->Voltage_V.value);
 	mEnergyCounter_mWh += (mPowerW * 1000 )/ 3600;
 	if (mEnergyCounter_mWh > 1000)
 	{
@@ -117,7 +127,8 @@ void ELH_Update_1s(void)
 		mEnergyCounter_mWh -= 1000;
 	}
 
-	VAR_SetVariable(VAR_EL_HEATER_CONS, mTodayEnergy_Wh, 1);
+	mpVars->ConsToday_Wh.value = (float)mTodayEnergy_Wh;
+	VARS2_SetGroupValid(mpVars, 1);
 
 	// set the required target tempearture w.r.t year season
 	sDateTime now = RTC_GetTime();
@@ -136,28 +147,28 @@ void ELH_Update_1s(void)
 
 
 	// collect the variables
-	invalid = 0;
-	boartTemp_C= VAR_GetVariable(VAR_TEMP_TECHM_BOARD,&invalid)/10;  // techm board temperature
-	mTankTemp_C = VAR_GetVariable(VAR_TEMP_TANK_6,&invalid)/10;  // top tank sensor
-	soc				 = VAR_GetVariable(VAR_BAT_SOC,&invalid);  		// battery soc
-	charging_A = VAR_GetVariable(VAR_CHARGING_A10,&invalid)/10;  // charging current   !!!
-//	load_A		 = VAR_GetVariable(VAR_LOAD_A10,&invalid)/10;  // load current
-	battCurr_A = VAR_GetVariable(VAR_BAT_CURRENT_A10,&invalid)/10;  // batt current
-	solarVoltage_V = VAR_GetVariable(VAR_MPPT_SOLAR_VOLTAGE_V100,&invalid)/100;  // FVE voltage
+	boartTemp_C = mpTemps->Board_C.value;           // techm board temperature
+	mTankTemp_C = mpTemps->Tank6_C.value;           // top tank sensor
+	soc = mpBattery->Soc_pct.value;                 // battery soc
+	charging_A = mpMppt->Charging_A.value;          // charging current
+	battCurr_A = mpBattery->Current_A.value;        // batt current
+	solarVoltage_V = mpMppt->SolarVoltage_V.value;  // FVE voltage
 
-	if(invalid)
+	// any input invalid (not received, timed out, sensor error) -> heater off
+	if(!(mpTemps->Board_C.valid && mpTemps->Tank6_C.valid && mpBattery->Soc_pct.valid &&
+	     mpMppt->Charging_A.valid && mpBattery->Current_A.valid && mpMppt->SolarVoltage_V.valid))
 	{
 		mState = eElh_InvalidInputs;
 		SwitchOffImmediatelly();
 		return;
 	}
 	// enable/disable hysteresis
-	if ((soc >=  99) && (charging_A == 0))   // battery balanced
+	if ((soc >= 99.0f) && (charging_A > -1.0f && charging_A < 1.0f))   // battery balanced (whole A == 0)
 	{
 		mSocEnableHys = 1;
 		mBatteryBalancedToday = 1;
 	}
-	if ((soc > SOC_DISABLE) && (mBatteryBalancedToday == 1))
+	if ((soc >= (SOC_DISABLE + 1)) && (mBatteryBalancedToday == 1))   // whole % > SOC_DISABLE
 	{
 		mSocEnableHys = 1;
 	}
@@ -198,14 +209,14 @@ void ELH_Update_1s(void)
 	}
 
 	// TECHM Board temperature
-	if (boartTemp_C > MAX_BOARD_TEMP_C)
+	if (boartTemp_C >= (MAX_BOARD_TEMP_C + 1))   // whole degC > MAX_BOARD_TEMP_C
 	{
 		mState = eElh_BoardOveremerature;
 		SwitchOffImmediatelly();
 		return;
 	}
 // Actual tank temperature
-	if (mTankTemp_C > mReqTankTemp)
+	if (mTankTemp_C >= (mReqTankTemp + 1))   // whole degC > mReqTankTemp
 	{
 		mState = eELh_TempReached;
 		SwitchOffImmediatelly();
@@ -228,9 +239,9 @@ void ELH_Update_1s(void)
 	if ( mSocEnableHys == 1)
 	{
 		// When SOC is being discharged from 100%, and charger is still disabled allow discharging MAX_LOAD_A
-		if(soc > 96 && charging_A <=1)
+		if(soc >= 97.0f && charging_A < 2.0f)   // whole: soc > 96, charging <= 1 A
 		{
-			if (solarVoltage_V >= 100) // if sun is still shining (panel voltage over 100V)
+			if (solarVoltage_V >= 100.0f) // if sun is still shining (panel voltage over 100V)
 			{
 				mMaxHeaterLoad = MAX_LOAD_A;
 			}
@@ -242,7 +253,7 @@ void ELH_Update_1s(void)
 		}
 		else  // if charger is enabled (Charging > 1A) adjust the load to maintain SOC around 97% (prevent charging to 100%)
 		{
-			if (soc <= 96)
+			if (soc < 97.0f)   // whole % <= 96
 			{
 				mMaxHeaterLoad = -2;  // at least 2 Amps should stay for charging
 			}
@@ -254,7 +265,7 @@ void ELH_Update_1s(void)
 		}
 
 		// compares required battery load with actual battery current and adjusts heater power to reach an optimum
-		ControlHeaterPower(battCurr_A);
+		ControlHeaterPower((int16_t)battCurr_A);   // whole A (truncated), as before
 	}
 
 	// Summer comfort heat: higher priority than balance support — ensure minimum tank temp first
@@ -271,7 +282,7 @@ void ELH_Update_1s(void)
 		if (mOptimalBalancingCurrent > 0)  // safety check, to prevent discharging battery by SW or COM error
 		{
 			mMaxHeaterLoad = -mOptimalBalancingCurrent; // optimal balancing current is provided by ELECON
-			ControlHeaterPower(battCurr_A);
+			ControlHeaterPower((int16_t)battCurr_A);   // whole A (truncated), as before
 			mState = eElh_BalanceSupport;  // overwrite state
 		}
 		else

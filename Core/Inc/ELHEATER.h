@@ -9,6 +9,8 @@
 #ifndef INC_ELHEATER_H_
 #define INC_ELHEATER_H_
 
+#include "uha_vars_gen.h"   /* Vars2 group types */
+
 typedef enum
 {
 	eElh_Heating,
@@ -47,7 +49,10 @@ typedef enum
 #define  COMFORT_COIL_MASK				0x38 // summer comfort heat: top 3 coils only (bits 3,4,5)
 
 
-void ELH_Init(void);
+/* produced: pVars (Vars2.ElHeater); read: pTemps (board, tank top), pBattery (SOC, current, voltage),
+ * pMppt (charging current, solar voltage) */
+void ELH_Init(sVarsElHeater* pVars, const sVarsTemperaturesTechm* pTemps,
+              const sVarsGlobalEnergyBattery* pBattery, const sVarsMppt* pMppt);
 
 void ELH_Update_1s(void);
 

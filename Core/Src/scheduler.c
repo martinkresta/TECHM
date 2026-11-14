@@ -8,7 +8,6 @@
 #include "scheduler.h"
 #include "OW.h"
 #include "TEMP.h"
-#include "SCOM.h"
 #include "ADC.h"
 #include "ELHEATER.h"
 #include "WM.h"
@@ -207,7 +206,6 @@ static void Timer_Task_10ms(void)
 	MCAN_Update_10ms();
 	COM_Update_10ms();
 	UI_Update_10ms();
-	SCOM_Update_10ms();
 	WM_Update_10ms();
 	AVC_Update_10ms();
 	GEST_Update_10ms();

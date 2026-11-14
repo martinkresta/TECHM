@@ -10,6 +10,7 @@
 #define INC_HEATING_H_
 
 #include "main.h"
+#include "uha_vars_gen.h"   /* Vars2 group types */
 
 typedef enum
 {
@@ -41,9 +42,11 @@ typedef enum
 #define  MIN_SOC									10
 
 #define MIN_PUMP_ON_TIME          60
+#define BOILER_W_PER_C            920.0f   // heating power per degC of boiler out - in (92 W per 0.1 degC)
 
 
-void HC_Init(void);
+/* produced: pVars (Vars2.Boiler); read: pTemps (boiler, tank, exhaust temperatures) */
+void HC_Init(sVarsBoiler* pVars, const sVarsTemperaturesTechm* pTemps);
 
 void HC_Update_1s(void);
 

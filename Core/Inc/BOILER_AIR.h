@@ -11,6 +11,7 @@
 #include "main.h"
 #include "AVC_V2.h"
 #include <stdbool.h>
+#include "uha_vars_gen.h"   /* Vars2 group types */
 
 //#define HEATUP_MAX_TEMP       196
 //#define CONTROL_MIN_TEMP      200
@@ -60,7 +61,8 @@ typedef enum
   es_CoolDown,
 }eState;
 
-void BAC_Init(void);
+/* read: pTemps (boiler exhaust temperature) */
+void BAC_Init(const sVarsTemperaturesTechm* pTemps);
 
 // cyclic update function executing auto control algorithm
 void BAC_Update_1s(void);

@@ -2,7 +2,7 @@
 
 #include "BOILER_AIR.h"
 #include "AVC_V2.h"
-#include "VARS.h"
+#include "VARS2.h"
 #include "PID.h"
 
 
@@ -19,19 +19,20 @@ static uint16_t mBacStateTimer;
 static uint16_t mControlLogicTimer;  // measuring period of valve control logic
 
 
-uint16_t mExhaustTemp_C;
+float mExhaustTemp_C;
+static const sVarsTemperaturesTechm* mpTemps;   /* read: exhaust temperature */
 
 float mPidSetpoint_C;
 
 tPid mExhaustPid;
 
 void SetState(eState newState);
-void ControlLogic(uint16_t temp);
 void ControlAlgoV2(void);
 
 // Init Function
-void BAC_Init(void)
+void BAC_Init(const sVarsTemperaturesTechm* pTemps)
 {
+  mpTemps = pTemps;
   // configure the PID controller
   mExhaustPid.maxAction = BAC_CTRL_MAX_PCT - BAC_DEFAULT_PCT;
   mExhaustPid.minAction = BAC_CTRL_MIN_PCT - BAC_DEFAULT_PCT;
@@ -45,8 +46,7 @@ void BAC_Init(void)
 // cyclic update function executing auto control algorithm
 void BAC_Update_1s(void)
 {
-  uint16_t invalid;
-  mExhaustTemp_C = ( VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST, &invalid) / 10);
+  mExhaustTemp_C = mpTemps->BoilerExhaust_C.value;   // validity not checked (as before)
 
   if(mBacStateTimer < 10000)
   {
@@ -75,7 +75,7 @@ void BAC_Update_1s(void)
       {
         AVC_SetRequestPos(mRequestValvePct);
       }
-      if(mExhaustTemp_C > BAC_DEF_HEATUP_TEMP)
+      if(mExhaustTemp_C >= (BAC_DEF_HEATUP_TEMP + 1))   // whole degC > BAC_DEF_HEATUP_TEMP
       {
         SetState(es_AirControl);
       }
@@ -85,7 +85,6 @@ void BAC_Update_1s(void)
       }
       break;
     case es_AirControl:
-      //ControlLogic(mExhaustTemp_C);
       ControlAlgoV2();
       if(mBacMode == ecm_Auto)
       {
@@ -97,7 +96,7 @@ void BAC_Update_1s(void)
       }
       break;
     case es_CoolDown:
-      if(mExhaustTemp_C > BAC_DEF_COOLDOWN_LEAVE_TEMP)
+      if(mExhaustTemp_C >= (BAC_DEF_COOLDOWN_LEAVE_TEMP + 1))   // whole degC > BAC_DEF_COOLDOWN_LEAVE_TEMP
       {
         SetState(es_AirControl);
       }
@@ -213,7 +212,6 @@ void SetState(eState newState)
 void ControlAlgoV2(void)
 {
   // read the regulated variable
-  uint16_t invalid;
   int16_t action;
   float ExhaustTemp_C, err;
 
@@ -227,7 +225,7 @@ void ControlAlgoV2(void)
   {
     mControlLogicTimer = 1;
 
-    ExhaustTemp_C = (VAR_GetVariable(VAR_TEMP_BOILER_EXHAUST, &invalid) / 10.0);
+    ExhaustTemp_C = mpTemps->BoilerExhaust_C.value;
     // calculate the error
     err = ExhaustTemp_C - mPidSetpoint_C;
     // execute the PID
@@ -250,105 +248,4 @@ void ControlAlgoV2(void)
 
  // AVC_SetRequestPos((uint16_t)(action));
 }
-/*
-void ControlLogic(uint16_t temp)
-{
-  mRequestValveDiffPct = 0;
 
-  if(mControlLogicTimer < BAC_CONTROL_PERIOD) // control period not occurred
-  {
-    mControlLogicTimer++;
-    mFilterSum += temp;
-  }
-  else   // do the control magic now
-  {
-    mControlLogicTimer = 0;
-    mConVal = mFilterSum / BAC_CONTROL_PERIOD;  // calculate filtered value
-    mConValDiff = mConVal - mLastConVal;
-    mLastConVal = mConVal;
-    mFilterSum = 0;
-    mConErr = 0;
-
-    if(mConVal > CONTROL_MAX_TEMP)  // band of non-sensitivity
-    {
-      mConErr = mConVal - CONTROL_MAX_TEMP;
-    }
-    else if(mConVal < CONTROL_MIN_TEMP)
-    {
-      mConErr = mConVal - CONTROL_MIN_TEMP;
-    }
-
-    // control logic
-
-    if (AVC_GetValvePos() <  BAC_CTRL_MAX_PCT)  // opening enabled
-    {
-      // if temp is too low but is raising, do nothing
-      if(mConErr < 0  && mConValDiff > 1)
-      {
-        mRequestValveDiffPct = 0;
-      }
-      //if temp is too low and is  falling
-      if(mConErr < 0 &&  mConValDiff < -1)
-      {
-        mRequestValveDiffPct = 2;
-        //mRequestValvePct += 3;   // open the valve more
-      }
-      // temp is too low and is steady
-      else if (mConErr < 0)
-      {
-        mRequestValveDiffPct = 1;
-        //mRequestValvePct += 1;   // open the valve bit more
-      }
-    }
-
-
-    if (AVC_GetValvePos() > BAC_CTRL_MIN_PCT) // closing enabled
-    {
-       // if temp is too high  but is falling, do nothing
-       if(mConErr > 0  && mConValDiff < -1)
-       {
-         mRequestValveDiffPct = 0;
-       }
-
-       //if temp is too high and is  rising
-       else if(mConErr > 0 &&  mConValDiff < -1)
-       {
-         if (AVC_GetValvePos() > 34)
-         {
-           mRequestValveDiffPct = 32 - AVC_GetValvePos();
-         }
-         else
-         {
-           mRequestValveDiffPct = -2;
-         }
-         //mRequestValvePct -= 3;   // close the valve more
-       }
-       // temp is too high and is steady
-       else if (mConErr > 0)
-       {
-         if (AVC_GetValvePos() > 34)
-          {
-            mRequestValveDiffPct = 32 - AVC_GetValvePos();
-          }
-          else
-          {
-            mRequestValveDiffPct = -1;
-          }
-         //mRequestValvePct -= 1;   // close the valve bit more
-       }
-    }
-  }
-
-
-  // limit the requested valve position to Control limits
-
-  if(mRequestValvePct > BAC_CTRL_MAX_PCT)
-  {
-    mRequestValvePct = BAC_CTRL_MAX_PCT;
-  }
-  if(mRequestValvePct < BAC_CTRL_MIN_PCT)
-  {
-    mRequestValvePct = BAC_CTRL_MIN_PCT;
-  }
-
-}*/

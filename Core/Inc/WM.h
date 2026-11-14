@@ -9,8 +9,10 @@
 #define INC_WM_H_
 
 #include "main.h"
+#include "uha_vars_gen.h"   /* sVarsWater */
 
-void WM_Init(void);
+/* produced: pVars (Vars2.Water), published in WM_Update_10ms() (main loop) */
+void WM_Init(sVarsWater* pVars);
 
 void WM_Update_10ms(void);
 

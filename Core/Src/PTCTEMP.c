@@ -3,7 +3,7 @@
 /* Dependencies */
 #include "PTCTEMP.h"
 #include "main.h"
-#include "VARS.h"
+#include "VARS2.h"
 #include "ADC.h"
 #include "APP.h"
 
@@ -41,11 +41,11 @@ void PTCTEMP_Convert(void)
 
 	if(PtcRaw != 0 && PtcRaw != 4096)
 	{
-		VAR_SetVariable(VAR_TEMP_BOILER_EXHAUST, mPtcTemp, 1);
+		(void)VARS2_SetById(VID_TEMP_BOILER_EXHAUST_C, (float)mPtcTemp / 10.0f, 1);   // mPtcTemp in 0.1 degC
 	}
 	else
 	{
-		VAR_SetVariable(VAR_TEMP_BOILER_EXHAUST, mPtcTemp, 0);
+		(void)VARS2_SetById(VID_TEMP_BOILER_EXHAUST_C, (float)mPtcTemp / 10.0f, 0);
 		// TBD LOG ERR
 	}
 
