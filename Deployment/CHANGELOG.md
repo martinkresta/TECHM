@@ -2,6 +2,22 @@
 
 Newest version first. Versions before v001.03 are not listed.
 
+## v002.01 (2026-11-16)
+
+- Task: VARS2 states step 2c (`ASW_TECHM/tasks/techm_states_setpoints.md`), branch `feature/vars2-states-techm`
+  (UHA_COMMON + ASW_TECHM); review list `ASW_TECHM/tasks/techm_states_report.md`
+- CRC: `0xFE528C60`
+
+- New VARS2 group `States.Techm` (ids 440–464): setpoints, room requests in effect, circuits, pumps, heater coils,
+  boiler state (`send: on_change`) and valve positions / required water temperatures (periodic 5 s, logged).
+- `EL_HEATER_STATUS` (id 80) is sent on change + every 20 s (was every 3 s); id, value and meaning unchanged.
+- **No control decision changed.** `DO.c` remembers the last value given to each setter (read-only getters);
+  `TEMPCON.c` copies the day/night request in effect into two globals; `BOILER_AIR.c` uses `mBacControlTemp_C`
+  (= `BAC_DEF_CONTROL_TEMP`, 200) instead of the define; `APP_UpdateStates_1s()` (called after all 1 s control
+  tasks) only writes `Vars2`.
+- Shared code: VARS2 `send: on_change` (step 2a) and the new YAML rows of all nodes.
+- Flash +1.9 KB, RAM +0.8 KB (52 new rows since v002.00: all nodes' states + VARS2 state).
+
 ## v001.07 (2026-11-14)
 
 - Task: VARS2 direct access part B (`UHA_COMMON/tasks/vars2_direct_access.md`), branch `feature/vars2_direct_access`

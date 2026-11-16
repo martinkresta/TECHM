@@ -276,6 +276,7 @@ static void Timer_Task_1s(void)
 	APP_Update_1s();
 	TC_Update_1s();
 	BAC_Update_1s();
+	APP_UpdateStates_1s();   // after all control tasks: publishes what they just set (no control)
 
 	//LED_Error_SetMode(eLED_BLINK_ONCE);
 	//	OW_Read(0);

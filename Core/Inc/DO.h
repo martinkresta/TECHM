@@ -39,4 +39,11 @@ void  DO_SetPumpBoiler(uint8_t state);
 void  DO_SetPumpWall(uint8_t state);
 void  DO_SetPumpRad(uint8_t state);
 
+/* read only: the last value given to the setters above (for the VARS2 states, APP.c) */
+uint8_t DO_GetPumps(void);          // PUMP_BOILER | PUMP_WALL | PUMP_RAD
+uint8_t DO_GetElHeaters(void);      // heater mask as given to DO_SetElHeaters()
+int16_t DO_GetServoRad(void);       // % after the 0..100 clamp
+int16_t DO_GetServoWall(void);
+int16_t DO_GetServoAirValve(void);
+
 #endif /* INC_DO_H_ */

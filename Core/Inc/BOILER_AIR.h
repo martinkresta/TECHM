@@ -64,6 +64,9 @@ typedef enum
 /* read: pTemps (boiler exhaust temperature) */
 void BAC_Init(const sVarsTemperaturesTechm* pTemps);
 
+// exhaust temperature setpoint of the air control (initialised from BAC_DEF_CONTROL_TEMP); read by APP.c
+extern float mBacControlTemp_C;
+
 // cyclic update function executing auto control algorithm
 void BAC_Update_1s(void);
 

@@ -33,3 +33,16 @@
 void TC_Init(sVarsTank* pVars, const sVarsTemperatures* pTemps);
 
 void TC_Update_1s(void);
+
+/* read only from outside (APP.c: VARS2 states). Setpoints, set in TC_Init() */
+extern float mDownReqTempDay;
+extern float mDownReqTempNight;
+extern float mUpReqTempDay;
+extern float mUpReqTempNight;
+/* process values of the last TC_Update_1s() */
+extern float mUpReqTemp_C;      // room request in effect (day or night value), upstairs
+extern float mDownReqTemp_C;    // downstairs
+extern uint8_t mRadOn;
+extern uint8_t mWallOn;
+extern float mReqWaterRad_C;
+extern float mReqWaterWall_C;

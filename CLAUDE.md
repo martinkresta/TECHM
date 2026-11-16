@@ -151,6 +151,14 @@ VARS2 groups produced here: `ElHeater` (ELHEATER), `Boiler` (HEATING), `Tank` (T
 
 ---
 
+## States (VARS2, v002.01)
+
+`Vars2.States.Techm` ids 440–464, written only in `APP_UpdateStates_1s()` (scheduler, after ELH / HC / TC / BAC):
+room setpoints day / night and in effect, exhaust setpoint `mBacControlTemp_C`, `mRadOn` / `mWallOn`, pumps and
+heater coils (last values given to the `DO_Set*()` functions, `DO_Get*()`), boiler state (enum `BoilerStatus` =
+`eBoilerState`) — all `send: on_change`; valve positions and required water temperatures periodic (5 s, logged).
+`EL_HEATER_STATUS` is `send: on_change` (20 s refresh). Setpoints become settable in step 3.
+
 ## Read from CAN
 - VAR_BAT_SOC — controls ELH enable/disable thresholds
 - RTC sync from RPi
