@@ -53,6 +53,8 @@ uint16_t mRadOnTime;
 uint16_t mWallOnTime;
 float mReqWaterRad_C;
 float mReqWaterWall_C;
+float mUpReqTemp_C;      // copy of upReqTemp, only read outside (VARS2 states)
+float mDownReqTemp_C;    // copy of downReqTemp
 
 static sVarsTank* mpVars;                  /* produced */
 static const sVarsTemperatures* mpTemps;   /* read */
@@ -163,6 +165,8 @@ void TC_Update_1s(void)
 	{
 		downReqTemp = mDownReqTempDay;
 	}
+	mUpReqTemp_C = upReqTemp;       // copies for the VARS2 states, not read by this module
+	mDownReqTemp_C = downReqTemp;
 
 
 	// Radiators on-off control

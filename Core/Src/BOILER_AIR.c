@@ -23,6 +23,7 @@ float mExhaustTemp_C;
 static const sVarsTemperaturesTechm* mpTemps;   /* read: exhaust temperature */
 
 float mPidSetpoint_C;
+float mBacControlTemp_C = BAC_DEF_CONTROL_TEMP;   // exhaust setpoint in es_AirControl (was the define; settable in step 3)
 
 tPid mExhaustPid;
 
@@ -196,7 +197,7 @@ void SetState(eState newState)
       mControlLogicTimer = 0;
      // mRequestValvePct = BAC_DEFAULT_PCT;
      // AVC_SetRequestPos(BAC_DEFAULT_PCT);
-      mPidSetpoint_C = BAC_DEF_CONTROL_TEMP;
+      mPidSetpoint_C = mBacControlTemp_C;
       mBacState = es_AirControl;
       break;
     case es_CoolDown:

@@ -65,6 +65,7 @@ void APP_Init(void)
 	TC_Init(&Vars2.Tank, &Vars2.Temperatures);
 	BAC_Init(&Vars2.Temperatures.Techm);
 	UHAMON_Init();
+  VARS2_SetGroupValid(&Vars2.States.Techm, 1);   // states valid from now on (values: APP_UpdateStates_1s())
 
 
 	/*Assign pins for onboard UI  */
@@ -199,6 +200,43 @@ void APP_Update_1s(void)
 	}
 
 	mAppUpTime++;
+}
+
+
+/* VARS2 states of TECHM (States.Techm): only reads what the control modules set in this 1 s cycle.
+ * Called from the scheduler after ELH, HC, TC and BAC. Writes Vars2 only, no control. */
+void APP_UpdateStates_1s(void)
+{
+	sVarsStatesTechm* s = &Vars2.States.Techm;
+	uint8_t pumps = DO_GetPumps();
+	uint8_t heaters = DO_GetElHeaters();
+	uint32_t coils = 0;
+	uint8_t bit;
+
+	for (bit = 0; bit < 6; bit++)   // coils switched on = bits set in the mask given to DO_SetElHeaters()
+	{
+		coils += (heaters >> bit) & 1u;
+	}
+
+	s->UpReqTempDay_C.value = mUpReqTempDay;
+	s->UpReqTempNight_C.value = mUpReqTempNight;
+	s->DownReqTempDay_C.value = mDownReqTempDay;
+	s->DownReqTempNight_C.value = mDownReqTempNight;
+	s->ExhaustSetpoint_C.value = mBacControlTemp_C;
+	s->UpReqTemp_C.value = mUpReqTemp_C;
+	s->DownReqTemp_C.value = mDownReqTemp_C;
+	s->RadOn.value = mRadOn ? 1 : 0;
+	s->WallOn.value = mWallOn ? 1 : 0;
+	s->PumpBoiler.value = (pumps & PUMP_BOILER) ? 1 : 0;
+	s->PumpWall.value = (pumps & PUMP_WALL) ? 1 : 0;
+	s->PumpRad.value = (pumps & PUMP_RAD) ? 1 : 0;
+	s->ElHeaterCoils.value = coils;
+	s->BoilerState.value = (int32_t)HC_GetStatus();
+	s->ValveWall_pct.value = (float)DO_GetServoWall();
+	s->ValveRad_pct.value = (float)DO_GetServoRad();
+	s->AirValveSignal_pct.value = (float)DO_GetServoAirValve();
+	s->ReqWaterRad_C.value = mReqWaterRad_C;
+	s->ReqWaterWall_C.value = mReqWaterWall_C;
 }
 
 

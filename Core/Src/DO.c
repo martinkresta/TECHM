@@ -12,6 +12,13 @@ static TIM_OC_InitTypeDef sConfigOC;
 
 static TIM_HandleTypeDef * htim;
 
+/* last values given to the setters, only read by the DO_Get*() functions (VARS2 states) */
+static uint8_t mPumps;
+static uint8_t mElHeaters;
+static int16_t mServoRadPct;
+static int16_t mServoWallPct;
+static int16_t mServoAirValvePct;
+
 void DO_Init()
 {
 	// prepare structure for configuring OC channels
@@ -26,6 +33,7 @@ void DO_Init()
 
 void	DO_SetElHeaters(uint8_t heaters)
 {
+	mElHeaters = heaters;   // bookkeeping only
 
 	// lower elements
 	if (heaters & 0x01)
@@ -118,6 +126,7 @@ void	DO_SetElHeaters(uint8_t heaters)
 
 void  DO_SetPumpBoiler(uint8_t state)
 {
+	mPumps = state ? (mPumps | PUMP_BOILER) : (mPumps & (uint8_t)~PUMP_BOILER);   // bookkeeping only
 	if (state)
 	{
 		HAL_GPIO_WritePin(PUMP_BOIL_GPIO_Port, PUMP_BOIL_Pin, GPIO_PIN_SET);
@@ -130,6 +139,7 @@ void  DO_SetPumpBoiler(uint8_t state)
 
 void  DO_SetPumpWall(uint8_t state)
 {
+	mPumps = state ? (mPumps | PUMP_WALL) : (mPumps & (uint8_t)~PUMP_WALL);   // bookkeeping only
 	if (state)  // wall
 	{
 		HAL_GPIO_WritePin(PUMP_WALL_GPIO_Port, PUMP_WALL_Pin, GPIO_PIN_SET);
@@ -143,6 +153,7 @@ void  DO_SetPumpWall(uint8_t state)
 
 void  DO_SetPumpRad(uint8_t state)
 {
+	mPumps = state ? (mPumps | PUMP_RAD) : (mPumps & (uint8_t)~PUMP_RAD);   // bookkeeping only
 	if (state)  // radiators
 	{
 		HAL_GPIO_WritePin(PUMP_RAD_GPIO_Port, PUMP_RAD_Pin, GPIO_PIN_SET);
@@ -179,6 +190,7 @@ void  DO_SetServoRad(int16_t pct)
 	if (pct < 0) pct = 0;
 	if (pct > 100) pct = 100;
 	dutycycle = (pct * 940)  / 100;  // for analog voltage output 10.0V is needed PWM dutycycle 94%
+	mServoRadPct = pct;   // bookkeeping only
 
 	sConfigOC.Pulse = dutycycle;
 
@@ -206,6 +218,7 @@ void  DO_SetServoWall(int16_t pct)
 	if (pct < 0) pct = 0;
 	if (pct > 100) pct = 100;
 	dutycycle = (pct * 940)  / 100;  // for analog voltage output 10.0V is needed PWM dutycycle 94%
+	mServoWallPct = pct;   // bookkeeping only
 
 	sConfigOC.Pulse = dutycycle;
 
@@ -231,6 +244,7 @@ void  DO_SetServoAirValve(int16_t pct)
   if (pct < 0) pct = 0;
   if (pct > 100) pct = 100;
   dutycycle = (pct * 940)  / 100;  // for analog voltage output 10.0V is needed PWM dutycycle 94%
+  mServoAirValvePct = pct;   // bookkeeping only
 
   sConfigOC.Pulse = dutycycle;
 
@@ -243,4 +257,9 @@ void  DO_SetServoAirValve(int16_t pct)
   HAL_TIM_PWM_Start(TIM_SERVOS, CHANNEL_AV);  // and this fcn is then not able to start  (HAL HELL ! )
 }
 
-
+/* read only (VARS2 states): the last values given to the setters */
+uint8_t DO_GetPumps(void)          { return mPumps; }
+uint8_t DO_GetElHeaters(void)      { return mElHeaters; }
+int16_t DO_GetServoRad(void)       { return mServoRadPct; }
+int16_t DO_GetServoWall(void)      { return mServoWallPct; }
+int16_t DO_GetServoAirValve(void)  { return mServoAirValvePct; }
