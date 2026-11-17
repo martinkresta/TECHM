@@ -6,15 +6,16 @@ Newest version first. Versions before v001.03 are not listed.
 
 - Task: commands step 3b (`UHA_COMMON/tasks/cmd_lights_blinds_setpoints.md`, spec `UHA_COMMON/VarDefs/CMD_spec.md`),
   branch `feature/cmd-3b` (UHA_COMMON + ASW_IOBOARD_D + ASW_IOBOARD_U + ASW_ELECON_D + ASW_TECHM)
-- CRC: `0x0D78F4C9`
+- CRC: `0xE30EF35A`
 
 - Commands on CAN `0x203` (`APP_OnCommand()`): `CMD_UP_REQ_DAY` / `CMD_UP_REQ_NIGHT` / `CMD_DOWN_REQ_DAY` /
   `CMD_DOWN_REQ_NIGHT` (301-304, 5..25 °C) and `CMD_EXHAUST_SET` (305, 150..250 °C).
 - Setters `TC_SetUpReqTempDay()` ... `TC_SetDownReqTempNight()` (TEMPCON) and `BAC_SetControlTemp()`
   (BOILER_AIR): store the value clamped to `CMD_*_MIN/_MAX`, nothing else. Room setpoints are used from the next
-  `TC_Update_1s()`; the exhaust setpoint when `es_AirControl` is entered next time (a running air control keeps
-  its setpoint). RAM only, defaults after reset. No change of any control decision.
-- Flash +276 B, RAM +0 B (since v002.01).
+  `TC_Update_1s()`. The exhaust setpoint goes at once to `mPidSetpoint_C` while `es_AirControl` runs (used from the
+  next PID period), otherwise when `es_AirControl` is entered. RAM only, defaults after reset. Without a command
+  nothing changes in any control decision.
+- Flash +300 B, RAM +0 B (since v002.01).
 
 ## v002.01 (2026-11-16)
 

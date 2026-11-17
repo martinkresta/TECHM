@@ -46,11 +46,15 @@ void BAC_Init(const sVarsTemperaturesTechm* pTemps)
 }
 
 // Exhaust setpoint setter (command channel, APP_OnCommand): the only writer besides the initialiser. Stores the
-// clamped value only; SetState(es_AirControl) copies it to mPidSetpoint_C when air control is entered next time
-// (a running air control keeps its setpoint, as before). RAM only.
+// clamped value; SetState(es_AirControl) copies it to mPidSetpoint_C when air control is entered. While air control
+// runs, the new value goes to mPidSetpoint_C at once (used from the next PID period of ControlAlgoV2()). RAM only.
 void BAC_SetControlTemp(float temp_C)
 {
   mBacControlTemp_C = CMD_Clamp(temp_C, CMD_EXHAUST_SET_MIN, CMD_EXHAUST_SET_MAX);
+  if (mBacState == es_AirControl)
+  {
+    mPidSetpoint_C = mBacControlTemp_C;
+  }
 }
 
 // cyclic update function executing auto control algorithm
