@@ -28,6 +28,7 @@
 #include "RTC.h"
 #include "DO.h"
 #include "COM.h"
+#include "CMD.h"   /* CMD_Clamp(), CMD_UP_REQ_DAY_MIN/MAX ... (uha_cmds_gen.h) */
 
 /* Configuration */
 float mDownReqTempDay;     // degC
@@ -86,6 +87,28 @@ void TC_Init(sVarsTank* pVars, const sVarsTemperatures* pTemps)
 	DO_SetServoRad(mServoRadPct);
 	DO_SetServoWall(mServoWallPct);
 
+}
+
+/* Room setpoint setters (command channel, APP_OnCommand): the only writers besides TC_Init(). They only store
+ * the clamped value; TC_Update_1s() picks it up in its next cycle (no valve / pump action here). RAM only. */
+void TC_SetUpReqTempDay(float temp_C)
+{
+	mUpReqTempDay = CMD_Clamp(temp_C, CMD_UP_REQ_DAY_MIN, CMD_UP_REQ_DAY_MAX);
+}
+
+void TC_SetUpReqTempNight(float temp_C)
+{
+	mUpReqTempNight = CMD_Clamp(temp_C, CMD_UP_REQ_NIGHT_MIN, CMD_UP_REQ_NIGHT_MAX);
+}
+
+void TC_SetDownReqTempDay(float temp_C)
+{
+	mDownReqTempDay = CMD_Clamp(temp_C, CMD_DOWN_REQ_DAY_MIN, CMD_DOWN_REQ_DAY_MAX);
+}
+
+void TC_SetDownReqTempNight(float temp_C)
+{
+	mDownReqTempNight = CMD_Clamp(temp_C, CMD_DOWN_REQ_NIGHT_MIN, CMD_DOWN_REQ_NIGHT_MAX);
 }
 
 void TC_Update_1s(void)

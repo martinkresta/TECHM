@@ -4,6 +4,7 @@
 #include "AVC_V2.h"
 #include "VARS2.h"
 #include "PID.h"
+#include "CMD.h"   /* CMD_Clamp(), CMD_EXHAUST_SET_MIN/MAX (uha_cmds_gen.h) */
 
 
 
@@ -42,6 +43,14 @@ void BAC_Init(const sVarsTemperaturesTechm* pTemps)
   mExhaustPid.iFactor = BAC_PID_KI;
   mExhaustPid.dFactor = BAC_PID_KD;
 
+}
+
+// Exhaust setpoint setter (command channel, APP_OnCommand): the only writer besides the initialiser. Stores the
+// clamped value only; SetState(es_AirControl) copies it to mPidSetpoint_C when air control is entered next time
+// (a running air control keeps its setpoint, as before). RAM only.
+void BAC_SetControlTemp(float temp_C)
+{
+  mBacControlTemp_C = CMD_Clamp(temp_C, CMD_EXHAUST_SET_MIN, CMD_EXHAUST_SET_MAX);
 }
 
 // cyclic update function executing auto control algorithm

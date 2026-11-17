@@ -29,6 +29,7 @@
 #include "AVC.h"
 #include "UHAMON.h"
 #include "LOG.h"
+#include "CMD.h"
 
 
 
@@ -237,6 +238,23 @@ void APP_UpdateStates_1s(void)
 	s->AirValveSignal_pct.value = (float)DO_GetServoAirValve();
 	s->ReqWaterRad_C.value = mReqWaterRad_C;
 	s->ReqWaterWall_C.value = mReqWaterWall_C;
+}
+
+
+// commands for this node (CMD_spec.md, CAN 0x203): setpoints only, clamped in the module setters;
+// feedback = Vars2.States.Techm (APP_UpdateStates_1s)
+void APP_OnCommand(eCmdId id, float value)
+{
+	switch (id)
+	{
+		case CMDID_UP_REQ_DAY:     TC_SetUpReqTempDay(value);     break;
+		case CMDID_UP_REQ_NIGHT:   TC_SetUpReqTempNight(value);   break;
+		case CMDID_DOWN_REQ_DAY:   TC_SetDownReqTempDay(value);   break;
+		case CMDID_DOWN_REQ_NIGHT: TC_SetDownReqTempNight(value); break;
+		case CMDID_EXHAUST_SET:    BAC_SetControlTemp(value);     break;
+		default:
+			break;
+	}
 }
 
 

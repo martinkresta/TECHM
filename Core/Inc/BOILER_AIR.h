@@ -67,6 +67,10 @@ void BAC_Init(const sVarsTemperaturesTechm* pTemps);
 // exhaust temperature setpoint of the air control (initialised from BAC_DEF_CONTROL_TEMP); read by APP.c
 extern float mBacControlTemp_C;
 
+// exhaust setpoint (command channel): stores the value clamped to CMD_EXHAUST_SET_MIN/MAX, used when
+// es_AirControl is entered next time
+void BAC_SetControlTemp(float temp_C);
+
 // cyclic update function executing auto control algorithm
 void BAC_Update_1s(void);
 

@@ -34,7 +34,13 @@ void TC_Init(sVarsTank* pVars, const sVarsTemperatures* pTemps);
 
 void TC_Update_1s(void);
 
-/* read only from outside (APP.c: VARS2 states). Setpoints, set in TC_Init() */
+/* room setpoints (command channel): store the value clamped to CMD_*_MIN/MAX, used from the next TC_Update_1s() */
+void TC_SetUpReqTempDay(float temp_C);
+void TC_SetUpReqTempNight(float temp_C);
+void TC_SetDownReqTempDay(float temp_C);
+void TC_SetDownReqTempNight(float temp_C);
+
+/* read only from outside (APP.c: VARS2 states). Setpoints, set in TC_Init() and the TC_Set*() setters */
 extern float mDownReqTempDay;
 extern float mDownReqTempNight;
 extern float mUpReqTempDay;
